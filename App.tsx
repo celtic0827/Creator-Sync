@@ -121,6 +121,7 @@ const STORAGE_KEY_PROJECTS = 'patreon_scheduler_projects_v2';
 const STORAGE_KEY_SCHEDULE = 'patreon_scheduler_schedule_v2';
 const STORAGE_KEY_CONFIG = 'patreon_scheduler_config_v1';
 const STORAGE_KEY_SETTINGS = 'patreon_scheduler_settings_v1';
+const STORAGE_KEY_SORT = 'patreon_scheduler_sort_v1';
 
 type SidebarTab = 'pipeline' | 'published';
 
@@ -255,7 +256,21 @@ export default function App() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragData, setActiveDragData] = useState<DragData | null>(null);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('pipeline');
-  const [sortMode, setSortMode] = useState<SortMode>('DEFAULT');
+  
+  // Sort Mode State with Persistence
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
+    try {
+      const savedSort = localStorage.getItem(STORAGE_KEY_SORT);
+      return (savedSort as SortMode) || 'DEFAULT';
+    } catch {
+      return 'DEFAULT';
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_SORT, sortMode);
+  }, [sortMode]);
+
   const [highlightedProjectId, setHighlightedProjectId] = useState<string | null>(null);
 
   // Modal States

@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { format, isToday, isWeekend } from 'date-fns';
 import { ScheduleItem, Project, CategoryConfig } from '../types';
 import { DraggableScheduleItem } from './DraggableScheduleItem';
+import { Layers } from 'lucide-react';
 
 interface CalendarCellProps {
   date: Date;
@@ -40,8 +42,22 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({ date, items, project
         <div className="absolute inset-0 border-2 border-indigo-500/50 pointer-events-none z-10" />
       )}
 
-      {/* Date Header */}
-      <div className="flex justify-end items-center mb-1">
+      {/* Date Header (Top Row) */}
+      <div className="flex justify-between items-start mb-1 min-h-[20px]">
+        {/* Left: Overload Indicator (Only if > 2 items) */}
+        {items.length > 2 ? (
+          <div 
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-[3px] bg-zinc-800 border border-zinc-700/50 text-zinc-400"
+            title={`${items.length} items`}
+          >
+            <Layers size={10} />
+            <span className="text-[9px] font-bold leading-none">{items.length}</span>
+          </div>
+        ) : (
+          <div></div> // Spacer
+        )}
+
+        {/* Right: Date Number */}
         <span className={`
           flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold
           ${isCurrentDay 
