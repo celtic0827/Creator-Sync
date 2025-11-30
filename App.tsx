@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { 
   DndContext, 
   DragOverlay, 
@@ -253,6 +253,8 @@ export default function App() {
   }, [appSettings]);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const scrollCooldown = useRef(false);
+
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragData, setActiveDragData] = useState<DragData | null>(null);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('pipeline');
@@ -315,6 +317,25 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleUndo]);
+
+  // Calendar Scroll Handling
+  const handleCalendarWheel = useCallback((e: React.WheelEvent) => {
+    // Basic debounce to prevent rapid-fire month changes
+    if (scrollCooldown.current) return;
+
+    if (e.deltaY > 0) {
+       // Scroll Down -> Next Month
+       setCurrentMonth(prev => addMonths(prev, 1));
+    } else if (e.deltaY < 0) {
+       // Scroll Up -> Prev Month
+       setCurrentMonth(prev => subMonths(prev, 1));
+    }
+
+    scrollCooldown.current = true;
+    setTimeout(() => {
+        scrollCooldown.current = false;
+    }, 400); // 400ms cooldown for smooth page turning feel
+  }, []);
 
   // Calendar Calculations
   const calendarDays = useMemo(() => {
@@ -623,7 +644,7 @@ export default function App() {
       onDragStart={handleDragStart} 
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-screen w-full overflow-hidden bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30">
+      <div className={`flex h-screen w-full overflow-hidden bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30 ${lang === 'zh-TW' ? 'lang-zh' : ''}`}>
         
         {/* Sidebar */}
         <aside className="w-[340px] shrink-0 border-r border-white/5 bg-zinc-900/50 flex flex-col z-10">
@@ -875,7 +896,10 @@ export default function App() {
           </div>
 
           {/* Calendar Grid Container */}
-          <div className="flex-1 px-8 pb-8 overflow-hidden flex flex-col">
+          <div 
+             className="flex-1 px-8 pb-8 overflow-hidden flex flex-col"
+             onWheel={handleCalendarWheel}
+          >
             
             {/* Day Headers */}
             <div className="grid grid-cols-7 mb-2">
