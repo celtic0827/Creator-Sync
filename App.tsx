@@ -19,6 +19,7 @@ import {
   addMonths, 
   isBefore
 } from 'date-fns';
+import { enUS, zhTW } from 'date-fns/locale';
 import { 
   Plus, 
   ChevronLeft, 
@@ -33,13 +34,14 @@ import {
   Undo2
 } from 'lucide-react';
 
-import { Project, ProjectStatus, ScheduleItem, DragData, CategoryConfig, CategoryDefinition } from './types';
+import { Project, ProjectStatus, ScheduleItem, DragData, CategoryConfig, CategoryDefinition, AppSettings, Language } from './types';
 import { ProjectCard } from './components/ProjectCard';
 import { CalendarCell } from './components/CalendarCell';
 import { DraggableScheduleItem } from './components/DraggableScheduleItem';
 import { ProjectFormModal } from './components/modals/ProjectFormModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { HelpModal } from './components/modals/HelpModal';
+import { t, getStatusText } from './translations';
 
 // Helpers to replace missing date-fns imports
 const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
@@ -73,6 +75,19 @@ const DEFAULT_CATEGORY_CONFIG: CategoryConfig = {
   OTHER: { label: 'Other', color: 'bg-pink-900', iconKey: 'Layers' }
 };
 
+const getDefaultLanguage = (): Language => {
+  if (typeof navigator !== 'undefined' && navigator.language) {
+    return navigator.language.toLowerCase().includes('zh') ? 'zh-TW' : 'en';
+  }
+  return 'en';
+};
+
+const DEFAULT_APP_SETTINGS: AppSettings = {
+  warningDays: 7,
+  criticalDays: 3,
+  language: getDefaultLanguage()
+};
+
 // Mock Initial Data (Used as fallback if localStorage is empty)
 const INITIAL_PROJECTS: Project[] = [
   // In Progress
@@ -101,6 +116,7 @@ const INITIAL_SCHEDULE: ScheduleItem[] = [
 const STORAGE_KEY_PROJECTS = 'patreon_scheduler_projects_v2';
 const STORAGE_KEY_SCHEDULE = 'patreon_scheduler_schedule_v2';
 const STORAGE_KEY_CONFIG = 'patreon_scheduler_config_v1';
+const STORAGE_KEY_SETTINGS = 'patreon_scheduler_settings_v1';
 
 type SidebarTab = 'pipeline' | 'published';
 
@@ -130,7 +146,7 @@ const StatusZone: React.FC<{ status: string; children: React.ReactNode }> = ({ s
 };
 
 // Trash Drop Zone Component
-const TrashDropZone: React.FC<{ activeDragId: string | null }> = ({ activeDragId }) => {
+const TrashDropZone: React.FC<{ activeDragId: string | null; lang: Language }> = ({ activeDragId, lang }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: 'trash-zone',
   });
@@ -142,7 +158,7 @@ const TrashDropZone: React.FC<{ activeDragId: string | null }> = ({ activeDragId
       ref={setNodeRef}
       id="trash-zone" 
       className={`
-        flex items-center gap-2 px-4 py-1.5 rounded-md transition-all duration-200 border z-50 select-none
+        flex items-center gap-2 px-6 py-1.5 rounded-md transition-all duration-200 border z-50 select-none whitespace-nowrap
         ${isActive 
           ? 'opacity-100 border-zinc-700 bg-zinc-900/80 text-zinc-300' 
           : 'opacity-40 border-transparent text-zinc-600'
@@ -154,7 +170,7 @@ const TrashDropZone: React.FC<{ activeDragId: string | null }> = ({ activeDragId
      `}
     >
        <Trash2 size={16} />
-       <span className="text-xs font-semibold">Drop to Delete</span>
+       <span className="text-xs font-semibold">{t('dropToDelete', lang)}</span>
     </div>
   );
 };
@@ -169,6 +185,21 @@ export default function App() {
       return DEFAULT_CATEGORY_CONFIG;
     }
   });
+
+  const [appSettings, setAppSettings] = useState<AppSettings>(() => {
+    try {
+      const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+      const settings = savedSettings ? JSON.parse(savedSettings) : DEFAULT_APP_SETTINGS;
+      // Ensure language is set if loading from old config
+      if (!settings.language) settings.language = getDefaultLanguage();
+      return settings;
+    } catch {
+      return DEFAULT_APP_SETTINGS;
+    }
+  });
+
+  const lang = appSettings.language;
+  const dateLocale = lang === 'zh-TW' ? zhTW : enUS;
 
   // Initialize State from LocalStorage
   const [projects, setProjects] = useState<Project[]>(() => {
@@ -211,6 +242,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(categoryConfig));
   }, [categoryConfig]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(appSettings));
+  }, [appSettings]);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -270,7 +305,18 @@ export default function App() {
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, [currentMonth]);
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // Dynamic Week Days based on Locale
+  const weekDays = useMemo(() => {
+      const baseDate = startOfWeek(new Date());
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+          const d = new Date(baseDate);
+          d.setDate(baseDate.getDate() + i);
+          days.push(format(d, 'EEE', { locale: dateLocale }));
+      }
+      return days;
+  }, [dateLocale]);
+
   const today = startOfToday();
 
   // Helper Logic
@@ -327,7 +373,8 @@ export default function App() {
       timestamp: new Date().toISOString(),
       projects,
       schedule,
-      categoryConfig
+      categoryConfig,
+      appSettings
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -354,6 +401,7 @@ export default function App() {
              setProjects(json.projects);
              setSchedule(json.schedule);
              if (json.categoryConfig) setCategoryConfig(json.categoryConfig);
+             if (json.appSettings) setAppSettings(json.appSettings);
              alert('Database restored successfully.');
              setIsSettingsModalOpen(false);
           }
@@ -549,7 +597,7 @@ export default function App() {
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                <ListTodo size={14} /> Pipeline
+                <ListTodo size={14} /> {t('pipeline', lang)}
                 <span className={`text-[10px] px-1.5 rounded-full ${sidebarTab === 'pipeline' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-900 text-zinc-600'}`}>
                   {pipelineProjects.length}
                 </span>
@@ -562,7 +610,7 @@ export default function App() {
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                <Archive size={14} /> Published
+                <Archive size={14} /> {t('published', lang)}
                 <span className={`text-[10px] px-1.5 rounded-full ${sidebarTab === 'published' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-900 text-zinc-600'}`}>
                   {publishedProjects.length}
                 </span>
@@ -582,7 +630,7 @@ export default function App() {
                       <div className="flex items-center gap-2">
                          <div className="h-px flex-1 bg-zinc-800"></div>
                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                           {status.replace('_', ' ')}
+                           {getStatusText(status, lang)}
                          </h3>
                          <div className="h-px flex-1 bg-zinc-800"></div>
                       </div>
@@ -595,6 +643,7 @@ export default function App() {
                               project={project} 
                               categoryConfig={categoryConfig}
                               scheduledDate={scheduledDate}
+                              appSettings={appSettings}
                               onJumpToDate={scheduledDate ? (date) => handleJumpToProject(project.id, date) : undefined}
                               onEdit={() => handleEditProject(project)}
                               onToggleArchive={() => handleToggleArchive(project)}
@@ -603,7 +652,7 @@ export default function App() {
                         })}
                         {statusProjects.length === 0 && (
                           <div className="text-[10px] text-zinc-700 text-center py-2 border border-dashed border-zinc-800/50 rounded">
-                            Drop items here
+                            {t('dropHere', lang)}
                           </div>
                         )}
                       </div>
@@ -614,7 +663,7 @@ export default function App() {
                 {pipelineProjects.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-40 text-zinc-600">
                     <Inbox size={32} className="mb-3 opacity-20" />
-                    <p className="text-xs">No pending projects</p>
+                    <p className="text-xs">{t('noPending', lang)}</p>
                   </div>
                 )}
 
@@ -622,7 +671,7 @@ export default function App() {
                   onClick={openCreateModal}
                   className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-zinc-800 py-3 text-xs font-medium text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 transition-colors mt-2"
                 >
-                  <Plus size={14} /> New Project
+                  <Plus size={14} /> {t('newProject', lang)}
                 </button>
               </div>
             )}
@@ -639,6 +688,7 @@ export default function App() {
                             project={project} 
                             categoryConfig={categoryConfig}
                             scheduledDate={scheduledDate}
+                            appSettings={appSettings}
                             onJumpToDate={scheduledDate ? (date) => handleJumpToProject(project.id, date) : undefined}
                             onEdit={() => handleEditProject(project)}
                             onToggleArchive={() => handleToggleArchive(project)}
@@ -649,7 +699,7 @@ export default function App() {
                  ) : (
                    <div className="flex flex-col items-center justify-center h-40 text-zinc-600">
                       <Archive size={32} className="mb-3 opacity-20" />
-                      <p className="text-xs">Archive is empty</p>
+                      <p className="text-xs">{t('archiveEmpty', lang)}</p>
                    </div>
                  )}
               </div>
@@ -663,7 +713,7 @@ export default function App() {
                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 rounded-md transition-colors"
                title="App Settings & Configuration"
              >
-               <Settings size={14} /> Settings
+               <Settings size={14} /> {t('settings', lang)}
              </button>
              <button 
                onClick={() => setIsHelpModalOpen(true)}
@@ -684,8 +734,8 @@ export default function App() {
              {/* Left: Navigation & Trash */}
              <div className="flex items-center gap-6">
                <div className="w-60">
-                 <h2 className="text-2xl font-bold text-white tracking-tight">
-                   {format(currentMonth, 'MMMM yyyy')}
+                 <h2 className="text-2xl font-bold text-white tracking-tight capitalize">
+                   {format(currentMonth, 'MMMM yyyy', { locale: dateLocale })}
                  </h2>
                </div>
                
@@ -698,9 +748,9 @@ export default function App() {
                  </button>
                  <button 
                    onClick={() => setCurrentMonth(new Date())}
-                   className="px-3 py-1 text-xs font-medium text-zinc-300 hover:text-white"
+                   className="w-16 py-1 text-xs font-medium text-zinc-300 hover:text-white whitespace-nowrap"
                  >
-                   Today
+                   {t('today', lang)}
                  </button>
                  <button 
                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
@@ -723,13 +773,13 @@ export default function App() {
                         : 'bg-transparent border-transparent text-zinc-700 cursor-default opacity-50'
                      }
                    `}
-                   title={`Undo last action (${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+Z)`}
+                   title={`${t('undo', lang)} (Ctrl+Z)`}
                 >
                    <Undo2 size={16} />
                 </button>
 
                 {/* Trash Drop Zone */}
-                <TrashDropZone activeDragId={activeDragId} />
+                <TrashDropZone activeDragId={activeDragId} lang={lang} />
              </div>
 
              {/* Right: Low-key Logo */}
@@ -784,7 +834,12 @@ export default function App() {
           {activeDragId ? (
             activeDragData?.type === 'PROJECT_SOURCE' ? (
               <div className="w-[300px]">
-                 <ProjectCard project={getActiveOverlayProject()!} categoryConfig={categoryConfig} isOverlay />
+                 <ProjectCard 
+                  project={getActiveOverlayProject()!} 
+                  categoryConfig={categoryConfig} 
+                  isOverlay 
+                  appSettings={appSettings} 
+                 />
               </div>
             ) : (
                <div className="w-auto">
@@ -807,6 +862,7 @@ export default function App() {
           onDelete={editingProjectId ? handleDeleteProject : undefined}
           editingProject={editingProjectId ? projects.find(p => p.id === editingProjectId) : null}
           categoryConfig={categoryConfig}
+          lang={lang}
         />
 
         <SettingsModal 
@@ -816,11 +872,14 @@ export default function App() {
           onUpdateCategory={setCategoryConfig}
           onExportData={handleExportData}
           onImportData={handleImportData}
+          appSettings={appSettings}
+          onUpdateAppSettings={setAppSettings}
         />
 
         <HelpModal 
           isOpen={isHelpModalOpen}
           onClose={() => setIsHelpModalOpen(false)}
+          lang={lang}
         />
 
       </div>

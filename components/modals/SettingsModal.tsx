@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Database, Upload, Download, Check, Edit2 } from 'lucide-react';
-import { ProjectType, CategoryConfig, CategoryDefinition } from '../../types';
+import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe } from 'lucide-react';
+import { ProjectType, CategoryConfig, CategoryDefinition, AppSettings, Language } from '../../types';
 import { DynamicIcon, COLOR_PALETTE, ICON_MAP } from '../IconUtils';
+import { t } from '../../translations';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -11,6 +12,8 @@ interface SettingsModalProps {
   onUpdateCategory: (config: CategoryConfig) => void;
   onExportData: () => void;
   onImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  appSettings?: AppSettings;
+  onUpdateAppSettings?: (settings: AppSettings) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ 
@@ -19,17 +22,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   categoryConfig, 
   onUpdateCategory, 
   onExportData, 
-  onImportData 
+  onImportData,
+  appSettings,
+  onUpdateAppSettings
 }) => {
   const [activeSettingsTab, setActiveSettingsTab] = useState<string>('VIDEO');
   const [editCategoryForm, setEditCategoryForm] = useState<CategoryDefinition>({ label: '', color: '', iconKey: '' });
+  const [prefForm, setPrefForm] = useState<AppSettings>({ warningDays: 7, criticalDays: 3, language: 'en' });
 
   // Reset/Sync form when tab or config changes
   useEffect(() => {
-    if (activeSettingsTab && activeSettingsTab !== 'DATA' && isOpen) {
+    if (activeSettingsTab && activeSettingsTab !== 'DATA' && activeSettingsTab !== 'PREFERENCES' && isOpen) {
        setEditCategoryForm(categoryConfig[activeSettingsTab as ProjectType]);
     }
   }, [activeSettingsTab, categoryConfig, isOpen]);
+
+  useEffect(() => {
+    if (appSettings) {
+      setPrefForm(appSettings);
+    }
+  }, [appSettings]);
 
   // Handle setting default tab when opening
   useEffect(() => {
@@ -39,7 +51,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [isOpen]);
 
   const handleSaveCategory = () => {
-    if (activeSettingsTab && activeSettingsTab !== 'DATA') {
+    if (activeSettingsTab && activeSettingsTab !== 'DATA' && activeSettingsTab !== 'PREFERENCES') {
       const newConfig = {
         ...categoryConfig,
         [activeSettingsTab]: editCategoryForm
@@ -47,9 +59,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       onUpdateCategory(newConfig);
     }
   };
+
+  const handleSavePreferences = () => {
+    if (onUpdateAppSettings) {
+      onUpdateAppSettings(prefForm);
+      onClose();
+    }
+  };
   
   // Safe accessor to avoid 'unknown' type errors if inference fails
   const safeEditCategoryForm = editCategoryForm as CategoryDefinition;
+  const lang = prefForm.language;
 
   if (!isOpen) return null;
 
@@ -61,14 +81,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="w-56 border-r border-zinc-800 bg-zinc-900/50 flex flex-col">
               <div className="p-4 border-b border-zinc-800">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Settings size={16} /> Settings
+                  <Settings size={16} /> {t('settings', lang)}
                 </h3>
               </div>
               <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar min-h-[350px]">
                 
                 {/* System Section */}
                 <div className="px-2 py-2">
-                  <div className="text-[10px] font-bold text-zinc-500 px-2 mb-1 uppercase tracking-wider">System</div>
+                  <div className="text-[10px] font-bold text-zinc-500 px-2 mb-1 uppercase tracking-wider">{t('settings_system', lang)}</div>
+                  <button 
+                    onClick={() => setActiveSettingsTab('PREFERENCES')}
+                    className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
+                      activeSettingsTab === 'PREFERENCES' 
+                        ? 'bg-zinc-800 border border-zinc-700 shadow-sm text-white' 
+                        : 'hover:bg-zinc-900 border border-transparent text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                      <Sliders size={14} />
+                      <div className="text-xs font-semibold">{t('settings_pref', lang)}</div>
+                  </button>
                   <button 
                     onClick={() => setActiveSettingsTab('DATA')}
                     className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
@@ -78,14 +109,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     }`}
                   >
                       <Database size={14} />
-                      <div className="text-xs font-semibold">Data Backup</div>
+                      <div className="text-xs font-semibold">{t('settings_data', lang)}</div>
                   </button>
                 </div>
 
                 {/* Catalogue Section */}
                 <div className="px-2 pb-2">
-                  <div className="text-[10px] font-bold text-zinc-500 px-2 mb-1 mt-2 uppercase tracking-wider">Catalogue</div>
-                  {Object.entries(categoryConfig).map(([key, config]) => (
+                  <div className="text-[10px] font-bold text-zinc-500 px-2 mb-1 mt-2 uppercase tracking-wider">{t('settings_catalogue', lang)}</div>
+                  {(Object.entries(categoryConfig) as [string, CategoryDefinition][]).map(([key, config]) => (
                       <button
                         key={key}
                         onClick={() => setActiveSettingsTab(key)}
@@ -107,7 +138,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
               <div className="p-3 border-t border-zinc-800">
                 <button onClick={onClose} className="w-full py-1.5 text-xs text-zinc-400 hover:text-white border border-zinc-700 rounded hover:bg-zinc-800">
-                    Close
+                    {t('settings_close', lang)}
                 </button>
               </div>
           </div>
@@ -118,7 +149,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 // Data Management View
                 <div className="flex flex-col h-full">
                     <div className="pb-4 border-b border-zinc-800 mb-6">
-                      <h2 className="text-sm font-bold text-white uppercase tracking-wide">Data Management</h2>
+                      <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t('settings_data', lang)}</h2>
                       <p className="text-xs text-zinc-500 mt-1">Export your data for backup or transfer to another device.</p>
                     </div>
                     
@@ -130,16 +161,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <Upload size={20} />
                           </div>
                           <div>
-                            <h4 className="text-sm font-semibold text-zinc-200">Export JSON</h4>
+                            <h4 className="text-sm font-semibold text-zinc-200">{t('settings_export', lang)}</h4>
                             <p className="text-[11px] text-zinc-500 mt-1 leading-snug">
-                              Download a complete backup of projects, schedule, and settings.
+                              {t('settings_export_desc', lang)}
                             </p>
                           </div>
                           <button 
                             onClick={onExportData}
                             className="mt-auto w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded border border-zinc-700"
                           >
-                            Download Backup
+                            Download
                           </button>
                       </div>
 
@@ -150,39 +181,120 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <Download size={20} />
                           </div>
                           <div>
-                            <h4 className="text-sm font-semibold text-zinc-200">Import JSON</h4>
+                            <h4 className="text-sm font-semibold text-zinc-200">{t('settings_import', lang)}</h4>
                             <p className="text-[11px] text-zinc-500 mt-1 leading-snug">
-                              Restore from a backup file. <span className="text-red-400">Warning: Overwrites current data.</span>
+                              {t('settings_import_desc', lang)}
                             </p>
                           </div>
                           <label className="mt-auto w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded border border-zinc-700 text-center cursor-pointer">
                             <input type="file" accept=".json" onChange={onImportData} className="hidden" />
-                            Select File to Restore
+                            Select File
                           </label>
                       </div>
                     </div>
                 </div>
+              ) : activeSettingsTab === 'PREFERENCES' ? (
+                // Preferences View
+                 <div className="flex flex-col h-full gap-4">
+                    <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                      <div>
+                          <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t('settings_pref', lang)}</h2>
+                      </div>
+                      <button 
+                        onClick={handleSavePreferences}
+                        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
+                      >
+                        <Check size={14} /> {t('settings_save', lang)}
+                      </button>
+                    </div>
+
+                    <div className="space-y-6 pt-2">
+                       {/* Language Settings */}
+                       <div className="space-y-3">
+                          <h4 className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                            <Globe size={14} /> {t('settings_lang', lang)}
+                          </h4>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setPrefForm(prev => ({...prev, language: 'en'}))}
+                              className={`px-4 py-2 text-xs font-medium rounded-md border transition-all ${
+                                prefForm.language === 'en' 
+                                  ? 'bg-indigo-600 text-white border-indigo-500' 
+                                  : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:bg-zinc-800'
+                              }`}
+                            >
+                              English
+                            </button>
+                            <button
+                              onClick={() => setPrefForm(prev => ({...prev, language: 'zh-TW'}))}
+                              className={`px-4 py-2 text-xs font-medium rounded-md border transition-all ${
+                                prefForm.language === 'zh-TW' 
+                                  ? 'bg-indigo-600 text-white border-indigo-500' 
+                                  : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:bg-zinc-800'
+                              }`}
+                            >
+                              繁體中文
+                            </button>
+                          </div>
+                       </div>
+
+                       <div className="h-px bg-zinc-800 w-full" />
+
+                       {/* Alert Thresholds */}
+                       <div className="space-y-3">
+                          <h4 className="text-xs font-semibold text-zinc-300">{t('settings_alerts', lang)}</h4>
+                          
+                          <div className="grid grid-cols-2 gap-6 mt-3">
+                             <div className="space-y-2 p-3 rounded-lg bg-amber-950/20 border border-amber-900/30">
+                                <label className="text-[10px] font-bold text-amber-500 uppercase">{t('settings_warning', lang)}</label>
+                                <div className="flex items-center gap-2">
+                                  <input 
+                                    type="number"
+                                    min="1"
+                                    max="60"
+                                    value={prefForm.warningDays}
+                                    onChange={e => setPrefForm(prev => ({...prev, warningDays: parseInt(e.target.value) || 0}))}
+                                    className="w-16 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:ring-1 focus:ring-amber-500 outline-none"
+                                  />
+                                </div>
+                             </div>
+
+                             <div className="space-y-2 p-3 rounded-lg bg-red-950/20 border border-red-900/30">
+                                <label className="text-[10px] font-bold text-red-500 uppercase">{t('settings_critical', lang)}</label>
+                                <div className="flex items-center gap-2">
+                                  <input 
+                                    type="number"
+                                    min="0"
+                                    max="60"
+                                    value={prefForm.criticalDays}
+                                    onChange={e => setPrefForm(prev => ({...prev, criticalDays: parseInt(e.target.value) || 0}))}
+                                    className="w-16 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:ring-1 focus:ring-red-500 outline-none"
+                                  />
+                                </div>
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
               ) : activeSettingsTab ? (
                 // Catalogue Editor View
                 <div className="flex flex-col h-full gap-4">
                     
                     {/* Header: Title & Save */}
-                    <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                      <div>
-                          <h2 className="text-sm font-bold text-white uppercase tracking-wide">{activeSettingsTab} Config</h2>
-                      </div>
+                    <div className="flex items-center justify-end pb-2 border-b border-zinc-800">
+                      {/* Title Removed as requested */}
                       <button 
                         onClick={handleSaveCategory}
                         className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
                       >
-                        <Check size={14} /> Save
+                        <Check size={14} /> {t('settings_save', lang)}
                       </button>
                     </div>
                     
                     {/* Row 1: Name Input & Preview */}
                     <div className="flex gap-4">
                       <div className="flex-1 space-y-1">
-                          <label className="text-[10px] font-bold text-zinc-500 uppercase">Label Name</label>
+                          <label className="text-[10px] font-bold text-zinc-500 uppercase">{t('cat_label', lang)}</label>
                           <input 
                             type="text" 
                             value={safeEditCategoryForm.label}
@@ -191,7 +303,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           />
                       </div>
                       <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-zinc-500 uppercase">Preview</label>
+                          <label className="text-[10px] font-bold text-zinc-500 uppercase">{t('cat_preview', lang)}</label>
                           <div className="flex items-center gap-2 px-3 py-1.5 h-[38px] rounded border border-zinc-800 bg-zinc-900/50">
                             <div className={`w-5 h-5 rounded flex items-center justify-center ${safeEditCategoryForm.color}`}>
                               <DynamicIcon iconKey={safeEditCategoryForm.iconKey} className="text-white w-3 h-3" />
@@ -203,7 +315,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                     {/* Row 2: Color Palette */}
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase">Color Theme (Bright / Dark)</label>
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase">{t('cat_color', lang)}</label>
                       <div className="grid grid-cols-12 gap-1.5">
                           {COLOR_PALETTE.map(color => (
                             <button
@@ -219,7 +331,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                     {/* Row 3: Icon Grid */}
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase">Icon Symbol</label>
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase">{t('cat_icon', lang)}</label>
                       <div className="grid grid-cols-9 gap-x-1.5 gap-y-3">
                           {Object.keys(ICON_MAP).map(iconKey => (
                             <button

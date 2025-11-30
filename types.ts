@@ -17,6 +17,14 @@ export interface CategoryDefinition {
 
 export type CategoryConfig = Record<ProjectType, CategoryDefinition>;
 
+export type Language = 'en' | 'zh-TW';
+
+export interface AppSettings {
+  warningDays: number;
+  criticalDays: number;
+  language: Language;
+}
+
 export interface Project {
   id: string;
   name: string;
