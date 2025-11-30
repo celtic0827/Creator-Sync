@@ -12,7 +12,8 @@ type TranslationKey =
   | 'settings_lang' | 'settings_alerts' | 'settings_export' | 'settings_import'
   | 'settings_export_desc' | 'settings_import_desc' | 'settings_warning' | 'settings_critical'
   | 'settings_close' | 'settings_save'
-  | 'cat_label' | 'cat_preview' | 'cat_color' | 'cat_icon';
+  | 'cat_label' | 'cat_preview' | 'cat_color' | 'cat_icon'
+  | 'sort_default' | 'sort_alpha' | 'sort_category' | 'sort_date';
 
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
@@ -65,6 +66,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     cat_preview: 'Preview',
     cat_color: 'Color Theme',
     cat_icon: 'Icon Symbol',
+    sort_default: 'Default Order',
+    sort_alpha: 'Name (A-Z)',
+    sort_category: 'Category',
+    sort_date: 'Scheduled Date',
   },
   'zh-TW': {
     pipeline: '專案管線',
@@ -116,6 +121,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     cat_preview: '預覽',
     cat_color: '色彩主題',
     cat_icon: '圖示符號',
+    sort_default: '預設排序',
+    sort_alpha: '名稱 (A-Z)',
+    sort_category: '依類別',
+    sort_date: '排程日期',
   }
 };
 

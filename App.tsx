@@ -31,10 +31,14 @@ import {
   Inbox,
   Settings,
   CircleHelp,
-  Undo2
+  Undo2,
+  ListFilter,
+  ArrowDownAZ,
+  Tags,
+  CalendarClock
 } from 'lucide-react';
 
-import { Project, ProjectStatus, ScheduleItem, DragData, CategoryConfig, CategoryDefinition, AppSettings, Language } from './types';
+import { Project, ProjectStatus, ScheduleItem, DragData, CategoryConfig, AppSettings, Language, SortMode } from './types';
 import { ProjectCard } from './components/ProjectCard';
 import { CalendarCell } from './components/CalendarCell';
 import { DraggableScheduleItem } from './components/DraggableScheduleItem';
@@ -252,6 +256,7 @@ export default function App() {
   const [activeDragData, setActiveDragData] = useState<DragData | null>(null);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('pipeline');
   const [highlightedProjectId, setHighlightedProjectId] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>('DEFAULT');
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -437,6 +442,37 @@ export default function App() {
       });
   }, [projects, schedule]);
 
+  // Sort logic helper
+  const sortProjects = useCallback((list: Project[]) => {
+    if (sortMode === 'DEFAULT') return list;
+    
+    return [...list].sort((a, b) => {
+      if (sortMode === 'ALPHA') {
+        return a.name.localeCompare(b.name);
+      }
+      if (sortMode === 'CATEGORY') {
+        // Sort by Type Label if possible, else type code
+        const labelA = categoryConfig[a.type]?.label || a.type;
+        const labelB = categoryConfig[b.type]?.label || b.type;
+        return labelA.localeCompare(labelB);
+      }
+      if (sortMode === 'DATE') {
+        const dateA = getProjectScheduledDate(a.id);
+        const dateB = getProjectScheduledDate(b.id);
+        
+        // Items with dates come first, sorted ascending (nearest first)
+        if (dateA && dateB) return dateA.localeCompare(dateB);
+        if (dateA) return -1;
+        if (dateB) return 1;
+        
+        // If no dates, fallback to name
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
+  }, [sortMode, categoryConfig, schedule]);
+
+
   // Drag Handlers
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -586,7 +622,7 @@ export default function App() {
         <aside className="w-[340px] shrink-0 border-r border-white/5 bg-zinc-900/50 flex flex-col z-10">
           
           {/* Sidebar Header & Tabs */}
-          <div className="p-4 border-b border-white/5 pt-6 flex flex-col gap-4">
+          <div className="p-4 border-b border-white/5 pt-6 flex flex-col gap-3">
              {/* Tabs */}
             <div className="flex p-1 bg-zinc-950 rounded-lg border border-white/5">
               <button
@@ -616,273 +652,17 @@ export default function App() {
                 </span>
               </button>
             </div>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
-            {/* Pipeline View */}
+
+            {/* Sort Toolbar - Only visible in Pipeline */}
             {sidebarTab === 'pipeline' && (
-              <div className="flex flex-col gap-6">
-                {/* Pipeline now includes PLANNING, IN_PROGRESS, COMPLETED, PAUSED */}
-                {[ProjectStatus.PLANNING, ProjectStatus.IN_PROGRESS, ProjectStatus.COMPLETED, ProjectStatus.PAUSED].map(status => {
-                   const statusProjects = pipelineProjects.filter(p => p.status === status);
-                   return (
-                    <StatusZone key={status} status={status}>
-                      <div className="flex items-center gap-2">
-                         <div className="h-px flex-1 bg-zinc-800"></div>
-                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                           {getStatusText(status, lang)}
-                         </h3>
-                         <div className="h-px flex-1 bg-zinc-800"></div>
-                      </div>
-                      <div className="space-y-2 min-h-[10px]">
-                        {statusProjects.map(project => {
-                          const scheduledDate = getProjectScheduledDate(project.id);
-                          return (
-                            <ProjectCard 
-                              key={project.id} 
-                              project={project} 
-                              categoryConfig={categoryConfig}
-                              scheduledDate={scheduledDate}
-                              appSettings={appSettings}
-                              onJumpToDate={scheduledDate ? (date) => handleJumpToProject(project.id, date) : undefined}
-                              onEdit={() => handleEditProject(project)}
-                              onToggleArchive={() => handleToggleArchive(project)}
-                            />
-                          );
-                        })}
-                        {statusProjects.length === 0 && (
-                          <div className="text-[10px] text-zinc-700 text-center py-2 border border-dashed border-zinc-800/50 rounded">
-                            {t('dropHere', lang)}
-                          </div>
-                        )}
-                      </div>
-                    </StatusZone>
-                   );
-                })}
-                
-                {pipelineProjects.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-40 text-zinc-600">
-                    <Inbox size={32} className="mb-3 opacity-20" />
-                    <p className="text-xs">{t('noPending', lang)}</p>
-                  </div>
-                )}
-
-                <button 
-                  onClick={openCreateModal}
-                  className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-zinc-800 py-3 text-xs font-medium text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 transition-colors mt-2"
-                >
-                  <Plus size={14} /> {t('newProject', lang)}
-                </button>
-              </div>
-            )}
-
-            {/* Published View */}
-            {sidebarTab === 'published' && (
-              <div className="space-y-2">
-                 {publishedProjects.length > 0 ? (
-                    publishedProjects.map(project => {
-                      const scheduledDate = getProjectScheduledDate(project.id);
-                      return (
-                        <div key={project.id} className="opacity-80 hover:opacity-100 transition-opacity">
-                           <ProjectCard 
-                            project={project} 
-                            categoryConfig={categoryConfig}
-                            scheduledDate={scheduledDate}
-                            appSettings={appSettings}
-                            onJumpToDate={scheduledDate ? (date) => handleJumpToProject(project.id, date) : undefined}
-                            onEdit={() => handleEditProject(project)}
-                            onToggleArchive={() => handleToggleArchive(project)}
-                          />
-                        </div>
-                      );
-                    })
-                 ) : (
-                   <div className="flex flex-col items-center justify-center h-40 text-zinc-600">
-                      <Archive size={32} className="mb-3 opacity-20" />
-                      <p className="text-xs">{t('archiveEmpty', lang)}</p>
-                   </div>
-                 )}
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar Footer */}
-          <div className="p-3 border-t border-white/5 bg-zinc-950 flex items-center gap-2">
-             <button 
-               onClick={() => setIsSettingsModalOpen(true)}
-               className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 rounded-md transition-colors"
-               title="App Settings & Configuration"
-             >
-               <Settings size={14} /> {t('settings', lang)}
-             </button>
-             <button 
-               onClick={() => setIsHelpModalOpen(true)}
-               className="flex items-center justify-center gap-2 px-3 py-2 text-zinc-500 hover:text-indigo-400 hover:bg-zinc-900 rounded-md transition-colors"
-               title="Help Guide"
-             >
-               <CircleHelp size={16} />
-             </button>
-          </div>
-        </aside>
-
-        {/* Main Calendar Area */}
-        <main className="flex-1 flex flex-col bg-zinc-950 relative">
-          
-          {/* Calendar Toolbar */}
-          <div className="flex items-center justify-between px-8 py-6 h-20">
-             
-             {/* Left: Navigation & Trash */}
-             <div className="flex items-center gap-6">
-               <div className="w-60">
-                 <h2 className="text-2xl font-bold text-white tracking-tight capitalize">
-                   {format(currentMonth, 'MMMM yyyy', { locale: dateLocale })}
-                 </h2>
-               </div>
-               
-               <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900/50 p-1">
+              <div className="flex items-center gap-1 justify-between px-1">
                  <button 
-                   onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                   className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                  onClick={() => setSortMode('DEFAULT')}
+                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-colors ${sortMode === 'DEFAULT' ? 'bg-zinc-800 text-white' : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-900'}`}
+                  title={t('sort_default', lang)}
                  >
-                   <ChevronLeft size={16} />
+                   <ListFilter size={14} />
                  </button>
                  <button 
-                   onClick={() => setCurrentMonth(new Date())}
-                   className="w-16 py-1 text-xs font-medium text-zinc-300 hover:text-white whitespace-nowrap"
-                 >
-                   {t('today', lang)}
-                 </button>
-                 <button 
-                   onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                   className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-                 >
-                   <ChevronRight size={16} />
-                 </button>
-               </div>
-
-               <div className="h-6 w-px bg-zinc-800/50 mx-2"></div>
-
-                {/* Undo Button */}
-                <button
-                   onClick={handleUndo}
-                   disabled={history.length === 0}
-                   className={`
-                     flex items-center gap-2 px-3 py-1.5 rounded-md border transition-all
-                     ${history.length > 0
-                        ? 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 cursor-pointer shadow-sm'
-                        : 'bg-transparent border-transparent text-zinc-700 cursor-default opacity-50'
-                     }
-                   `}
-                   title={`${t('undo', lang)} (Ctrl+Z)`}
-                >
-                   <Undo2 size={16} />
-                </button>
-
-                {/* Trash Drop Zone */}
-                <TrashDropZone activeDragId={activeDragId} lang={lang} />
-             </div>
-
-             {/* Right: Low-key Logo */}
-             <div className="flex items-center gap-3">
-               <div className="text-right">
-                <h1 className="text-xs font-bold tracking-tight text-zinc-300 uppercase">Creator Sync</h1>
-                <p className="text-[10px] text-zinc-600 font-medium">Pro Scheduler</p>
-               </div>
-               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 shadow-inner">
-                 <Layers size={16} />
-               </div>
-             </div>
-          </div>
-
-          {/* Calendar Grid Container */}
-          <div className="flex-1 px-8 pb-8 overflow-hidden flex flex-col">
-            
-            {/* Day Headers */}
-            <div className="grid grid-cols-7 mb-2">
-              {weekDays.map(day => (
-                <div key={day} className="text-center text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* The Grid */}
-            <div className="flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-800 shadow-2xl">
-               <div className="grid grid-cols-7 gap-px bg-zinc-800 h-full min-h-[500px]">
-                {calendarDays.map((day) => {
-                  const dateStr = format(day, 'yyyy-MM-dd');
-                  const dayItems = schedule.filter(s => s.date === dateStr);
-                  return (
-                    <CalendarCell 
-                      key={day.toISOString()} 
-                      date={day} 
-                      items={dayItems} 
-                      projects={projects}
-                      categoryConfig={categoryConfig}
-                      highlightedProjectId={highlightedProjectId}
-                      onItemClick={handleScheduleItemClick}
-                      onRemoveItem={handleRemoveScheduleItem}
-                    />
-                  );
-                })}
-               </div>
-            </div>
-          </div>
-        </main>
-
-        <DragOverlay>
-          {activeDragId ? (
-            activeDragData?.type === 'PROJECT_SOURCE' ? (
-              <div className="w-[300px]">
-                 <ProjectCard 
-                  project={getActiveOverlayProject()!} 
-                  categoryConfig={categoryConfig} 
-                  isOverlay 
-                  appSettings={appSettings} 
-                 />
-              </div>
-            ) : (
-               <div className="w-auto">
-                 <DraggableScheduleItem 
-                   item={getActiveOverlayScheduleItem()!} 
-                   project={getActiveOverlayProject()!} 
-                   categoryConfig={categoryConfig}
-                   isOverlay
-                 />
-               </div>
-            )
-          ) : null}
-        </DragOverlay>
-
-        {/* Separated Modals */}
-        <ProjectFormModal 
-          isOpen={isModalOpen}
-          onClose={() => { setIsModalOpen(false); setEditingProjectId(null); }}
-          onSave={handleSaveProject}
-          onDelete={editingProjectId ? handleDeleteProject : undefined}
-          editingProject={editingProjectId ? projects.find(p => p.id === editingProjectId) : null}
-          categoryConfig={categoryConfig}
-          lang={lang}
-        />
-
-        <SettingsModal 
-          isOpen={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
-          categoryConfig={categoryConfig}
-          onUpdateCategory={setCategoryConfig}
-          onExportData={handleExportData}
-          onImportData={handleImportData}
-          appSettings={appSettings}
-          onUpdateAppSettings={setAppSettings}
-        />
-
-        <HelpModal 
-          isOpen={isHelpModalOpen}
-          onClose={() => setIsHelpModalOpen(false)}
-          lang={lang}
-        />
-
-      </div>
-    </DndContext>
-  );
-}
+                  onClick={() => setSortMode('ALPHA')}
+                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-colors ${sortMode === 'ALPHA' ? 'bg-zinc-800 text-white' : 'text-zinc-600
