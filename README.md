@@ -3,7 +3,7 @@
 
 **Creator Sync** is a specialized project management and content scheduling tool designed for Patreon creators, YouTubers, and digital artists. It bridges the gap between project planning and release scheduling with a drag-and-drop interface.
 
-![App Screenshot](https://via.placeholder.com/1200x600?text=Creator+Sync+Dashboard+Preview)
+![App Screenshot](https://upload.cc/i1/2025/11/30/XGaPS0.jpg)
 
 ## 🚀 Key Features
 

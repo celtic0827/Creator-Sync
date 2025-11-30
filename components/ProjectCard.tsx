@@ -3,7 +3,7 @@ import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig } from '../types';
 import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { DynamicIcon } from './IconUtils';
 
 interface ProjectCardProps {
@@ -149,7 +149,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
              title="Jump to date in calendar"
            >
              <CalendarCheck2 size={12} />
-             <span className="text-[10px] font-semibold">{format(parseISO(scheduledDate), 'MMM d')}</span>
+             <span className="text-[10px] font-semibold">
+               {/* Append time to ensure local date parsing */}
+               {format(new Date(scheduledDate + 'T00:00:00'), 'MMM d')}
+             </span>
            </button>
         ) : (
           <div className="text-zinc-700 group-hover:text-zinc-400 transition-colors">

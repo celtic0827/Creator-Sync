@@ -13,16 +13,11 @@ import {
 } from '@dnd-kit/core';
 import { 
   format, 
-  startOfMonth, 
   endOfMonth, 
   eachDayOfInterval, 
-  startOfWeek, 
   endOfWeek, 
   addMonths, 
-  subMonths, 
-  isBefore,
-  startOfToday,
-  parseISO
+  isBefore
 } from 'date-fns';
 import { 
   Plus, 
@@ -33,28 +28,40 @@ import {
   Archive,
   Layers,
   Inbox,
-  X,
-  Check,
   Settings,
-  Edit2,
-  Tag,
-  AlertTriangle,
   CircleHelp,
-  BookOpen,
-  MousePointer2,
-  Calendar,
-  Database,
-  Download,
-  Upload,
-  Undo2,
-  ShieldCheck
+  Undo2
 } from 'lucide-react';
 
-import { Project, ProjectStatus, ScheduleItem, DragData, ProjectType, CategoryConfig, CategoryDefinition } from './types';
+import { Project, ProjectStatus, ScheduleItem, DragData, CategoryConfig, CategoryDefinition } from './types';
 import { ProjectCard } from './components/ProjectCard';
 import { CalendarCell } from './components/CalendarCell';
 import { DraggableScheduleItem } from './components/DraggableScheduleItem';
-import { DynamicIcon, ICON_MAP, COLOR_PALETTE } from './components/IconUtils';
+import { ProjectFormModal } from './components/modals/ProjectFormModal';
+import { SettingsModal } from './components/modals/SettingsModal';
+import { HelpModal } from './components/modals/HelpModal';
+
+// Helpers to replace missing date-fns imports
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+const subMonths = (date: Date, amount: number) => addMonths(date, -amount);
+const startOfWeek = (date: Date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day;
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+const parseISO = (str: string) => {
+  // Ensure local time parsing for YYYY-MM-DD
+  if (str.length === 10) return new Date(str + 'T00:00:00');
+  return new Date(str);
+};
 
 // Default Category Configuration
 const DEFAULT_CATEGORY_CONFIG: CategoryConfig = {
@@ -216,23 +223,7 @@ export default function App() {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-  const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
   
-  const [newProjectForm, setNewProjectForm] = useState({
-    name: '',
-    description: '',
-    tagsString: '',
-    type: 'VIDEO' as ProjectType,
-    status: ProjectStatus.PLANNING
-  });
-
-  // Settings / Config Editor State
-  const [activeSettingsTab, setActiveSettingsTab] = useState<string>('VIDEO'); // Can be a ProjectType or 'DATA'
-  const [editCategoryForm, setEditCategoryForm] = useState<CategoryDefinition>({ label: '', color: '', iconKey: '' });
-  
-  // Safe accessor to avoid 'unknown' type errors if inference fails
-  const safeEditCategoryForm = editCategoryForm as CategoryDefinition;
-
   // DnD Sensors
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -466,39 +457,22 @@ export default function App() {
 
   const openCreateModal = () => {
     setEditingProjectId(null);
-    setIsDeleteConfirming(false);
-    setNewProjectForm({
-      name: '',
-      description: '',
-      tagsString: '',
-      type: 'VIDEO',
-      status: ProjectStatus.PLANNING
-    });
     setIsModalOpen(true);
   };
 
   const handleEditProject = (project: Project) => {
     setEditingProjectId(project.id);
-    setIsDeleteConfirming(false);
-    setNewProjectForm({
-      name: project.name,
-      description: project.description,
-      tagsString: project.tags.join(', '),
-      type: project.type,
-      status: project.status
-    });
     setIsModalOpen(true);
   };
 
   const handleDeleteProject = () => {
     if (!editingProjectId) return;
     saveHistory(); // Save before delete
-    // Direct delete - confirmation handled by UI state
+    // Direct delete - confirmation handled by UI state in Modal
     setSchedule(prev => prev.filter(s => s.projectId !== editingProjectId));
     setProjects(prev => prev.filter(p => p.id !== editingProjectId));
     setIsModalOpen(false);
     setEditingProjectId(null);
-    setIsDeleteConfirming(false);
   };
 
   const handleToggleArchive = (project: Project) => {
@@ -511,62 +485,35 @@ export default function App() {
     ));
   };
 
-  const handleSaveProject = () => {
-    if (!newProjectForm.name) return;
+  const handleSaveProject = (formData: Partial<Project>) => {
     saveHistory(); // Save before creating/updating
     
-    const config = categoryConfig[newProjectForm.type];
+    const projectType = formData.type || 'VIDEO';
+    const config = categoryConfig[projectType];
     
-    // Parse tags
-    const tags = newProjectForm.tagsString
-      .split(',')
-      .map(t => t.trim())
-      .filter(t => t.length > 0);
-
     if (editingProjectId) {
       // Update existing project
       setProjects(prev => prev.map(p => p.id === editingProjectId ? {
         ...p,
-        name: newProjectForm.name,
-        description: newProjectForm.description,
-        tags: tags,
-        status: newProjectForm.status as ProjectStatus,
-        type: newProjectForm.type,
+        ...formData,
         color: config.color // Update color just in case (though mostly derived)
-      } : p));
+      } as Project : p));
     } else {
       // Create new project
       const newProject: Project = {
         id: crypto.randomUUID(),
-        name: newProjectForm.name,
-        description: newProjectForm.description,
-        tags: tags,
-        status: newProjectForm.status as ProjectStatus,
-        type: newProjectForm.type,
+        name: formData.name || 'Untitled',
+        description: formData.description || '',
+        tags: formData.tags || [],
+        status: formData.status || ProjectStatus.PLANNING,
+        type: projectType,
         color: config.color
       };
       setProjects(prev => [...prev, newProject]);
     }
 
-    setNewProjectForm({ name: '', description: '', tagsString: '', type: 'VIDEO', status: ProjectStatus.PLANNING });
     setIsModalOpen(false);
     setEditingProjectId(null);
-  };
-
-  const handleSettingsTabChange = (key: string) => {
-    setActiveSettingsTab(key);
-    if (key !== 'DATA') {
-       setEditCategoryForm(categoryConfig[key as ProjectType]);
-    }
-  };
-
-  const handleSaveCategory = () => {
-    if (activeSettingsTab && activeSettingsTab !== 'DATA') {
-      setCategoryConfig(prev => ({
-        ...prev,
-        [activeSettingsTab]: safeEditCategoryForm
-      }));
-    }
   };
 
   const getActiveOverlayProject = () => {
@@ -712,10 +659,7 @@ export default function App() {
           {/* Sidebar Footer */}
           <div className="p-3 border-t border-white/5 bg-zinc-950 flex items-center gap-2">
              <button 
-               onClick={() => {
-                 setIsSettingsModalOpen(true);
-                 handleSettingsTabChange('VIDEO'); // Default to first category
-               }}
+               onClick={() => setIsSettingsModalOpen(true)}
                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 rounded-md transition-colors"
                title="App Settings & Configuration"
              >
@@ -855,507 +799,29 @@ export default function App() {
           ) : null}
         </DragOverlay>
 
-        {/* Create/Edit Project Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between border-b border-zinc-800 p-4">
-                <h3 className="text-sm font-semibold text-white">
-                  {editingProjectId ? 'Edit Project' : 'Create New Project'}
-                </h3>
-                <button onClick={() => setIsModalOpen(false)} className="rounded-md p-1 text-zinc-500 hover:bg-zinc-800 hover:text-white">
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="p-4 space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-zinc-400">Project Name</label>
-                  <input 
-                    type="text" 
-                    value={newProjectForm.name}
-                    onChange={e => setNewProjectForm(prev => ({...prev, name: e.target.value}))}
-                    placeholder="e.g. New Content Pack"
-                    className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white placeholder-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    autoFocus
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-zinc-400">Description</label>
-                  <input 
-                    type="text" 
-                    value={newProjectForm.description}
-                    onChange={e => setNewProjectForm(prev => ({...prev, description: e.target.value}))}
-                    placeholder="Short details..."
-                    className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white placeholder-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                   <div className="flex justify-between items-center">
-                      <label className="text-[11px] font-medium text-zinc-400">Tags</label>
-                      <span className="text-[9px] text-zinc-600">Comma separated</span>
-                   </div>
-                   <div className="relative">
-                      <Tag size={12} className="absolute left-3 top-2.5 text-zinc-600" />
-                      <input 
-                        type="text" 
-                        value={newProjectForm.tagsString}
-                        onChange={e => setNewProjectForm(prev => ({...prev, tagsString: e.target.value}))}
-                        placeholder="e.g. NSFW, Bonus, Draft"
-                        className="w-full rounded-md border border-zinc-700 bg-zinc-950 pl-8 pr-3 py-2 text-xs text-white placeholder-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      />
-                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-zinc-400">Category Type</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {Object.entries(categoryConfig).map(([key, config]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setNewProjectForm(prev => ({...prev, type: key as ProjectType}))}
-                        className={`
-                          flex flex-col items-center justify-center gap-1.5 p-2 rounded-lg border text-xs transition-all
-                          ${newProjectForm.type === key 
-                            ? 'bg-zinc-800 border-indigo-500 text-white shadow-md' 
-                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-                          }
-                        `}
-                      >
-                         <div className={`${config.color} p-1 rounded-full text-white/90`}>
-                           <DynamicIcon iconKey={config.iconKey} className="w-4 h-4" />
-                         </div>
-                         <span className="scale-90 truncate w-full text-center">{config.label.split(' / ')[0]}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-zinc-400">Status</label>
-                  <select 
-                     value={newProjectForm.status}
-                     onChange={e => setNewProjectForm(prev => ({...prev, status: e.target.value as ProjectStatus}))}
-                     className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 appearance-none"
-                  >
-                     {Object.values(ProjectStatus).map(s => (
-                       <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                     ))}
-                  </select>
-                </div>
-              </div>
-              <div className="flex items-center justify-between border-t border-zinc-800 bg-zinc-900/50 p-4">
-                 {editingProjectId ? (
-                    isDeleteConfirming ? (
-                        <div className="flex items-center gap-2 mr-auto bg-red-950/30 px-2 py-1 rounded border border-red-900/50">
-                            <AlertTriangle size={12} className="text-red-400" />
-                            <span className="text-[10px] text-red-200 font-medium">Really Delete?</span>
-                            <div className="flex gap-1 ml-1">
-                                <button 
-                                  onClick={handleDeleteProject}
-                                  className="text-white bg-red-600 hover:bg-red-700 px-2 py-0.5 rounded text-[10px] font-bold"
-                                >
-                                    YES
-                                </button>
-                                <button 
-                                  onClick={() => setIsDeleteConfirming(false)}
-                                  className="text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2 py-0.5 rounded text-[10px]"
-                                >
-                                    NO
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <button 
-                          type="button"
-                          onClick={() => setIsDeleteConfirming(true)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-950/50 p-1.5 rounded transition-colors group"
-                          title="Delete Project"
-                        >
-                           <Trash2 size={16} className="group-hover:scale-110 transition-transform" />
-                        </button>
-                    )
-                 ) : (
-                    <div></div> // Spacer
-                 )}
+        {/* Separated Modals */}
+        <ProjectFormModal 
+          isOpen={isModalOpen}
+          onClose={() => { setIsModalOpen(false); setEditingProjectId(null); }}
+          onSave={handleSaveProject}
+          onDelete={editingProjectId ? handleDeleteProject : undefined}
+          editingProject={editingProjectId ? projects.find(p => p.id === editingProjectId) : null}
+          categoryConfig={categoryConfig}
+        />
 
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setIsModalOpen(false)} className="rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-800 hover:text-white">Cancel</button>
-                  <button 
-                    onClick={handleSaveProject}
-                    disabled={!newProjectForm.name}
-                    className="flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Check size={14} /> {editingProjectId ? 'Save Changes' : 'Create'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <SettingsModal 
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          categoryConfig={categoryConfig}
+          onUpdateCategory={setCategoryConfig}
+          onExportData={handleExportData}
+          onImportData={handleImportData}
+        />
 
-        {/* Settings Modal (Unified Catalogue & Data Backup) */}
-        {isSettingsModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-             <div className="w-full max-w-3xl h-auto rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl flex overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                
-                {/* Left: Navigation Sidebar */}
-                <div className="w-56 border-r border-zinc-800 bg-zinc-900/50 flex flex-col">
-                   <div className="p-4 border-b border-zinc-800">
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <Settings size={16} /> Settings
-                      </h3>
-                   </div>
-                   <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar min-h-[350px]">
-                      
-                      {/* System Section */}
-                      <div className="px-2 py-2">
-                        <div className="text-[10px] font-bold text-zinc-500 px-2 mb-1 uppercase tracking-wider">System</div>
-                        <button 
-                          onClick={() => handleSettingsTabChange('DATA')}
-                          className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
-                            activeSettingsTab === 'DATA' 
-                              ? 'bg-zinc-800 border border-zinc-700 shadow-sm text-white' 
-                              : 'hover:bg-zinc-900 border border-transparent text-zinc-400 hover:text-white'
-                          }`}
-                        >
-                           <Database size={14} />
-                           <div className="text-xs font-semibold">Data Backup</div>
-                        </button>
-                      </div>
-
-                      {/* Catalogue Section */}
-                      <div className="px-2 pb-2">
-                        <div className="text-[10px] font-bold text-zinc-500 px-2 mb-1 mt-2 uppercase tracking-wider">Catalogue</div>
-                        {Object.entries(categoryConfig).map(([key, config]) => (
-                           <button
-                             key={key}
-                             onClick={() => handleSettingsTabChange(key as ProjectType)}
-                             className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
-                               activeSettingsTab === key 
-                                 ? 'bg-zinc-800 border border-zinc-700 shadow-sm' 
-                                 : 'hover:bg-zinc-900 border border-transparent'
-                             }`}
-                           >
-                              <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${config.color}`}>
-                                 <DynamicIcon iconKey={config.iconKey} className="text-white w-3 h-3" />
-                              </div>
-                              <div className="text-left flex-1 min-w-0">
-                                 <div className="text-xs font-semibold text-zinc-200 truncate">{config.label}</div>
-                              </div>
-                           </button>
-                        ))}
-                      </div>
-                   </div>
-                   <div className="p-3 border-t border-zinc-800">
-                      <button onClick={() => setIsSettingsModalOpen(false)} className="w-full py-1.5 text-xs text-zinc-400 hover:text-white border border-zinc-700 rounded hover:bg-zinc-800">
-                         Close
-                      </button>
-                   </div>
-                </div>
-
-                {/* Right: Content Area */}
-                <div className="flex-1 bg-zinc-950 flex flex-col p-5">
-                   {activeSettingsTab === 'DATA' ? (
-                      // Data Management View
-                      <div className="flex flex-col h-full">
-                         <div className="pb-4 border-b border-zinc-800 mb-6">
-                            <h2 className="text-sm font-bold text-white uppercase tracking-wide">Data Management</h2>
-                            <p className="text-xs text-zinc-500 mt-1">Export your data for backup or transfer to another device.</p>
-                         </div>
-                         
-                         <div className="grid grid-cols-2 gap-4">
-                            {/* Export Card */}
-                            <div className="p-4 rounded-lg border border-zinc-800 bg-zinc-900/30 hover:border-zinc-700 transition-colors flex flex-col gap-3">
-                               <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-                                  {/* Upload Icon for Export (Sending Out) */}
-                                  <Upload size={20} />
-                               </div>
-                               <div>
-                                  <h4 className="text-sm font-semibold text-zinc-200">Export JSON</h4>
-                                  <p className="text-[11px] text-zinc-500 mt-1 leading-snug">
-                                    Download a complete backup of projects, schedule, and settings.
-                                  </p>
-                               </div>
-                               <button 
-                                 onClick={handleExportData}
-                                 className="mt-auto w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded border border-zinc-700"
-                               >
-                                  Download Backup
-                               </button>
-                            </div>
-
-                            {/* Import Card */}
-                            <div className="p-4 rounded-lg border border-zinc-800 bg-zinc-900/30 hover:border-zinc-700 transition-colors flex flex-col gap-3">
-                               <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                                   {/* Download Icon for Import (Bringing In) */}
-                                  <Download size={20} />
-                               </div>
-                               <div>
-                                  <h4 className="text-sm font-semibold text-zinc-200">Import JSON</h4>
-                                  <p className="text-[11px] text-zinc-500 mt-1 leading-snug">
-                                    Restore from a backup file. <span className="text-red-400">Warning: Overwrites current data.</span>
-                                  </p>
-                               </div>
-                               <label className="mt-auto w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded border border-zinc-700 text-center cursor-pointer">
-                                  <input type="file" accept=".json" onChange={handleImportData} className="hidden" />
-                                  Select File to Restore
-                               </label>
-                            </div>
-                         </div>
-                      </div>
-                   ) : activeSettingsTab ? (
-                      // Catalogue Editor View
-                      <div className="flex flex-col h-full gap-4">
-                         
-                         {/* Header: Title & Save */}
-                         <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                            <div>
-                               <h2 className="text-sm font-bold text-white uppercase tracking-wide">{activeSettingsTab} Config</h2>
-                            </div>
-                            <button 
-                              onClick={handleSaveCategory}
-                              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
-                            >
-                              <Check size={14} /> Save
-                            </button>
-                         </div>
-                         
-                         {/* Row 1: Name Input & Preview */}
-                         <div className="flex gap-4">
-                            <div className="flex-1 space-y-1">
-                               <label className="text-[10px] font-bold text-zinc-500 uppercase">Label Name</label>
-                               <input 
-                                 type="text" 
-                                 value={safeEditCategoryForm.label}
-                                 onChange={(e) => setEditCategoryForm(prev => ({...prev, label: e.target.value}))}
-                                 className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-white focus:ring-1 focus:ring-indigo-500 outline-none"
-                               />
-                            </div>
-                            <div className="space-y-1">
-                               <label className="text-[10px] font-bold text-zinc-500 uppercase">Preview</label>
-                               <div className="flex items-center gap-2 px-3 py-1.5 h-[38px] rounded border border-zinc-800 bg-zinc-900/50">
-                                  <div className={`w-5 h-5 rounded flex items-center justify-center ${safeEditCategoryForm.color}`}>
-                                    <DynamicIcon iconKey={safeEditCategoryForm.iconKey} className="text-white w-3 h-3" />
-                                  </div>
-                                  <span className="text-xs font-medium text-white max-w-[100px] truncate">{safeEditCategoryForm.label}</span>
-                               </div>
-                            </div>
-                         </div>
-
-                         {/* Row 2: Color Palette (Updated to 12 cols x 2 rows) */}
-                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-zinc-500 uppercase">Color Theme (Bright / Dark)</label>
-                            <div className="grid grid-cols-12 gap-1.5">
-                               {COLOR_PALETTE.map(color => (
-                                  <button
-                                    key={color}
-                                    onClick={() => setEditCategoryForm(prev => ({...prev, color}))}
-                                    className={`w-6 h-6 rounded-full transition-transform ${color} ${
-                                       safeEditCategoryForm.color === color ? 'ring-2 ring-white ring-offset-1 ring-offset-zinc-950 scale-110' : 'opacity-70 hover:opacity-100 hover:scale-105'
-                                    }`}
-                                  />
-                               ))}
-                            </div>
-                         </div>
-
-                         {/* Row 3: Icon Grid (Updated to 9 cols x 3 rows with double vertical gap) */}
-                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-zinc-500 uppercase">Icon Symbol</label>
-                            <div className="grid grid-cols-9 gap-x-1.5 gap-y-3">
-                               {Object.keys(ICON_MAP).map(iconKey => (
-                                  <button
-                                    key={iconKey}
-                                    onClick={() => setEditCategoryForm(prev => ({...prev, iconKey}))}
-                                    className={`aspect-square w-9 rounded flex items-center justify-center transition-all ${
-                                       safeEditCategoryForm.iconKey === iconKey 
-                                         ? 'bg-zinc-800 text-white ring-1 ring-indigo-500' 
-                                         : 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200'
-                                    }`}
-                                    title={iconKey}
-                                  >
-                                     <DynamicIcon iconKey={iconKey} className="w-4 h-4" />
-                                  </button>
-                               ))}
-                            </div>
-                         </div>
-
-                      </div>
-                   ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-zinc-600">
-                         <Edit2 size={32} className="mb-2 opacity-20" />
-                         <p className="text-xs">Select a category to edit</p>
-                      </div>
-                   )}
-                </div>
-             </div>
-          </div>
-        )}
-
-        {/* Help Guide Modal */}
-        {isHelpModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-             <div className="w-full max-w-4xl max-h-[85vh] rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-zinc-800 p-5 bg-zinc-900/30">
-                   <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
-                         <BookOpen size={20} />
-                      </div>
-                      <div>
-                         <h2 className="text-lg font-bold text-white tracking-tight">Creator Sync Guide</h2>
-                         <p className="text-xs text-zinc-500">Mastering your production pipeline</p>
-                      </div>
-                   </div>
-                   <button 
-                     onClick={() => setIsHelpModalOpen(false)} 
-                     className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-white transition-colors"
-                   >
-                     <X size={20} />
-                   </button>
-                </div>
-
-                {/* Content - Scrollable */}
-                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                      
-                      {/* Section 1: Concept */}
-                      <section className="space-y-3">
-                         <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                           <Layers size={14} className="text-indigo-500" /> Core Workflow
-                         </h3>
-                         <div className="prose prose-sm prose-invert text-zinc-400 text-xs leading-relaxed space-y-2">
-                            <p>
-                               Creator Sync connects your <strong>Project Pipeline</strong> (Sidebar) with your <strong>Release Schedule</strong> (Calendar).
-                            </p>
-                            <ul className="list-disc pl-4 space-y-1">
-                               <li>
-                                  <strong className="text-zinc-300">Left Sidebar:</strong> Your backlog. Create projects here. They move through <em>Planning</em> → <em>In Progress</em> → <em>Completed</em>.
-                               </li>
-                               <li>
-                                  <strong className="text-zinc-300">Calendar:</strong> Your release dates. Drag projects from the sidebar onto a date to schedule them.
-                               </li>
-                               <li>
-                                  <strong className="text-zinc-300">Drag & Drop:</strong> Everything is movable. Drag sidebar items to change status. Drag calendar items to reschedule.
-                               </li>
-                            </ul>
-                         </div>
-                      </section>
-
-                      {/* Section 2: Scheduling */}
-                      <section className="space-y-3">
-                         <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                           <Calendar size={14} className="text-emerald-500" /> Scheduling & Navigation
-                         </h3>
-                         <div className="prose prose-sm prose-invert text-zinc-400 text-xs leading-relaxed space-y-2">
-                            <p>
-                               Once a project is on the calendar, it is considered "Scheduled".
-                            </p>
-                            <ul className="list-disc pl-4 space-y-1">
-                               <li>
-                                  <span className="text-zinc-300">Jump to Date:</span> Click the small date button on a sidebar card to jump to its month in the calendar.
-                               </li>
-                               <li>
-                                  <span className="text-zinc-300">Locate Project:</span> Click any item on the calendar grid to auto-scroll the sidebar to the original project card.
-                               </li>
-                               <li>
-                                  <span className="text-zinc-300">Remove Schedule:</span> Hover over a calendar item and click the <X size={10} className="inline" /> button, or drag it to the Trash at the top. This removes the date but keeps the project.
-                               </li>
-                            </ul>
-                         </div>
-                      </section>
-
-                      {/* Section 3: Statuses */}
-                      <section className="space-y-3">
-                         <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                           <ListTodo size={14} className="text-amber-500" /> Project Statuses
-                         </h3>
-                         <div className="space-y-3">
-                            <div className="flex gap-3">
-                               <div className="w-16 shrink-0 text-[10px] font-bold text-zinc-500 text-right mt-0.5">PLANNING</div>
-                               <p className="text-xs text-zinc-400">Ideas, concepts, and drafts. Not yet in full production.</p>
-                            </div>
-                            <div className="flex gap-3">
-                               <div className="w-16 shrink-0 text-[10px] font-bold text-zinc-300 text-right mt-0.5">IN PROGRESS</div>
-                               <p className="text-xs text-zinc-400">Active work. Most of your daily focus should be here.</p>
-                            </div>
-                            <div className="flex gap-3">
-                               <div className="w-16 shrink-0 text-[10px] font-bold text-emerald-500 text-right mt-0.5">COMPLETED</div>
-                               <p className="text-xs text-zinc-400">Production finished, ready for release. Waiting to be scheduled.</p>
-                            </div>
-                            <div className="flex gap-3">
-                               <div className="w-16 shrink-0 text-[10px] font-bold text-zinc-600 text-right mt-0.5">PAUSED</div>
-                               <p className="text-xs text-zinc-400">On hold indefinitely.</p>
-                            </div>
-                         </div>
-                      </section>
-
-                      {/* Section 4: Archiving */}
-                      <section className="space-y-3">
-                         <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                           <Archive size={14} className="text-violet-500" /> Published vs. Archive
-                         </h3>
-                         <div className="prose prose-sm prose-invert text-zinc-400 text-xs leading-relaxed space-y-2">
-                            <p>
-                               To keep your Pipeline clean, use the tabs at the top of the sidebar.
-                            </p>
-                            <ul className="list-disc pl-4 space-y-1">
-                               <li>
-                                  <strong className="text-zinc-300">Pipeline Tab:</strong> Shows active and upcoming work.
-                               </li>
-                               <li>
-                                  <strong className="text-zinc-300">Published Tab:</strong> Automatically holds projects that were scheduled in the past.
-                               </li>
-                               <li>
-                                  <strong className="text-zinc-300">Archive Button <Archive size={10} className="inline text-zinc-500" />:</strong> On any card, click the archive box icon to manually force a project into the Published tab (e.g., if you cancelled it or finished it without scheduling).
-                               </li>
-                            </ul>
-                         </div>
-                      </section>
-
-                      {/* Section 5: Deletion */}
-                      <section className="space-y-3 border-t border-zinc-800 pt-6 mt-2">
-                         <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                           <Trash2 size={14} className="text-red-500" /> Trash & Deletion
-                         </h3>
-                         <div className="flex items-start gap-4 bg-red-950/10 border border-red-900/20 p-4 rounded-lg">
-                            <AlertTriangle size={20} className="text-red-400 shrink-0 mt-0.5" />
-                            <div className="text-xs text-zinc-400 space-y-1">
-                               <p><strong className="text-red-300">Dragging to Trash:</strong> Dragging a <em>Calendar Item</em> to the top trash bin removes the date. Dragging a <em>Sidebar Project</em> to the trash bin deletes the project entirely.</p>
-                               <p>You can also delete projects via the <Edit2 size={10} className="inline" /> Edit menu.</p>
-                            </div>
-                         </div>
-                      </section>
-
-                      {/* Section 6: Data & Safety */}
-                      <section className="space-y-3 border-t border-zinc-800 pt-6 mt-2">
-                         <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                           <ShieldCheck size={14} className="text-blue-500" /> Data & Safety
-                         </h3>
-                         <div className="prose prose-sm prose-invert text-zinc-400 text-xs leading-relaxed space-y-2">
-                            <ul className="list-disc pl-4 space-y-1">
-                               <li>
-                                  <strong className="text-zinc-300">Undo Action <Undo2 size={10} className="inline"/>:</strong> Made a mistake? Press <code>Ctrl+Z</code> or click the Undo arrow in the top toolbar to revert your last action (Drag, Delete, Edit).
-                               </li>
-                               <li>
-                                  <strong className="text-zinc-300">Backup & Restore:</strong> Go to <em>Settings <Settings size={10} className="inline"/></em> → <em>Data Backup</em> to export your entire workspace to a JSON file. Use this to move data between devices.
-                               </li>
-                            </ul>
-                         </div>
-                      </section>
-                   </div>
-                </div>
-
-                {/* Footer */}
-                <div className="p-4 border-t border-zinc-800 bg-zinc-900/50 flex justify-end">
-                   <button 
-                     onClick={() => setIsHelpModalOpen(false)}
-                     className="px-6 py-2 bg-zinc-100 hover:bg-white text-zinc-900 text-xs font-bold rounded-md transition-colors"
-                   >
-                     Got it
-                   </button>
-                </div>
-             </div>
-          </div>
-        )}
+        <HelpModal 
+          isOpen={isHelpModalOpen}
+          onClose={() => setIsHelpModalOpen(false)}
+        />
 
       </div>
     </DndContext>
