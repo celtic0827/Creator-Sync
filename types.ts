@@ -19,8 +19,6 @@ export type CategoryConfig = Record<ProjectType, CategoryDefinition>;
 
 export type Language = 'en' | 'zh-TW';
 
-export type SortMode = 'DEFAULT' | 'ALPHA' | 'CATEGORY' | 'DATE';
-
 export interface AppSettings {
   warningDays: number;
   criticalDays: number;
@@ -52,3 +50,5 @@ export interface DragData {
   scheduleId?: string; // Only if moving an existing schedule item
   originDate?: string; // Only if moving an existing schedule item
 }
+
+export type SortMode = 'DEFAULT' | 'ALPHA' | 'CATEGORY' | 'DATE';

@@ -66,7 +66,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     cat_preview: 'Preview',
     cat_color: 'Color Theme',
     cat_icon: 'Icon Symbol',
-    sort_default: 'Default Order',
+    sort_default: 'Default',
     sort_alpha: 'Name (A-Z)',
     sort_category: 'Category',
     sort_date: 'Scheduled Date',
@@ -123,7 +123,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     cat_icon: '圖示符號',
     sort_default: '預設排序',
     sort_alpha: '名稱 (A-Z)',
-    sort_category: '依類別',
+    sort_category: '類別目錄',
     sort_date: '排程日期',
   }
 };
