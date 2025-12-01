@@ -19,10 +19,17 @@ export type CategoryConfig = Record<ProjectType, CategoryDefinition>;
 
 export type Language = 'en' | 'zh-TW';
 
+export interface StatusDefinition {
+  id: string;
+  label: string;
+}
+
 export interface AppSettings {
   warningDays: number;
   criticalDays: number;
   language: Language;
+  statusMode: 'DEFAULT' | 'CUSTOM';
+  customStatuses: StatusDefinition[];
 }
 
 export interface Project {
@@ -30,7 +37,7 @@ export interface Project {
   name: string;
   description: string;
   tags: string[]; // Sub-category tags
-  status: ProjectStatus;
+  status: string; // Changed from ProjectStatus enum to string to support custom statuses
   type: ProjectType;
   color: string; // Legacy support, generally derived from config now
 }
@@ -49,6 +56,7 @@ export interface DragData {
   projectId: string;
   scheduleId?: string; // Only if moving an existing schedule item
   originDate?: string; // Only if moving an existing schedule item
+  status?: string; // For dropping into status zones
 }
 
 export type SortMode = 'DEFAULT' | 'ALPHA' | 'CATEGORY' | 'DATE';

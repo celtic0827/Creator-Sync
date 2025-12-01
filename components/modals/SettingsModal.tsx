@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe } from 'lucide-react';
-import { ProjectType, CategoryConfig, CategoryDefinition, AppSettings, Language } from '../../types';
+import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, GripVertical } from 'lucide-react';
+import { ProjectType, CategoryConfig, CategoryDefinition, AppSettings, Language, StatusDefinition, ProjectStatus } from '../../types';
 import { DynamicIcon, COLOR_PALETTE, ICON_MAP } from '../IconUtils';
 import { t } from '../../translations';
 
@@ -12,9 +12,17 @@ interface SettingsModalProps {
   onUpdateCategory: (config: CategoryConfig) => void;
   onExportData: () => void;
   onImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  appSettings?: AppSettings;
-  onUpdateAppSettings?: (settings: AppSettings) => void;
+  appSettings: AppSettings;
+  onUpdateAppSettings: (settings: AppSettings) => void;
 }
+
+// Default Status Configuration for Reset
+const DEFAULT_STATUS_DEFS: StatusDefinition[] = [
+  { id: ProjectStatus.PLANNING, label: 'Planning' },
+  { id: ProjectStatus.IN_PROGRESS, label: 'In Progress' },
+  { id: ProjectStatus.COMPLETED, label: 'Completed' },
+  { id: ProjectStatus.PAUSED, label: 'Paused' }
+];
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ 
   isOpen, 
@@ -28,11 +36,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [activeSettingsTab, setActiveSettingsTab] = useState<string>('VIDEO');
   const [editCategoryForm, setEditCategoryForm] = useState<CategoryDefinition>({ label: '', color: '', iconKey: '' });
-  const [prefForm, setPrefForm] = useState<AppSettings>({ warningDays: 7, criticalDays: 3, language: 'en' });
+  const [prefForm, setPrefForm] = useState<AppSettings>(appSettings);
 
   // Reset/Sync form when tab or config changes
   useEffect(() => {
-    if (activeSettingsTab && activeSettingsTab !== 'DATA' && activeSettingsTab !== 'PREFERENCES' && isOpen) {
+    if (activeSettingsTab && !['DATA', 'PREFERENCES', 'PIPELINE'].includes(activeSettingsTab) && isOpen) {
        setEditCategoryForm(categoryConfig[activeSettingsTab as ProjectType]);
     }
   }, [activeSettingsTab, categoryConfig, isOpen]);
@@ -51,7 +59,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [isOpen]);
 
   const handleSaveCategory = () => {
-    if (activeSettingsTab && activeSettingsTab !== 'DATA' && activeSettingsTab !== 'PREFERENCES') {
+    if (activeSettingsTab && !['DATA', 'PREFERENCES', 'PIPELINE'].includes(activeSettingsTab)) {
       const newConfig = {
         ...categoryConfig,
         [activeSettingsTab]: editCategoryForm
@@ -60,11 +68,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const handleSavePreferences = () => {
-    if (onUpdateAppSettings) {
-      onUpdateAppSettings(prefForm);
-      onClose();
-    }
+  const handleSaveAppSettings = () => {
+    onUpdateAppSettings(prefForm);
+    onClose();
+  };
+
+  const handlePipelineAdd = () => {
+    if (prefForm.customStatuses.length >= 8) return;
+    const newStatus: StatusDefinition = {
+      id: `custom-${Date.now()}`,
+      label: 'New Status'
+    };
+    setPrefForm(prev => ({
+      ...prev,
+      customStatuses: [...prev.customStatuses, newStatus]
+    }));
+  };
+
+  const handlePipelineRemove = (index: number) => {
+    if (prefForm.customStatuses.length <= 2) return;
+    setPrefForm(prev => {
+      const newList = [...prev.customStatuses];
+      newList.splice(index, 1);
+      return { ...prev, customStatuses: newList };
+    });
+  };
+
+  const handlePipelineRename = (index: number, newLabel: string) => {
+    setPrefForm(prev => {
+      const newList = [...prev.customStatuses];
+      newList[index] = { ...newList[index], label: newLabel };
+      return { ...prev, customStatuses: newList };
+    });
   };
   
   // Safe accessor to avoid 'unknown' type errors if inference fails
@@ -75,7 +110,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div className="w-full max-w-3xl h-auto rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl flex overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-full max-w-3xl h-[550px] rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl flex overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           
           {/* Left: Navigation Sidebar */}
           <div className="w-56 border-r border-zinc-800 bg-zinc-900/50 flex flex-col">
@@ -84,7 +119,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <Settings size={16} /> {t('settings', lang)}
                 </h3>
               </div>
-              <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar min-h-[350px]">
+              <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
                 
                 {/* System Section */}
                 <div className="px-2 py-2">
@@ -99,6 +134,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   >
                       <Sliders size={14} />
                       <div className="text-xs font-semibold">{t('settings_pref', lang)}</div>
+                  </button>
+                  <button 
+                    onClick={() => setActiveSettingsTab('PIPELINE')}
+                    className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
+                      activeSettingsTab === 'PIPELINE' 
+                        ? 'bg-zinc-800 border border-zinc-700 shadow-sm text-white' 
+                        : 'hover:bg-zinc-900 border border-transparent text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                      <Kanban size={14} />
+                      <div className="text-xs font-semibold">{t('settings_pipeline', lang)}</div>
                   </button>
                   <button 
                     onClick={() => setActiveSettingsTab('DATA')}
@@ -144,7 +190,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* Right: Content Area */}
-          <div className="flex-1 bg-zinc-950 flex flex-col p-5">
+          <div className="flex-1 bg-zinc-950 flex flex-col p-5 overflow-hidden">
               {activeSettingsTab === 'DATA' ? (
                 // Data Management View
                 <div className="flex flex-col h-full">
@@ -157,7 +203,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       {/* Export Card */}
                       <div className="p-4 rounded-lg border border-zinc-800 bg-zinc-900/30 hover:border-zinc-700 transition-colors flex flex-col gap-3">
                           <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-                            {/* Upload Icon for Export (Sending Out) */}
                             <Upload size={20} />
                           </div>
                           <div>
@@ -177,7 +222,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       {/* Import Card */}
                       <div className="p-4 rounded-lg border border-zinc-800 bg-zinc-900/30 hover:border-zinc-700 transition-colors flex flex-col gap-3">
                           <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                              {/* Download Icon for Import (Bringing In) */}
                             <Download size={20} />
                           </div>
                           <div>
@@ -193,6 +237,109 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </div>
                     </div>
                 </div>
+              ) : activeSettingsTab === 'PIPELINE' ? (
+                 // Pipeline Settings View
+                 <div className="flex flex-col h-full gap-4">
+                    <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                      <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t('settings_pipeline', lang)}</h2>
+                      <button 
+                        onClick={handleSaveAppSettings}
+                        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
+                      >
+                        <Check size={14} /> {t('settings_save', lang)}
+                      </button>
+                    </div>
+
+                    <div className="space-y-4 pt-2 overflow-y-auto custom-scrollbar">
+                       {/* Mode Toggles */}
+                       <div className="flex gap-4">
+                          <button
+                            onClick={() => setPrefForm(prev => ({...prev, statusMode: 'DEFAULT'}))}
+                            className={`flex-1 p-4 rounded-lg border flex flex-col gap-2 items-start transition-all ${
+                              prefForm.statusMode === 'DEFAULT' 
+                                ? 'bg-indigo-500/10 border-indigo-500/50' 
+                                : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 opacity-60 hover:opacity-100'
+                            }`}
+                          >
+                             <div className="flex items-center gap-2 w-full">
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${prefForm.statusMode === 'DEFAULT' ? 'border-indigo-500 bg-indigo-500' : 'border-zinc-600'}`}>
+                                   {prefForm.statusMode === 'DEFAULT' && <Check size={10} className="text-white" />}
+                                </div>
+                                <span className={`text-xs font-bold ${prefForm.statusMode === 'DEFAULT' ? 'text-indigo-200' : 'text-zinc-400'}`}>
+                                  {t('pipeline_mode_default', lang)}
+                                </span>
+                             </div>
+                             <div className="pl-6 text-[10px] text-zinc-500 text-left">
+                               Standard fixed statuses: Planning, In Progress, Completed, Paused.
+                             </div>
+                          </button>
+
+                          <button
+                            onClick={() => setPrefForm(prev => ({...prev, statusMode: 'CUSTOM'}))}
+                            className={`flex-1 p-4 rounded-lg border flex flex-col gap-2 items-start transition-all ${
+                              prefForm.statusMode === 'CUSTOM' 
+                                ? 'bg-indigo-500/10 border-indigo-500/50' 
+                                : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 opacity-60 hover:opacity-100'
+                            }`}
+                          >
+                             <div className="flex items-center gap-2 w-full">
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${prefForm.statusMode === 'CUSTOM' ? 'border-indigo-500 bg-indigo-500' : 'border-zinc-600'}`}>
+                                   {prefForm.statusMode === 'CUSTOM' && <Check size={10} className="text-white" />}
+                                </div>
+                                <span className={`text-xs font-bold ${prefForm.statusMode === 'CUSTOM' ? 'text-indigo-200' : 'text-zinc-400'}`}>
+                                  {t('pipeline_mode_custom', lang)}
+                                </span>
+                             </div>
+                             <div className="pl-6 text-[10px] text-zinc-500 text-left">
+                               Define your own workflow stages (2-8 items).
+                             </div>
+                          </button>
+                       </div>
+
+                       {/* List Editor (Only for Custom) */}
+                       {prefForm.statusMode === 'CUSTOM' && (
+                         <div className="space-y-2 mt-2">
+                            <label className="text-[10px] font-bold text-zinc-500 uppercase flex justify-between">
+                              <span>Custom Statuses ({prefForm.customStatuses.length}/8)</span>
+                              {prefForm.customStatuses.length >= 8 && <span className="text-amber-500">{t('pipeline_max_limit', lang)}</span>}
+                            </label>
+                            
+                            <div className="space-y-2">
+                               {prefForm.customStatuses.map((status, idx) => (
+                                 <div key={status.id} className="flex items-center gap-2 group animate-in slide-in-from-left-2 duration-200">
+                                    <div className="w-6 flex justify-center text-zinc-600 cursor-default">
+                                       <span className="text-[10px] font-mono">{idx + 1}</span>
+                                    </div>
+                                    <input 
+                                      type="text" 
+                                      value={status.label}
+                                      onChange={(e) => handlePipelineRename(idx, e.target.value)}
+                                      placeholder={t('pipeline_placeholder', lang)}
+                                      className="flex-1 bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 outline-none"
+                                    />
+                                    <button 
+                                      onClick={() => handlePipelineRemove(idx)}
+                                      disabled={prefForm.customStatuses.length <= 2}
+                                      className="p-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded disabled:opacity-30 disabled:hover:text-zinc-500 disabled:hover:bg-transparent"
+                                      title="Remove status"
+                                    >
+                                       <Trash2 size={14} />
+                                    </button>
+                                 </div>
+                               ))}
+                            </div>
+
+                            <button
+                              onClick={handlePipelineAdd}
+                              disabled={prefForm.customStatuses.length >= 8}
+                              className="w-full py-2 mt-2 border border-dashed border-zinc-800 rounded-lg text-zinc-500 text-xs font-medium hover:bg-zinc-900 hover:text-zinc-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                               <Plus size={14} /> {t('pipeline_add', lang)}
+                            </button>
+                         </div>
+                       )}
+                    </div>
+                 </div>
               ) : activeSettingsTab === 'PREFERENCES' ? (
                 // Preferences View
                  <div className="flex flex-col h-full gap-4">
@@ -201,7 +348,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t('settings_pref', lang)}</h2>
                       </div>
                       <button 
-                        onClick={handleSavePreferences}
+                        onClick={handleSaveAppSettings}
                         className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
                       >
                         <Check size={14} /> {t('settings_save', lang)}

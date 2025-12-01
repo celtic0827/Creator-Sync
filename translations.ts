@@ -8,12 +8,13 @@ type TranslationKey =
   | 'status_PLANNING' | 'status_IN_PROGRESS' | 'status_COMPLETED' | 'status_PAUSED' | 'status_ARCHIVED'
   | 'modal_createTitle' | 'modal_editTitle' | 'modal_name' | 'modal_desc' | 'modal_tags'
   | 'modal_category' | 'modal_status' | 'modal_delete' | 'modal_reallyDelete' | 'modal_save' | 'modal_cancel'
-  | 'settings_system' | 'settings_catalogue' | 'settings_data' | 'settings_pref'
+  | 'settings_system' | 'settings_catalogue' | 'settings_pipeline' | 'settings_data' | 'settings_pref'
   | 'settings_lang' | 'settings_alerts' | 'settings_export' | 'settings_import'
   | 'settings_export_desc' | 'settings_import_desc' | 'settings_warning' | 'settings_critical'
   | 'settings_close' | 'settings_save'
   | 'cat_label' | 'cat_preview' | 'cat_color' | 'cat_icon'
-  | 'sort_default' | 'sort_alpha' | 'sort_category' | 'sort_date';
+  | 'sort_default' | 'sort_alpha' | 'sort_category' | 'sort_date'
+  | 'pipeline_mode_default' | 'pipeline_mode_custom' | 'pipeline_add' | 'pipeline_max_limit' | 'pipeline_placeholder';
 
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
@@ -50,6 +51,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     modal_cancel: 'Cancel',
     settings_system: 'System',
     settings_catalogue: 'Catalogue',
+    settings_pipeline: 'Pipeline Config',
     settings_data: 'Data Management',
     settings_pref: 'Preferences',
     settings_lang: 'Language / 語言',
@@ -70,6 +72,11 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     sort_alpha: 'Name (A-Z)',
     sort_category: 'Category',
     sort_date: 'Scheduled Date',
+    pipeline_mode_default: 'Default Mode',
+    pipeline_mode_custom: 'Custom Mode',
+    pipeline_add: 'Add Status',
+    pipeline_max_limit: 'Max 8 statuses reached',
+    pipeline_placeholder: 'Status Name',
   },
   'zh-TW': {
     pipeline: '專案管線',
@@ -105,6 +112,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     modal_cancel: '取消',
     settings_system: '系統設定',
     settings_catalogue: '類別目錄',
+    settings_pipeline: '管線設定',
     settings_data: '資料管理',
     settings_pref: '偏好設定',
     settings_lang: '語言 / Language',
@@ -125,6 +133,11 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     sort_alpha: '名稱 (A-Z)',
     sort_category: '類別目錄',
     sort_date: '排程日期',
+    pipeline_mode_default: '預設模式',
+    pipeline_mode_custom: '客製模式',
+    pipeline_add: '新增狀態',
+    pipeline_max_limit: '最多只能有 8 個狀態',
+    pipeline_placeholder: '狀態名稱',
   }
 };
 
@@ -132,6 +145,10 @@ export const t = (key: string, lang: Language): string => {
   return TRANSLATIONS[lang]?.[key] || TRANSLATIONS['en'][key] || key;
 };
 
-export const getStatusText = (status: ProjectStatus, lang: Language): string => {
-  return t(`status_${status}`, lang);
+export const getStatusText = (status: string, lang: Language, defaultLabel?: string): string => {
+  const key = `status_${status}`;
+  const translation = t(key, lang);
+  // If translation missing (key returned) and we have a custom label, use custom label
+  if (translation === key && defaultLabel) return defaultLabel;
+  return translation;
 };

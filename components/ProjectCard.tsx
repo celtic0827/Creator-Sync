@@ -4,7 +4,8 @@ import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
 import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertTriangle, AlertCircle } from 'lucide-react';
 import { format, differenceInCalendarDays } from 'date-fns';
-import { enUS, zhTW } from 'date-fns/locale';
+import enUS from 'date-fns/locale/en-US';
+import zhTW from 'date-fns/locale/zh-TW';
 import { DynamicIcon } from './IconUtils';
 import { t } from '../translations';
 

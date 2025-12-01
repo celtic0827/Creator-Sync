@@ -19,7 +19,8 @@ import {
   addMonths, 
   isBefore
 } from 'date-fns';
-import { enUS, zhTW } from 'date-fns/locale';
+import enUS from 'date-fns/locale/en-US';
+import zhTW from 'date-fns/locale/zh-TW';
 import { 
   Plus, 
   ChevronLeft, 
@@ -38,7 +39,7 @@ import {
   List
 } from 'lucide-react';
 
-import { Project, ProjectStatus, ScheduleItem, DragData, CategoryConfig, CategoryDefinition, AppSettings, Language, SortMode } from './types';
+import { Project, ProjectStatus, ScheduleItem, DragData, CategoryConfig, CategoryDefinition, AppSettings, Language, SortMode, StatusDefinition } from './types';
 import { ProjectCard } from './components/ProjectCard';
 import { CalendarCell } from './components/CalendarCell';
 import { DraggableScheduleItem } from './components/DraggableScheduleItem';
@@ -79,6 +80,14 @@ const DEFAULT_CATEGORY_CONFIG: CategoryConfig = {
   OTHER: { label: 'Other', color: 'bg-pink-900', iconKey: 'Layers' }
 };
 
+// Default Status Configuration
+const DEFAULT_STATUS_DEFS: StatusDefinition[] = [
+  { id: ProjectStatus.PLANNING, label: 'Planning' },
+  { id: ProjectStatus.IN_PROGRESS, label: 'In Progress' },
+  { id: ProjectStatus.COMPLETED, label: 'Completed' },
+  { id: ProjectStatus.PAUSED, label: 'Paused' }
+];
+
 const getDefaultLanguage = (): Language => {
   if (typeof navigator !== 'undefined' && navigator.language) {
     return navigator.language.toLowerCase().includes('zh') ? 'zh-TW' : 'en';
@@ -89,7 +98,9 @@ const getDefaultLanguage = (): Language => {
 const DEFAULT_APP_SETTINGS: AppSettings = {
   warningDays: 7,
   criticalDays: 3,
-  language: getDefaultLanguage()
+  language: getDefaultLanguage(),
+  statusMode: 'DEFAULT',
+  customStatuses: [...DEFAULT_STATUS_DEFS]
 };
 
 // Mock Initial Data (Used as fallback if localStorage is empty)
@@ -185,7 +196,8 @@ export default function App() {
   const [categoryConfig, setCategoryConfig] = useState<CategoryConfig>(() => {
     try {
       const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
-      return savedConfig ? JSON.parse(savedConfig) : DEFAULT_CATEGORY_CONFIG;
+      const parsed = savedConfig ? JSON.parse(savedConfig) : null;
+      return (parsed && typeof parsed === 'object') ? parsed : DEFAULT_CATEGORY_CONFIG;
     } catch {
       return DEFAULT_CATEGORY_CONFIG;
     }
@@ -195,8 +207,10 @@ export default function App() {
     try {
       const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
       const settings = savedSettings ? JSON.parse(savedSettings) : DEFAULT_APP_SETTINGS;
-      // Ensure language is set if loading from old config
+      // Initialize new fields if they don't exist
       if (!settings.language) settings.language = getDefaultLanguage();
+      if (!settings.statusMode) settings.statusMode = 'DEFAULT';
+      if (!settings.customStatuses) settings.customStatuses = [...DEFAULT_STATUS_DEFS];
       return settings;
     } catch {
       return DEFAULT_APP_SETTINGS;
@@ -206,19 +220,37 @@ export default function App() {
   const lang = appSettings.language;
   const dateLocale = lang === 'zh-TW' ? zhTW : enUS;
 
+  // Compute Active Statuses based on Settings
+  const activeStatuses = useMemo(() => {
+    return appSettings.statusMode === 'CUSTOM' 
+      ? appSettings.customStatuses 
+      : DEFAULT_STATUS_DEFS;
+  }, [appSettings.statusMode, appSettings.customStatuses]);
+
   // Initialize State from LocalStorage
   const [projects, setProjects] = useState<Project[]>(() => {
     try {
       const savedProjects = localStorage.getItem(STORAGE_KEY_PROJECTS);
       let parsedProjects: Project[] = savedProjects ? JSON.parse(savedProjects) : INITIAL_PROJECTS;
-      // Auto-update legacy fields
-      parsedProjects = parsedProjects.map(p => ({
-        ...p,
-        tags: p.tags || [], // Ensure tags exist
-        color: categoryConfig[p.type]?.color || categoryConfig.OTHER.color
-      }));
+      
+      if (!Array.isArray(parsedProjects)) return INITIAL_PROJECTS;
+
+      // Auto-update legacy fields with Safe Access
+      parsedProjects = parsedProjects.map(p => {
+        const safeCategoryConfig = categoryConfig || DEFAULT_CATEGORY_CONFIG;
+        const defaultConfig = safeCategoryConfig.OTHER || { color: 'bg-zinc-800', label: 'Other', iconKey: 'Layers' };
+        
+        const typeConfig = p.type ? safeCategoryConfig[p.type] : undefined;
+        
+        return {
+          ...p,
+          tags: Array.isArray(p.tags) ? p.tags : [],
+          color: (typeConfig ? typeConfig.color : null) || defaultConfig.color || 'bg-zinc-800'
+        };
+      });
       return parsedProjects;
-    } catch {
+    } catch (e) {
+      console.error("Failed to load projects", e);
       return INITIAL_PROJECTS;
     }
   });
@@ -252,6 +284,31 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(appSettings));
   }, [appSettings]);
 
+  // Safe Migration: Ensure no projects are stranded in deleted statuses
+  useEffect(() => {
+    if (activeStatuses.length === 0) return;
+    
+    // Valid status IDs
+    const validIds = new Set(activeStatuses.map(s => s.id));
+    // Also consider ARCHIVED valid for storage, even if not in column list
+    validIds.add(ProjectStatus.ARCHIVED);
+
+    // Find orphaned projects
+    const orphanedProjects = projects.filter(p => !validIds.has(p.status));
+
+    if (orphanedProjects.length > 0) {
+      console.log('Migrating orphaned projects:', orphanedProjects.length);
+      const defaultStatusId = activeStatuses[0].id; // Move to first available status (usually Backlog/Planning)
+      
+      setProjects(prev => prev.map(p => {
+        if (!validIds.has(p.status)) {
+           return { ...p, status: defaultStatusId };
+        }
+        return p;
+      }));
+    }
+  }, [activeStatuses, projects]);
+
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const scrollCooldown = useRef(false);
 
@@ -259,7 +316,6 @@ export default function App() {
   const [activeDragData, setActiveDragData] = useState<DragData | null>(null);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('pipeline');
   
-  // Sort Mode State with Persistence
   const [sortMode, setSortMode] = useState<SortMode>(() => {
     try {
       const savedSort = localStorage.getItem(STORAGE_KEY_SORT);
@@ -287,10 +343,8 @@ export default function App() {
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
   );
 
-  // Undo / History Logic
   const saveHistory = useCallback(() => {
     setHistory(prev => {
-      // Limit history to 20 steps
       const newHistory = [...prev, { projects: [...projects], schedule: [...schedule] }];
       return newHistory.slice(-20);
     });
@@ -306,7 +360,6 @@ export default function App() {
     });
   }, []);
 
-  // Keyboard Shortcuts (Ctrl+Z)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -318,26 +371,21 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleUndo]);
 
-  // Calendar Scroll Handling
   const handleCalendarWheel = useCallback((e: React.WheelEvent) => {
-    // Basic debounce to prevent rapid-fire month changes
     if (scrollCooldown.current) return;
 
     if (e.deltaY > 0) {
-       // Scroll Down -> Next Month
        setCurrentMonth(prev => addMonths(prev, 1));
     } else if (e.deltaY < 0) {
-       // Scroll Up -> Prev Month
        setCurrentMonth(prev => subMonths(prev, 1));
     }
 
     scrollCooldown.current = true;
     setTimeout(() => {
         scrollCooldown.current = false;
-    }, 400); // 400ms cooldown for smooth page turning feel
+    }, 400);
   }, []);
 
-  // Calendar Calculations
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
@@ -346,7 +394,6 @@ export default function App() {
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, [currentMonth]);
 
-  // Dynamic Week Days based on Locale
   const weekDays = useMemo(() => {
       const baseDate = startOfWeek(new Date());
       const days = [];
@@ -360,7 +407,6 @@ export default function App() {
 
   const today = startOfToday();
 
-  // Helper Logic
   const isScheduledInPast = (projectId: string) => {
     const item = schedule.find(s => s.projectId === projectId);
     if (!item) return false;
@@ -375,22 +421,24 @@ export default function App() {
   const sortProjects = useCallback((projectsToSort: Project[], mode: SortMode) => {
     return [...projectsToSort].sort((a, b) => {
       switch (mode) {
-        case 'ALPHA':
+        case 'ALPHA': {
           return a.name.localeCompare(b.name);
-        case 'CATEGORY':
+        }
+        case 'CATEGORY': {
           const catA = categoryConfig[a.type]?.label || '';
           const catB = categoryConfig[b.type]?.label || '';
           return catA.localeCompare(catB);
-        case 'DATE':
+        }
+        case 'DATE': {
           const dateA = getProjectScheduledDate(a.id);
           const dateB = getProjectScheduledDate(b.id);
-          // Projects with dates come first, sorted by nearest date
           if (dateA && dateB) return dateA.localeCompare(dateB);
           if (dateA) return -1;
           if (dateB) return 1;
           return 0;
+        }
         default:
-          return 0; // Default order
+          return 0;
       }
     });
   }, [categoryConfig, schedule]);
@@ -406,8 +454,6 @@ export default function App() {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
-    // If ARCHIVED or Scheduled in Past -> Published Tab
-    // Otherwise -> Pipeline Tab
     const isArchived = project.status === ProjectStatus.ARCHIVED;
     const isPast = isScheduledInPast(project.id);
     
@@ -416,7 +462,6 @@ export default function App() {
     setSidebarTab(targetTab);
     setHighlightedProjectId(projectId);
 
-    // Scroll into view (needs a tick for tab switch render)
     setTimeout(() => {
       const el = document.getElementById(`project-card-${projectId}`);
       if (el) {
@@ -427,7 +472,7 @@ export default function App() {
   };
 
   const handleRemoveScheduleItem = (scheduleId: string) => {
-    saveHistory(); // Save before mutate
+    saveHistory();
     setSchedule(prev => prev.filter(s => s.id !== scheduleId));
   };
 
@@ -461,7 +506,7 @@ export default function App() {
         const json = JSON.parse(event.target?.result as string);
         if (json.projects && json.schedule) {
           if (confirm('This will overwrite all current projects and schedule data. Continue?')) {
-             saveHistory(); // Save before overwrite
+             saveHistory();
              setProjects(json.projects);
              setSchedule(json.schedule);
              if (json.categoryConfig) setCategoryConfig(json.categoryConfig);
@@ -480,28 +525,23 @@ export default function App() {
   };
 
   const pipelineProjects = useMemo(() => {
-    // Pipeline: Not scheduled in past AND Not archived
-    // Includes: PLANNING, IN_PROGRESS, COMPLETED, PAUSED
     return projects.filter(p => !isScheduledInPast(p.id) && p.status !== ProjectStatus.ARCHIVED);
   }, [projects, schedule]);
 
   const publishedProjects = useMemo(() => {
-    // Published: Scheduled in past OR Archived
     return projects
       .filter(p => isScheduledInPast(p.id) || p.status === ProjectStatus.ARCHIVED)
       .sort((a, b) => {
-        // Sort: Scheduled items first by date (newest first), then Unscheduled Archives
         const dateA = getProjectScheduledDate(a.id);
         const dateB = getProjectScheduledDate(b.id);
         
         if (dateA && dateB) return dateB.localeCompare(dateA);
         if (dateA) return -1;
         if (dateB) return 1;
-        return 0; // Maintain order
+        return 0;
       });
   }, [projects, schedule]);
 
-  // Drag Handlers
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setActiveDragId(active.id as string);
@@ -515,10 +555,8 @@ export default function App() {
     setActiveDragId(null);
     setActiveDragData(null);
 
-    if (!over) return;
+    if (!over || !data) return;
 
-    // Check if state will actually change before saving history
-    // Simple check: if valid drop, save history
     if (over.id.toString().startsWith('date-') || over.id === 'trash-zone' || over.id.toString().startsWith('status-')) {
        saveHistory();
     }
@@ -544,21 +582,16 @@ export default function App() {
       }
     } else if (over.id === 'trash-zone') {
        if (data.type === 'SCHEDULE_ITEM' && data.scheduleId) {
-          // Case 1: Dragging a Calendar Item -> Remove from Calendar
           setSchedule(prev => prev.filter(item => item.id !== data.scheduleId));
        } else if (data.type === 'PROJECT_SOURCE') {
-          // Case 2: Dragging a Project Card -> Ask to Delete Project
           const project = projects.find(p => p.id === data.projectId);
-          // Note: Browser confirm blocks JS, so history saved above works fine
           if (project && confirm(`Delete project "${project.name}" permanently?`)) {
              setSchedule(prev => prev.filter(s => s.projectId !== data.projectId));
              setProjects(prev => prev.filter(p => p.id !== data.projectId));
-          } else {
-             // If cancelled, undo the history save (optional, but history stack limit handles it)
           }
        }
     } else if (over.id.toString().startsWith('status-')) {
-      const newStatus = over.data.current?.status as ProjectStatus;
+      const newStatus = over.data.current?.status as string;
       if (newStatus && data.projectId) {
         setProjects(prev => prev.map(p => 
           p.id === data.projectId ? { ...p, status: newStatus } : p
@@ -579,8 +612,7 @@ export default function App() {
 
   const handleDeleteProject = () => {
     if (!editingProjectId) return;
-    saveHistory(); // Save before delete
-    // Direct delete - confirmation handled by UI state in Modal
+    saveHistory();
     setSchedule(prev => prev.filter(s => s.projectId !== editingProjectId));
     setProjects(prev => prev.filter(p => p.id !== editingProjectId));
     setIsModalOpen(false);
@@ -588,9 +620,9 @@ export default function App() {
   };
 
   const handleToggleArchive = (project: Project) => {
-    saveHistory(); // Save before archive toggle
+    saveHistory();
     const isArchived = project.status === ProjectStatus.ARCHIVED;
-    const newStatus = isArchived ? ProjectStatus.IN_PROGRESS : ProjectStatus.ARCHIVED;
+    const newStatus = isArchived ? activeStatuses[0].id : ProjectStatus.ARCHIVED;
     
     setProjects(prev => prev.map(p => 
        p.id === project.id ? { ...p, status: newStatus } : p
@@ -598,26 +630,24 @@ export default function App() {
   };
 
   const handleSaveProject = (formData: Partial<Project>) => {
-    saveHistory(); // Save before creating/updating
+    saveHistory();
     
     const projectType = formData.type || 'VIDEO';
     const config = categoryConfig[projectType];
     
     if (editingProjectId) {
-      // Update existing project
       setProjects(prev => prev.map(p => p.id === editingProjectId ? {
         ...p,
         ...formData,
-        color: config.color // Update color just in case (though mostly derived)
+        color: config.color
       } as Project : p));
     } else {
-      // Create new project
       const newProject: Project = {
         id: crypto.randomUUID(),
         name: formData.name || 'Untitled',
         description: formData.description || '',
         tags: formData.tags || [],
-        status: formData.status || ProjectStatus.PLANNING,
+        status: formData.status || activeStatuses[0].id,
         type: projectType,
         color: config.color
       };
@@ -720,18 +750,17 @@ export default function App() {
             {/* Pipeline View */}
             {sidebarTab === 'pipeline' && (
               <div className="flex flex-col gap-6">
-                {/* Pipeline now includes PLANNING, IN_PROGRESS, COMPLETED, PAUSED */}
-                {[ProjectStatus.PLANNING, ProjectStatus.IN_PROGRESS, ProjectStatus.COMPLETED, ProjectStatus.PAUSED].map(status => {
-                   let statusProjects = pipelineProjects.filter(p => p.status === status);
-                   // Apply Sorting
+                {/* Dynamically Render Status Columns based on Active Statuses */}
+                {activeStatuses.map(statusDef => {
+                   let statusProjects = pipelineProjects.filter(p => p.status === statusDef.id);
                    statusProjects = sortProjects(statusProjects, sortMode);
 
                    return (
-                    <StatusZone key={status} status={status}>
+                    <StatusZone key={statusDef.id} status={statusDef.id}>
                       <div className="flex items-center gap-2">
                          <div className="h-px flex-1 bg-zinc-800"></div>
                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                           {getStatusText(status, lang)}
+                           {appSettings.statusMode === 'CUSTOM' ? statusDef.label : getStatusText(statusDef.id, lang, statusDef.label)}
                          </h3>
                          <div className="h-px flex-1 bg-zinc-800"></div>
                       </div>
@@ -967,6 +996,8 @@ export default function App() {
           editingProject={editingProjectId ? projects.find(p => p.id === editingProjectId) : null}
           categoryConfig={categoryConfig}
           lang={lang}
+          activeStatuses={activeStatuses}
+          statusMode={appSettings.statusMode}
         />
 
         <SettingsModal 

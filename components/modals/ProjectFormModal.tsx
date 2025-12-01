@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Tag, Check, AlertTriangle, Trash2 } from 'lucide-react';
-import { Project, ProjectStatus, ProjectType, CategoryConfig, CategoryDefinition, Language } from '../../types';
+import { Project, ProjectStatus, ProjectType, CategoryConfig, CategoryDefinition, Language, StatusDefinition } from '../../types';
 import { DynamicIcon } from '../IconUtils';
 import { t, getStatusText } from '../../translations';
 
@@ -13,6 +13,8 @@ interface ProjectFormModalProps {
   editingProject?: Project | null;
   categoryConfig: CategoryConfig;
   lang: Language;
+  activeStatuses: StatusDefinition[];
+  statusMode?: 'DEFAULT' | 'CUSTOM';
 }
 
 export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ 
@@ -22,14 +24,16 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
   onDelete,
   editingProject, 
   categoryConfig,
-  lang
+  lang,
+  activeStatuses,
+  statusMode = 'DEFAULT'
 }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     tagsString: '',
     type: 'VIDEO' as ProjectType,
-    status: ProjectStatus.PLANNING
+    status: activeStatuses[0]?.id || ProjectStatus.PLANNING
   });
   
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
@@ -51,12 +55,12 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
           description: '',
           tagsString: '',
           type: 'VIDEO' as ProjectType,
-          status: ProjectStatus.PLANNING
+          status: activeStatuses[0]?.id || ProjectStatus.PLANNING
         });
       }
       setIsDeleteConfirming(false);
     }
-  }, [isOpen, editingProject]);
+  }, [isOpen, editingProject, activeStatuses]);
 
   const handleSubmit = () => {
     if (!formData.name) return;
@@ -155,11 +159,13 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
             <label className="text-[11px] font-medium text-zinc-400">{t('modal_status', lang)}</label>
             <select 
                 value={formData.status}
-                onChange={e => setFormData(prev => ({...prev, status: e.target.value as ProjectStatus}))}
+                onChange={e => setFormData(prev => ({...prev, status: e.target.value}))}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 appearance-none"
             >
-                {Object.values(ProjectStatus).map(s => (
-                  <option key={s} value={s}>{getStatusText(s, lang)}</option>
+                {activeStatuses.map(s => (
+                  <option key={s.id} value={s.id}>
+                     {statusMode === 'CUSTOM' ? s.label : getStatusText(s.id, lang, s.label)}
+                  </option>
                 ))}
             </select>
           </div>

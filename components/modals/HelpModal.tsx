@@ -92,10 +92,23 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
 
                 {/* Section 3: Statuses */}
                 <section className="space-y-3">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                      <ListTodo size={14} className="text-amber-500" /> {isZh ? '專案狀態' : 'Project Statuses'}
-                    </h3>
-                    <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <ListTodo size={14} className="text-amber-500" /> {isZh ? '專案狀態' : 'Project Statuses'}
+                      </h3>
+                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 font-medium">
+                         {isZh ? '可客製化' : 'Customizable'}
+                      </span>
+                    </div>
+                    
+                    <p className="text-xs text-zinc-500 italic">
+                        {isZh 
+                           ? '這些是預設狀態。您可以在 設定 > 管線設定 中自由更名、新增或刪除。' 
+                           : 'These are the default stages. You can customize them in Settings > Pipeline Config.'
+                        }
+                    </p>
+
+                    <div className="space-y-3 pt-1">
                       <div className="flex gap-3">
                           <div className="w-16 shrink-0 text-[10px] font-bold text-zinc-500 text-right mt-0.5">{t('status_PLANNING', lang)}</div>
                           <p className="text-xs text-zinc-400">{isZh ? '想法、概念與草稿。尚未進入正式製作。' : 'Ideas, concepts, and drafts. Not yet in full production.'}</p>
