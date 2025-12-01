@@ -9,7 +9,8 @@ type TranslationKey =
   | 'modal_createTitle' | 'modal_editTitle' | 'modal_name' | 'modal_desc' | 'modal_tags'
   | 'modal_category' | 'modal_status' | 'modal_delete' | 'modal_reallyDelete' | 'modal_save' | 'modal_cancel'
   | 'settings_system' | 'settings_catalogue' | 'settings_pipeline' | 'settings_data' | 'settings_pref'
-  | 'settings_lang' | 'settings_alerts' | 'settings_export' | 'settings_import'
+  | 'settings_lang' | 'settings_appearance' | 'settings_theme_light' | 'settings_theme_dark'
+  | 'settings_alerts' | 'settings_export' | 'settings_import'
   | 'settings_export_desc' | 'settings_import_desc' | 'settings_warning' | 'settings_critical'
   | 'settings_close' | 'settings_save'
   | 'cat_label' | 'cat_preview' | 'cat_color' | 'cat_icon'
@@ -56,6 +57,9 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     settings_data: 'Data Management',
     settings_pref: 'Preferences',
     settings_lang: 'Language / 語言',
+    settings_appearance: 'Appearance',
+    settings_theme_light: 'Light Mode',
+    settings_theme_dark: 'Dark Mode',
     settings_alerts: 'Deadline Alerts',
     settings_export: 'Export JSON',
     settings_import: 'Import JSON',
@@ -118,6 +122,9 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     settings_data: '資料管理',
     settings_pref: '偏好設定',
     settings_lang: '語言 / Language',
+    settings_appearance: '外觀 / Appearance',
+    settings_theme_light: '亮色模式',
+    settings_theme_dark: '暗色模式',
     settings_alerts: '截止日警示',
     settings_export: '匯出 JSON',
     settings_import: '匯入 JSON',

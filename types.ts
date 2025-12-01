@@ -18,6 +18,7 @@ export interface CategoryDefinition {
 export type CategoryConfig = Record<ProjectType, CategoryDefinition>;
 
 export type Language = 'en' | 'zh-TW';
+export type Theme = 'light' | 'dark';
 
 export interface StatusDefinition {
   id: string;
@@ -29,6 +30,7 @@ export interface AppSettings {
   warningDays: number;
   criticalDays: number;
   language: Language;
+  theme: Theme;
   statusMode: 'DEFAULT' | 'CUSTOM';
   customStatuses: StatusDefinition[];
 }

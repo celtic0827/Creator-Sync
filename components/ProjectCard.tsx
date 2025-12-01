@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
@@ -69,24 +70,24 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       }
   }
 
-  // Visual Styles based on Alert State
+  // Visual Styles based on Alert State (Adaptive for Light/Dark)
   let alertClasses = '';
-  let borderClasses = 'border-zinc-800 hover:border-zinc-700';
-  let bgClasses = 'bg-zinc-900/40 hover:bg-zinc-800';
+  let borderClasses = 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700';
+  let bgClasses = 'bg-white dark:bg-zinc-900/40 hover:bg-zinc-50 dark:hover:bg-zinc-800 shadow-sm';
 
   if (alertState === 'CRITICAL') {
-      borderClasses = 'border-red-500/50 hover:border-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]';
-      bgClasses = 'bg-red-950/20 hover:bg-red-950/30';
+      borderClasses = 'border-red-300 dark:border-red-500/50 hover:border-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]';
+      bgClasses = 'bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30';
   } else if (alertState === 'WARNING') {
-      borderClasses = 'border-amber-500/50 hover:border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.1)]';
-      bgClasses = 'bg-amber-950/20 hover:bg-amber-950/30';
+      borderClasses = 'border-amber-300 dark:border-amber-500/50 hover:border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.1)]';
+      bgClasses = 'bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100 dark:hover:bg-amber-950/30';
   }
 
   // Professional Design Classes
   const baseClasses = `
     group relative flex items-stretch rounded-md border transition-all duration-200 overflow-hidden
     ${isOverlay 
-      ? 'cursor-grabbing scale-105 shadow-2xl rotate-1 z-50 bg-zinc-800 border-indigo-500 ring-1 ring-indigo-500/50' 
+      ? 'cursor-grabbing scale-105 shadow-2xl rotate-1 z-50 bg-white dark:bg-zinc-800 border-indigo-500 ring-1 ring-indigo-500/50' 
       : `cursor-grab ${bgClasses} ${borderClasses}`
     }
     ${isDragging ? 'opacity-30' : 'opacity-100'}
@@ -123,7 +124,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         
         {/* Row 1: Header (Title + Actions) */}
         <div className="flex items-start justify-between gap-2">
-           <h4 className={`text-sm font-medium leading-tight break-words line-clamp-2 ${isScheduled || isArchived ? 'text-zinc-400' : 'text-zinc-200 group-hover:text-white'}`}>
+           <h4 className={`text-sm font-medium leading-tight break-words line-clamp-2 ${isScheduled || isArchived ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-700 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white'}`}>
              {project.name}
            </h4>
            
@@ -138,8 +139,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                       className={`
                         p-1 rounded transition-all 
                         ${isArchived 
-                          ? 'text-zinc-500 hover:text-amber-400 hover:bg-zinc-700' 
-                          : 'text-zinc-500 hover:text-indigo-400 hover:bg-zinc-700'
+                          ? 'text-zinc-400 hover:text-amber-500 hover:bg-zinc-200 dark:hover:bg-zinc-700' 
+                          : 'text-zinc-400 hover:text-indigo-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }
                       `}
                       title={isArchived ? t('restore', lang) : t('archive', lang)}
@@ -152,7 +153,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                       <button 
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                        className="p-1 text-zinc-500 hover:text-indigo-400 hover:bg-zinc-700 rounded transition-all"
+                        className="p-1 text-zinc-400 hover:text-indigo-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition-all"
                         title={t('edit', lang)}
                       >
                         <Edit2 size={12} />
@@ -162,7 +163,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
               {/* Grip - Only show if not scheduled (visual indicator for dragging) */}
               {!isScheduled && !isOverlay && (
-                <div className="text-zinc-700 group-hover:text-zinc-500 transition-colors cursor-grab ml-1">
+                <div className="text-zinc-300 dark:text-zinc-700 group-hover:text-zinc-400 dark:group-hover:text-zinc-500 transition-colors cursor-grab ml-1">
                    <GripVertical size={14} />
                 </div>
               )}
@@ -186,8 +187,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   className={`
                     text-[9px] px-1.5 py-0.5 rounded-[3px] font-medium tracking-wide
                     ${isScheduled || isArchived
-                      ? 'bg-zinc-800 text-zinc-500 border border-zinc-800' 
-                      : 'bg-zinc-800/80 text-zinc-400 border border-zinc-700/50 group-hover:border-zinc-600'
+                      ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-800' 
+                      : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50 group-hover:border-zinc-300 dark:group-hover:border-zinc-600'
                     }
                   `}
                 >
@@ -217,7 +218,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                      <button 
                       onPointerDown={(e) => e.stopPropagation()} 
                       onClick={handleDateClick}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all cursor-pointer"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all cursor-pointer"
                       title={t('jumpToDate', lang)}
                      >
                        <CalendarCheck2 size={11} />

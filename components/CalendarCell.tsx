@@ -34,7 +34,12 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({ date, items, project
       ref={setNodeRef}
       className={`
         relative min-h-[85px] flex flex-col p-1.5 transition-all duration-200
-        ${isOver ? 'bg-indigo-500/10' : isWknd ? 'bg-[#0c0c0e]/50' : 'bg-[#09090b]'}
+        ${isOver 
+            ? 'bg-indigo-50 dark:bg-indigo-500/10' 
+            : isWknd 
+                ? 'bg-zinc-100 dark:bg-[#0c0c0e]/50' 
+                : 'bg-white dark:bg-[#09090b]'
+        }
       `}
     >
       {/* Drop Target Indicator */}
@@ -47,7 +52,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({ date, items, project
         {/* Left: Overload Indicator (Only if > 2 items) */}
         {items.length > 2 ? (
           <div 
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded-[3px] bg-zinc-800 border border-zinc-700/50 text-zinc-400"
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-[3px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/50 text-zinc-500 dark:text-zinc-400"
             title={`${items.length} items`}
           >
             <Layers size={10} />
@@ -61,8 +66,8 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({ date, items, project
         <span className={`
           flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold
           ${isCurrentDay 
-            ? 'bg-zinc-700 text-white shadow-lg shadow-zinc-900/50' 
-            : 'text-zinc-500'
+            ? 'bg-zinc-800 dark:bg-zinc-700 text-white shadow-lg shadow-zinc-500/20 dark:shadow-zinc-900/50' 
+            : 'text-zinc-400 dark:text-zinc-500'
           }
         `}>
           {format(date, 'd')}

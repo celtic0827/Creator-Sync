@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ScheduleItem, DragData, CategoryConfig } from '../types';
@@ -37,10 +38,13 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({ it
       onClick={onClick}
       className={`
         group relative flex flex-col items-start gap-1 p-2 rounded-[4px] shadow-sm text-xs font-medium cursor-grab active:cursor-grabbing transition-all duration-300
-        ${isOverlay ? 'shadow-xl scale-105 z-50 w-48 bg-zinc-800 ring-1 ring-white/10' : 'hover:brightness-110'}
+        ${isOverlay 
+            ? 'shadow-xl scale-105 z-50 w-48 bg-white dark:bg-zinc-800 ring-1 ring-zinc-200 dark:ring-white/10' 
+            : 'hover:brightness-95 dark:hover:brightness-110 hover:shadow-md'
+        }
         ${isDragging ? 'opacity-0' : 'opacity-100'}
-        ${isHighlighted ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-zinc-900 z-20 brightness-110' : ''}
-        bg-zinc-800 border border-white/5
+        ${isHighlighted ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-zinc-100 dark:ring-offset-zinc-900 z-20 brightness-100' : ''}
+        bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-white/5
       `}
       title={item.note || project.name}
     >
@@ -52,7 +56,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({ it
                e.stopPropagation();
                onRemove();
             }}
-            className="absolute -top-1.5 -right-1.5 bg-zinc-900 rounded-full p-0.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 border border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md"
+            className="absolute -top-1.5 -right-1.5 bg-zinc-200 dark:bg-zinc-900 rounded-full p-0.5 text-zinc-500 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md"
             title="Remove from calendar"
          >
             <X size={10} />
@@ -65,7 +69,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({ it
             <DynamicIcon iconKey={config.iconKey} className="w-2.5 h-2.5 text-white/90" />
          </div>
          
-         <span className="truncate flex-1 text-zinc-200 text-[11px] leading-tight">
+         <span className="truncate flex-1 text-zinc-700 dark:text-zinc-200 text-[11px] leading-tight font-semibold">
            {project.name}
          </span>
       </div>
@@ -73,11 +77,11 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({ it
       {project.tags && project.tags.length > 0 && (
          <div className="flex flex-wrap gap-1 px-0.5">
             {project.tags.slice(0, 2).map((tag, i) => (
-               <span key={i} className="text-[9px] px-1 py-0 rounded-[2px] bg-zinc-700/50 text-zinc-400 leading-none">
+               <span key={i} className="text-[9px] px-1 py-0 rounded-[2px] bg-zinc-100 dark:bg-zinc-700/50 text-zinc-500 dark:text-zinc-400 leading-none">
                   {tag}
                </span>
             ))}
-            {project.tags.length > 2 && <span className="text-[8px] text-zinc-500">+{project.tags.length - 2}</span>}
+            {project.tags.length > 2 && <span className="text-[8px] text-zinc-400 dark:text-zinc-500">+{project.tags.length - 2}</span>}
          </div>
       )}
     </div>

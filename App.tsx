@@ -99,6 +99,7 @@ const DEFAULT_APP_SETTINGS: AppSettings = {
   warningDays: 7,
   criticalDays: 3,
   language: getDefaultLanguage(),
+  theme: 'dark',
   statusMode: 'DEFAULT',
   customStatuses: [...DEFAULT_STATUS_DEFS]
 };
@@ -153,7 +154,7 @@ const StatusZone: React.FC<{ status: string; children: React.ReactNode }> = ({ s
     <div 
       ref={setNodeRef}
       className={`flex flex-col gap-3 rounded-lg transition-all duration-200 ${
-        isOver ? 'bg-zinc-800/80 ring-2 ring-indigo-500/50 shadow-inner p-2 -mx-2' : ''
+        isOver ? 'bg-zinc-200 dark:bg-zinc-800/80 ring-2 ring-indigo-500/50 shadow-inner p-2 -mx-2' : ''
       }`}
     >
       {children}
@@ -176,11 +177,11 @@ const TrashDropZone: React.FC<{ activeDragId: string | null; lang: Language }> =
       className={`
         flex items-center gap-2 px-6 py-1.5 rounded-md transition-all duration-200 border z-50 select-none whitespace-nowrap
         ${isActive 
-          ? 'opacity-100 border-zinc-700 bg-zinc-900/80 text-zinc-300' 
-          : 'opacity-40 border-transparent text-zinc-600'
+          ? 'opacity-100 border-zinc-300 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/80 text-zinc-600 dark:text-zinc-300 shadow-sm' 
+          : 'opacity-40 border-transparent text-zinc-500 dark:text-zinc-600'
         }
         ${isOver 
-          ? 'bg-red-500/20 border-red-500 text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.4)] scale-105 opacity-100' 
+          ? 'bg-red-50 dark:bg-red-500/20 border-red-500 text-red-600 dark:text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.4)] scale-105 opacity-100' 
           : ''
         }
      `}
@@ -210,6 +211,7 @@ export default function App() {
       
       // Initialize new fields if they don't exist
       if (!settings.language) settings.language = getDefaultLanguage();
+      if (!settings.theme) settings.theme = 'dark'; // Default to dark for existing users
       if (!settings.statusMode) settings.statusMode = 'DEFAULT';
       if (!settings.customStatuses) settings.customStatuses = [...DEFAULT_STATUS_DEFS];
       return settings;
@@ -220,6 +222,15 @@ export default function App() {
 
   const lang = appSettings.language;
   const dateLocale = lang === 'zh-TW' ? zhTW : enUS;
+
+  // Apply Theme
+  useEffect(() => {
+    if (appSettings.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [appSettings.theme]);
 
   // Compute Active Statuses based on Settings
   const activeStatuses = useMemo(() => {
@@ -672,25 +683,25 @@ export default function App() {
       onDragStart={handleDragStart} 
       onDragEnd={handleDragEnd}
     >
-      <div className={`flex h-screen w-full overflow-hidden bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30 ${lang === 'zh-TW' ? 'lang-zh' : ''}`}>
+      <div className={`flex h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-indigo-500/30 ${lang === 'zh-TW' ? 'lang-zh' : ''}`}>
         
         {/* Sidebar */}
-        <aside className="w-[340px] shrink-0 border-r border-white/5 bg-zinc-900/50 flex flex-col z-10">
+        <aside className="w-[340px] shrink-0 border-r border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-900/50 flex flex-col z-10 transition-colors duration-200">
           
           {/* Sidebar Header & Tabs */}
-          <div className="p-4 border-b border-white/5 pt-6 flex flex-col gap-3">
+          <div className="p-4 border-b border-zinc-200 dark:border-white/5 pt-6 flex flex-col gap-3">
              {/* Tabs */}
-            <div className="flex p-1 bg-zinc-950 rounded-lg border border-white/5">
+            <div className="flex p-1 bg-zinc-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-white/5">
               <button
                 onClick={() => setSidebarTab('pipeline')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-md transition-all ${
                   sidebarTab === 'pipeline' 
-                    ? 'bg-zinc-800 text-white shadow-sm' 
-                    : 'text-zinc-500 hover:text-zinc-300'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-transparent' 
+                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                 }`}
               >
                 <ListTodo size={14} /> {t('pipeline', lang)}
-                <span className={`text-[10px] px-1.5 rounded-full ${sidebarTab === 'pipeline' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-900 text-zinc-600'}`}>
+                <span className={`text-[10px] px-1.5 rounded-full ${sidebarTab === 'pipeline' ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-600'}`}>
                   {pipelineProjects.length}
                 </span>
               </button>
@@ -698,12 +709,12 @@ export default function App() {
                 onClick={() => setSidebarTab('published')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-md transition-all ${
                   sidebarTab === 'published' 
-                    ? 'bg-zinc-800 text-white shadow-sm' 
-                    : 'text-zinc-500 hover:text-zinc-300'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-transparent' 
+                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                 }`}
               >
                 <Archive size={14} /> {t('published', lang)}
-                <span className={`text-[10px] px-1.5 rounded-full ${sidebarTab === 'published' ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-900 text-zinc-600'}`}>
+                <span className={`text-[10px] px-1.5 rounded-full ${sidebarTab === 'published' ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-600'}`}>
                   {publishedProjects.length}
                 </span>
               </button>
@@ -714,28 +725,28 @@ export default function App() {
               <div className="flex gap-1">
                 <button
                   onClick={() => setSortMode('DEFAULT')}
-                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-all ${sortMode === 'DEFAULT' ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/50'}`}
+                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-all ${sortMode === 'DEFAULT' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-600 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
                   title={t('sort_default', lang)}
                 >
                   <List size={14} />
                 </button>
                 <button
                   onClick={() => setSortMode('ALPHA')}
-                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-all ${sortMode === 'ALPHA' ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/50'}`}
+                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-all ${sortMode === 'ALPHA' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-600 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
                   title={t('sort_alpha', lang)}
                 >
                   <ArrowDownAZ size={14} />
                 </button>
                 <button
                   onClick={() => setSortMode('CATEGORY')}
-                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-all ${sortMode === 'CATEGORY' ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/50'}`}
+                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-all ${sortMode === 'CATEGORY' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-600 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
                   title={t('sort_category', lang)}
                 >
                   <Shapes size={14} />
                 </button>
                 <button
                   onClick={() => setSortMode('DATE')}
-                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-all ${sortMode === 'DATE' ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/50'}`}
+                  className={`flex-1 flex items-center justify-center p-1.5 rounded transition-all ${sortMode === 'DATE' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-600 dark:hover:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
                   title={t('sort_date', lang)}
                 >
                   <CalendarClock size={14} />
@@ -756,11 +767,11 @@ export default function App() {
                    return (
                     <StatusZone key={statusDef.id} status={statusDef.id}>
                       <div className="flex items-center gap-2">
-                         <div className="h-px flex-1 bg-zinc-800"></div>
-                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                         <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                            {appSettings.statusMode === 'CUSTOM' ? statusDef.label : getStatusText(statusDef.id, lang, statusDef.label)}
                          </h3>
-                         <div className="h-px flex-1 bg-zinc-800"></div>
+                         <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
                       </div>
                       <div className="space-y-2 min-h-[10px]">
                         {statusProjects.map(project => {
@@ -779,7 +790,7 @@ export default function App() {
                           );
                         })}
                         {statusProjects.length === 0 && (
-                          <div className="text-[10px] text-zinc-700 text-center py-2 border border-dashed border-zinc-800/50 rounded">
+                          <div className="text-[10px] text-zinc-400 dark:text-zinc-700 text-center py-2 border border-dashed border-zinc-300 dark:border-zinc-800/50 rounded">
                             {t('dropHere', lang)}
                           </div>
                         )}
@@ -789,7 +800,7 @@ export default function App() {
                 })}
                 
                 {pipelineProjects.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-40 text-zinc-600">
+                  <div className="flex flex-col items-center justify-center h-40 text-zinc-400 dark:text-zinc-600">
                     <Inbox size={32} className="mb-3 opacity-20" />
                     <p className="text-xs">{t('noPending', lang)}</p>
                   </div>
@@ -797,7 +808,7 @@ export default function App() {
 
                 <button 
                   onClick={openCreateModal}
-                  className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-zinc-800 py-3 text-xs font-medium text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 transition-colors mt-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-zinc-300 dark:border-zinc-800 py-3 text-xs font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors mt-2"
                 >
                   <Plus size={14} /> {t('newProject', lang)}
                 </button>
@@ -825,7 +836,7 @@ export default function App() {
                       );
                     })
                  ) : (
-                   <div className="flex flex-col items-center justify-center h-40 text-zinc-600">
+                   <div className="flex flex-col items-center justify-center h-40 text-zinc-400 dark:text-zinc-600">
                       <Archive size={32} className="mb-3 opacity-20" />
                       <p className="text-xs">{t('archiveEmpty', lang)}</p>
                    </div>
@@ -835,17 +846,17 @@ export default function App() {
           </div>
 
           {/* Sidebar Footer */}
-          <div className="p-3 border-t border-white/5 bg-zinc-950 flex items-center gap-2">
+          <div className="p-3 border-t border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-950 flex items-center gap-2 transition-colors">
              <button 
                onClick={() => setIsSettingsModalOpen(true)}
-               className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 rounded-md transition-colors"
+               className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-md transition-colors"
                title="App Settings & Configuration"
              >
                <Settings size={14} /> {t('settings', lang)}
              </button>
              <button 
                onClick={() => setIsHelpModalOpen(true)}
-               className="flex items-center justify-center gap-2 px-3 py-2 text-zinc-500 hover:text-indigo-400 hover:bg-zinc-900 rounded-md transition-colors"
+               className="flex items-center justify-center gap-2 px-3 py-2 text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-md transition-colors"
                title="Help Guide"
              >
                <CircleHelp size={16} />
@@ -854,7 +865,7 @@ export default function App() {
         </aside>
 
         {/* Main Calendar Area */}
-        <main className="flex-1 flex flex-col bg-zinc-950 relative">
+        <main className="flex-1 flex flex-col bg-zinc-50 dark:bg-zinc-950 relative transition-colors duration-200">
           
           {/* Calendar Toolbar */}
           <div className="flex items-center justify-between px-8 py-6 h-20">
@@ -862,33 +873,33 @@ export default function App() {
              {/* Left: Navigation & Trash */}
              <div className="flex items-center gap-6">
                <div className="w-60">
-                 <h2 className="text-2xl font-bold text-white tracking-tight capitalize">
+                 <h2 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight capitalize">
                    {format(currentMonth, 'MMMM yyyy', { locale: dateLocale })}
                  </h2>
                </div>
                
-               <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900/50 p-1">
+               <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-1">
                  <button 
                    onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                   className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                   className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"
                  >
                    <ChevronLeft size={16} />
                  </button>
                  <button 
                    onClick={() => setCurrentMonth(new Date())}
-                   className="w-16 py-1 text-xs font-medium text-zinc-300 hover:text-white whitespace-nowrap"
+                   className="w-16 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white whitespace-nowrap"
                  >
                    {t('today', lang)}
                  </button>
                  <button 
                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                   className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                   className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"
                  >
                    <ChevronRight size={16} />
                  </button>
                </div>
 
-               <div className="h-6 w-px bg-zinc-800/50 mx-2"></div>
+               <div className="h-6 w-px bg-zinc-300 dark:bg-zinc-800/50 mx-2"></div>
 
                 {/* Undo Button */}
                 <button
@@ -897,8 +908,8 @@ export default function App() {
                    className={`
                      flex items-center gap-2 px-3 py-1.5 rounded-md border transition-all
                      ${history.length > 0
-                        ? 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 cursor-pointer shadow-sm'
-                        : 'bg-transparent border-transparent text-zinc-700 cursor-default opacity-50'
+                        ? 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 cursor-pointer shadow-sm'
+                        : 'bg-transparent border-transparent text-zinc-400 dark:text-zinc-700 cursor-default opacity-50'
                      }
                    `}
                    title={`${t('undo', lang)} (Ctrl+Z)`}
@@ -913,10 +924,10 @@ export default function App() {
              {/* Right: Low-key Logo */}
              <div className="flex items-center gap-3">
                <div className="text-right">
-                <h1 className="text-xs font-bold tracking-tight text-zinc-300 uppercase">Creator Sync</h1>
-                <p className="text-[10px] text-zinc-600 font-medium">Pro Scheduler</p>
+                <h1 className="text-xs font-bold tracking-tight text-zinc-500 dark:text-zinc-300 uppercase">Creator Sync</h1>
+                <p className="text-[10px] text-zinc-400 dark:text-zinc-600 font-medium">Pro Scheduler</p>
                </div>
-               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 shadow-inner">
+               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 shadow-inner">
                  <Layers size={16} />
                </div>
              </div>
@@ -931,15 +942,15 @@ export default function App() {
             {/* Day Headers */}
             <div className="grid grid-cols-7 mb-2">
               {weekDays.map(day => (
-                <div key={day} className="text-center text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                <div key={day} className="text-center text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
                   {day}
                 </div>
               ))}
             </div>
 
             {/* The Grid */}
-            <div className="flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-800 shadow-2xl">
-               <div className="grid grid-cols-7 gap-px bg-zinc-800 h-full min-h-[500px]">
+            <div className="flex-1 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-200 dark:bg-zinc-800 shadow-xl dark:shadow-2xl">
+               <div className="grid grid-cols-7 gap-px bg-zinc-200 dark:bg-zinc-800 h-full min-h-[500px]">
                 {calendarDays.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd');
                   const dayItems = schedule.filter(s => s.date === dateStr);
