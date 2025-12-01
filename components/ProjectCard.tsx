@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
@@ -43,7 +42,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   const isScheduled = !!scheduledDate;
   const isArchived = project.status === ProjectStatus.ARCHIVED;
-  const isCompleted = project.status === ProjectStatus.COMPLETED;
+  
+  // Determine if completed based on mode
+  const isCompleted = appSettings?.statusMode === 'CUSTOM'
+     ? appSettings.customStatuses.find(s => s.id === project.status)?.isCompleted
+     : project.status === ProjectStatus.COMPLETED;
+
   const config = categoryConfig[project.type] || { color: 'bg-zinc-800', iconKey: 'Layers' };
   const lang = appSettings?.language || 'en';
   const dateLocale = lang === 'zh-TW' ? zhTW : enUS;

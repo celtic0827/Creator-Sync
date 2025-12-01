@@ -22,6 +22,7 @@ export type Language = 'en' | 'zh-TW';
 export interface StatusDefinition {
   id: string;
   label: string;
+  isCompleted?: boolean; // Marks this status as the "Done" state for logic purposes
 }
 
 export interface AppSettings {

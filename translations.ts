@@ -14,7 +14,8 @@ type TranslationKey =
   | 'settings_close' | 'settings_save'
   | 'cat_label' | 'cat_preview' | 'cat_color' | 'cat_icon'
   | 'sort_default' | 'sort_alpha' | 'sort_category' | 'sort_date'
-  | 'pipeline_mode_default' | 'pipeline_mode_custom' | 'pipeline_add' | 'pipeline_max_limit' | 'pipeline_placeholder';
+  | 'pipeline_mode_default' | 'pipeline_mode_custom' | 'pipeline_add' | 'pipeline_max_limit' | 'pipeline_placeholder'
+  | 'pipeline_set_completed';
 
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
@@ -77,6 +78,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     pipeline_add: 'Add Status',
     pipeline_max_limit: 'Max 8 statuses reached',
     pipeline_placeholder: 'Status Name',
+    pipeline_set_completed: 'Select which status represents "Completed" to stop deadline alerts.',
   },
   'zh-TW': {
     pipeline: '專案管線',
@@ -138,6 +140,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     pipeline_add: '新增狀態',
     pipeline_max_limit: '最多只能有 8 個狀態',
     pipeline_placeholder: '狀態名稱',
+    pipeline_set_completed: '請選擇代表「已完成」的狀態，以停止過期警示。',
   }
 };
 

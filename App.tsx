@@ -84,7 +84,7 @@ const DEFAULT_CATEGORY_CONFIG: CategoryConfig = {
 const DEFAULT_STATUS_DEFS: StatusDefinition[] = [
   { id: ProjectStatus.PLANNING, label: 'Planning' },
   { id: ProjectStatus.IN_PROGRESS, label: 'In Progress' },
-  { id: ProjectStatus.COMPLETED, label: 'Completed' },
+  { id: ProjectStatus.COMPLETED, label: 'Completed', isCompleted: true },
   { id: ProjectStatus.PAUSED, label: 'Paused' }
 ];
 
@@ -206,14 +206,15 @@ export default function App() {
   const [appSettings, setAppSettings] = useState<AppSettings>(() => {
     try {
       const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
-      const settings = savedSettings ? JSON.parse(savedSettings) : DEFAULT_APP_SETTINGS;
+      const settings = savedSettings ? JSON.parse(savedSettings) : { ...DEFAULT_APP_SETTINGS };
+      
       // Initialize new fields if they don't exist
       if (!settings.language) settings.language = getDefaultLanguage();
       if (!settings.statusMode) settings.statusMode = 'DEFAULT';
       if (!settings.customStatuses) settings.customStatuses = [...DEFAULT_STATUS_DEFS];
       return settings;
     } catch {
-      return DEFAULT_APP_SETTINGS;
+      return { ...DEFAULT_APP_SETTINGS };
     }
   });
 
@@ -284,21 +285,18 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(appSettings));
   }, [appSettings]);
 
-  // Safe Migration: Ensure no projects are stranded in deleted statuses
+  // Safe Migration
   useEffect(() => {
     if (activeStatuses.length === 0) return;
     
-    // Valid status IDs
     const validIds = new Set(activeStatuses.map(s => s.id));
-    // Also consider ARCHIVED valid for storage, even if not in column list
     validIds.add(ProjectStatus.ARCHIVED);
 
-    // Find orphaned projects
     const orphanedProjects = projects.filter(p => !validIds.has(p.status));
 
     if (orphanedProjects.length > 0) {
       console.log('Migrating orphaned projects:', orphanedProjects.length);
-      const defaultStatusId = activeStatuses[0].id; // Move to first available status (usually Backlog/Planning)
+      const defaultStatusId = activeStatuses[0].id;
       
       setProjects(prev => prev.map(p => {
         if (!validIds.has(p.status)) {

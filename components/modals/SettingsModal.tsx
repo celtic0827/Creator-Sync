@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, GripVertical, CheckCircle, Circle } from 'lucide-react';
 import { ProjectType, CategoryConfig, CategoryDefinition, AppSettings, Language, StatusDefinition, ProjectStatus } from '../../types';
 import { DynamicIcon, COLOR_PALETTE, ICON_MAP } from '../IconUtils';
 import { t } from '../../translations';
@@ -15,14 +15,6 @@ interface SettingsModalProps {
   appSettings: AppSettings;
   onUpdateAppSettings: (settings: AppSettings) => void;
 }
-
-// Default Status Configuration for Reset
-const DEFAULT_STATUS_DEFS: StatusDefinition[] = [
-  { id: ProjectStatus.PLANNING, label: 'Planning' },
-  { id: ProjectStatus.IN_PROGRESS, label: 'In Progress' },
-  { id: ProjectStatus.COMPLETED, label: 'Completed' },
-  { id: ProjectStatus.PAUSED, label: 'Paused' }
-];
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ 
   isOpen, 
@@ -77,7 +69,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (prefForm.customStatuses.length >= 8) return;
     const newStatus: StatusDefinition = {
       id: `custom-${Date.now()}`,
-      label: 'New Status'
+      label: 'New Status',
+      isCompleted: false
     };
     setPrefForm(prev => ({
       ...prev,
@@ -89,6 +82,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (prefForm.customStatuses.length <= 2) return;
     setPrefForm(prev => {
       const newList = [...prev.customStatuses];
+      // If removing the completed one, make the last one completed
+      if (newList[index].isCompleted) {
+         if (index > 0) newList[index-1].isCompleted = true;
+         else if (index < newList.length - 1) newList[index+1].isCompleted = true;
+      }
       newList.splice(index, 1);
       return { ...prev, customStatuses: newList };
     });
@@ -100,6 +98,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       newList[index] = { ...newList[index], label: newLabel };
       return { ...prev, customStatuses: newList };
     });
+  };
+
+  const handleSetCompleted = (index: number) => {
+    setPrefForm(prev => ({
+        ...prev,
+        customStatuses: prev.customStatuses.map((s, i) => ({
+            ...s,
+            isCompleted: i === index
+        }))
+    }));
   };
   
   // Safe accessor to avoid 'unknown' type errors if inference fails
@@ -304,7 +312,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               {prefForm.customStatuses.length >= 8 && <span className="text-amber-500">{t('pipeline_max_limit', lang)}</span>}
                             </label>
                             
-                            <div className="space-y-2">
+                            <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-lg p-3 space-y-2">
+                               <p className="text-[10px] text-zinc-400 mb-2">{t('pipeline_set_completed', lang)}</p>
                                {prefForm.customStatuses.map((status, idx) => (
                                  <div key={status.id} className="flex items-center gap-2 group animate-in slide-in-from-left-2 duration-200">
                                     <div className="w-6 flex justify-center text-zinc-600 cursor-default">
@@ -317,6 +326,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                       placeholder={t('pipeline_placeholder', lang)}
                                       className="flex-1 bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 outline-none"
                                     />
+                                    
+                                    <div className="h-6 w-px bg-zinc-800 mx-1"></div>
+                                    
+                                    <button
+                                      onClick={() => handleSetCompleted(idx)}
+                                      className={`p-2 rounded hover:bg-zinc-800 transition-colors ${status.isCompleted ? 'text-emerald-400' : 'text-zinc-600 hover:text-emerald-200'}`}
+                                      title="Mark as 'Completed' status (stops deadline alerts)"
+                                    >
+                                       {status.isCompleted ? <CheckCircle size={16} /> : <Circle size={16} />}
+                                    </button>
+
                                     <button 
                                       onClick={() => handlePipelineRemove(idx)}
                                       disabled={prefForm.customStatuses.length <= 2}
