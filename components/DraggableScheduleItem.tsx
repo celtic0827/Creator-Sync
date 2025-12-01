@@ -1,34 +1,40 @@
 
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { Project, ScheduleItem, DragData, CategoryConfig } from '../types';
-import { DynamicIcon } from './IconUtils';
 import { X } from 'lucide-react';
+import { ScheduleItem, Project, CategoryConfig, DragData } from '../types';
 
 interface DraggableScheduleItemProps {
   item: ScheduleItem;
   project: Project;
   categoryConfig: CategoryConfig;
-  isOverlay?: boolean;
   isHighlighted?: boolean;
   onClick?: () => void;
   onRemove?: () => void;
+  isOverlay?: boolean;
 }
 
-export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({ item, project, categoryConfig, isOverlay, isHighlighted, onClick, onRemove }) => {
-  const dragData: DragData = {
-    type: 'SCHEDULE_ITEM',
-    projectId: project.id,
-    scheduleId: item.id,
-    originDate: item.date
-  };
-
+export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({
+  item,
+  project,
+  categoryConfig,
+  isHighlighted,
+  onClick,
+  onRemove,
+  isOverlay
+}) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `schedule-item-${item.id}`,
-    data: dragData,
+    id: `schedule-${item.id}`,
+    data: {
+      type: 'SCHEDULE_ITEM',
+      projectId: project.id,
+      scheduleId: item.id,
+      originDate: item.date
+    } as DragData,
+    disabled: isOverlay
   });
 
-  const config = categoryConfig[project.type] || { color: 'bg-zinc-800', iconKey: 'Layers' };
+  const config = categoryConfig[project.type] || { color: 'bg-zinc-500', iconKey: 'Layers' };
 
   return (
     <div
@@ -37,18 +43,36 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({ it
       {...attributes}
       onClick={onClick}
       className={`
-        group relative flex flex-col items-start gap-1 p-2 rounded-[4px] shadow-sm text-xs font-medium cursor-grab active:cursor-grabbing transition-all duration-300
+        group relative flex items-center gap-2 p-1.5 rounded-md border text-left transition-all select-none
         ${isOverlay 
-            ? 'shadow-xl scale-105 z-50 w-48 bg-white dark:bg-zinc-800 ring-1 ring-zinc-200 dark:ring-white/10' 
-            : 'hover:brightness-95 dark:hover:brightness-110 hover:shadow-md'
+            ? 'bg-white dark:bg-zinc-800 shadow-xl scale-105 rotate-1 z-50 border-indigo-500 cursor-grabbing w-[200px]' 
+            : isDragging 
+                ? 'opacity-30' 
+                : 'bg-zinc-50 dark:bg-zinc-900/40 hover:bg-white dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-grab'
         }
-        ${isDragging ? 'opacity-0' : 'opacity-100'}
-        ${isHighlighted ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-zinc-100 dark:ring-offset-zinc-900 z-20 brightness-100' : ''}
-        bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-white/5
+        ${isHighlighted ? 'ring-2 ring-indigo-500 ring-offset-1 dark:ring-offset-zinc-900' : ''}
       `}
-      title={item.note || project.name}
     >
-      {/* Remove Button (Visible on Hover) */}
+      {/* Color Indicator */}
+      <div className={`w-1.5 self-stretch rounded-full ${config.color} shrink-0`} />
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <h4 className="text-[11px] font-medium text-zinc-700 dark:text-zinc-200 truncate leading-tight">
+           {project.name}
+        </h4>
+        {project.tags && project.tags.length > 0 && (
+           <div className="flex flex-wrap gap-1 mt-0.5">
+              {project.tags.slice(0, 2).map((tag, i) => (
+                  <span key={i} className="text-[9px] text-zinc-400 dark:text-zinc-500 font-normal truncate">
+                    {tag}
+                  </span>
+              ))}
+           </div>
+        )}
+      </div>
+
+       {/* Remove Button (Visible on Hover) - Positioned inside to prevent clipping */}
       {!isOverlay && onRemove && (
          <button
             onPointerDown={(e) => e.stopPropagation()}
@@ -56,33 +80,11 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({ it
                e.stopPropagation();
                onRemove();
             }}
-            className="absolute -top-1.5 -right-1.5 bg-zinc-200 dark:bg-zinc-900 rounded-full p-0.5 text-zinc-500 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md"
+            className="absolute top-0.5 right-0.5 bg-zinc-200 dark:bg-zinc-900 rounded-full p-1 text-zinc-500 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-sm"
             title="Remove from calendar"
          >
             <X size={10} />
          </button>
-      )}
-
-      <div className="flex items-center gap-2 w-full">
-         {/* Type Icon Box */}
-         <div className={`w-4 h-4 rounded-sm flex items-center justify-center flex-shrink-0 ${config.color}`}>
-            <DynamicIcon iconKey={config.iconKey} className="w-2.5 h-2.5 text-white/90" />
-         </div>
-         
-         <span className="truncate flex-1 text-zinc-700 dark:text-zinc-200 text-[11px] leading-tight font-semibold">
-           {project.name}
-         </span>
-      </div>
-
-      {project.tags && project.tags.length > 0 && (
-         <div className="flex flex-wrap gap-1 px-0.5">
-            {project.tags.slice(0, 2).map((tag, i) => (
-               <span key={i} className="text-[9px] px-1 py-0 rounded-[2px] bg-zinc-100 dark:bg-zinc-700/50 text-zinc-500 dark:text-zinc-400 leading-none">
-                  {tag}
-               </span>
-            ))}
-            {project.tags.length > 2 && <span className="text-[8px] text-zinc-400 dark:text-zinc-500">+{project.tags.length - 2}</span>}
-         </div>
       )}
     </div>
   );

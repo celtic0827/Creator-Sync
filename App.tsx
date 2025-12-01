@@ -155,7 +155,7 @@ const StatusZone: React.FC<{ status: string; children: React.ReactNode }> = ({ s
   return (
     <div 
       ref={setNodeRef}
-      className={`flex flex-col gap-3 rounded-lg transition-all duration-200 ${
+      className={`flex flex-col gap-2 rounded-lg transition-all duration-200 ${
         isOver ? 'bg-zinc-200 dark:bg-zinc-800/80 ring-2 ring-indigo-500/50 shadow-inner p-2 -mx-2' : ''
       }`}
     >
@@ -786,13 +786,19 @@ export default function App() {
 
                    return (
                     <StatusZone key={statusDef.id} status={statusDef.id}>
-                      <div className="flex items-center gap-2">
-                         <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
-                         <h3 className="text-[10px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-                           {appSettings.statusMode === 'CUSTOM' ? statusDef.label : getStatusText(statusDef.id, lang, statusDef.label)}
-                         </h3>
-                         <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
+                      {/* Modern Left-Aligned Header with Count Badge */}
+                      <div className="flex items-center justify-between mb-2 mt-2 px-1">
+                         <div className="flex items-center gap-2">
+                           <h3 className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                             {appSettings.statusMode === 'CUSTOM' ? statusDef.label : getStatusText(statusDef.id, lang, statusDef.label)}
+                           </h3>
+                           <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                             {statusProjects.length}
+                           </span>
+                         </div>
+                         <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-800/50 ml-3"></div>
                       </div>
+
                       <div className="space-y-2 min-h-[10px]">
                         {statusProjects.map(project => {
                           const scheduledDate = getProjectScheduledDate(project.id);
@@ -810,7 +816,7 @@ export default function App() {
                           );
                         })}
                         {statusProjects.length === 0 && (
-                          <div className="text-[10px] text-zinc-400 dark:text-zinc-700 text-center py-2 border border-dashed border-zinc-300 dark:border-zinc-800/50 rounded">
+                          <div className="text-[10px] text-zinc-400 dark:text-zinc-700 text-center py-4 border border-dashed border-zinc-200 dark:border-zinc-800/50 rounded bg-zinc-50/50 dark:bg-zinc-900/20">
                             {t('dropHere', lang)}
                           </div>
                         )}

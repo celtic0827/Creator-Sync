@@ -177,7 +177,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
         {/* Row 3: Tags + Inline Info (Right aligned) */}
         {( (project.tags && project.tags.length > 0) || isScheduled || alertState !== 'NONE' ) && (
-          <div className="flex items-end justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 mt-0.5">
             
             {/* Tags Container */}
             <div className="flex flex-wrap gap-1">
@@ -185,7 +185,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 <span 
                   key={i} 
                   className={`
-                    text-[9px] px-1.5 py-0.5 rounded-[3px] font-medium tracking-wide
+                    text-[9px] px-1.5 py-0.5 rounded-[3px] font-normal tracking-wide leading-none
                     ${isScheduled || isArchived
                       ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-800' 
                       : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50 group-hover:border-zinc-300 dark:group-hover:border-zinc-600'
@@ -199,7 +199,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
             {/* Right Side: Date & Alerts (Inline) */}
             {(isScheduled || alertState !== 'NONE') && !isOverlay && (
-               <div className="flex items-center gap-1.5 shrink-0 ml-auto pb-0.5">
+               <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                   
                   {/* Alerts (Icon Only) */}
                   {alertState === 'CRITICAL' && (
@@ -213,16 +213,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                     </div>
                   )}
 
-                  {/* Date Button */}
+                  {/* Date Button - Clean Text Only Design */}
                   {isScheduled && (
                      <button 
                       onPointerDown={(e) => e.stopPropagation()} 
                       onClick={handleDateClick}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all cursor-pointer"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-all cursor-pointer text-zinc-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-700/50"
                       title={t('jumpToDate', lang)}
                      >
                        <CalendarCheck2 size={11} />
-                       <span className="text-[9px] font-semibold leading-none pt-px">
+                       <span className="text-[10px] font-medium leading-none">
                          {format(new Date(scheduledDate + 'T00:00:00'), 'MMM d', { locale: dateLocale })}
                        </span>
                      </button>

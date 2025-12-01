@@ -33,20 +33,20 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({ date, items, project
     <div
       ref={setNodeRef}
       className={`
-        relative min-h-[85px] flex flex-col p-1.5 transition-all duration-200
+        group relative min-h-[85px] flex flex-col p-1.5 transition-all duration-200
         ${isOver 
-            ? 'bg-indigo-100 dark:bg-indigo-500/20' // Drag over state (stronger)
+            ? 'bg-indigo-50 dark:bg-indigo-500/20 z-10' // Drag over state
             : isCurrentDay
-                ? 'bg-indigo-50/60 dark:bg-indigo-500/10 pattern-today ring-1 ring-indigo-500/10 dark:ring-indigo-400/20 inset-ring inset-ring-indigo-500/5' // Today state (Pattern + Subtle tint)
+                ? 'bg-indigo-50/60 dark:bg-indigo-500/10 pattern-today ring-1 ring-indigo-500/10 dark:ring-indigo-400/20 inset-ring inset-ring-indigo-500/5' // Today
                 : isWknd 
-                    ? 'bg-zinc-100 dark:bg-[#0c0c0e]/50' // Weekend
-                    : 'bg-white dark:bg-[#09090b]' // Default
+                    ? 'bg-zinc-100 dark:bg-[#0c0c0e]/50 hover:bg-zinc-50 dark:hover:bg-[#0c0c0e]/80' // Weekend
+                    : 'bg-white dark:bg-[#09090b] hover:bg-zinc-50 dark:hover:bg-zinc-900/50' // Default
         }
       `}
     >
-      {/* Drop Target Indicator */}
+      {/* Drop Target Indicator (Dashed Border) */}
       {isOver && (
-        <div className="absolute inset-0 border-2 border-indigo-500/50 pointer-events-none z-10" />
+        <div className="absolute inset-0.5 border-2 border-dashed border-indigo-400 dark:border-indigo-500/60 rounded-[4px] pointer-events-none z-10" />
       )}
 
       {/* Date Header (Top Row) */}
@@ -66,10 +66,10 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({ date, items, project
 
         {/* Right: Date Number */}
         <span className={`
-          flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold
+          flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold transition-opacity duration-200
           ${isCurrentDay 
             ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-md shadow-indigo-500/30' 
-            : 'text-zinc-400 dark:text-zinc-500'
+            : 'text-zinc-400 dark:text-zinc-500 opacity-60 group-hover:opacity-100'
           }
         `}>
           {format(date, 'd')}
