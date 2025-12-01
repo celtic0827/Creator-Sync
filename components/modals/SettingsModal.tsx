@@ -123,7 +123,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Left: Navigation Sidebar */}
           <div className="w-56 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col">
               <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
-                <h3 className="text-sm font-bold text-zinc-800 dark:text-white flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-zinc-800 dark:text-white flex items-center gap-2">
                   <Settings size={16} /> {t('settings', lang)}
                 </h3>
               </div>
@@ -131,7 +131,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 
                 {/* System Section */}
                 <div className="px-2 py-2">
-                  <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 px-2 mb-1 uppercase tracking-wider">{t('settings_system', lang)}</div>
+                  <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-2 mb-1 uppercase tracking-wider">{t('settings_system', lang)}</div>
                   <button 
                     onClick={() => setActiveSettingsTab('PREFERENCES')}
                     className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
@@ -141,7 +141,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     }`}
                   >
                       <Sliders size={14} />
-                      <div className="text-xs font-semibold">{t('settings_pref', lang)}</div>
+                      <div className="text-xs font-medium">{t('settings_pref', lang)}</div>
                   </button>
                   <button 
                     onClick={() => setActiveSettingsTab('PIPELINE')}
@@ -152,7 +152,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     }`}
                   >
                       <Kanban size={14} />
-                      <div className="text-xs font-semibold">{t('settings_pipeline', lang)}</div>
+                      <div className="text-xs font-medium">{t('settings_pipeline', lang)}</div>
                   </button>
                   <button 
                     onClick={() => setActiveSettingsTab('DATA')}
@@ -163,13 +163,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     }`}
                   >
                       <Database size={14} />
-                      <div className="text-xs font-semibold">{t('settings_data', lang)}</div>
+                      <div className="text-xs font-medium">{t('settings_data', lang)}</div>
                   </button>
                 </div>
 
                 {/* Catalogue Section */}
                 <div className="px-2 pb-2">
-                  <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 px-2 mb-1 mt-2 uppercase tracking-wider">{t('settings_catalogue', lang)}</div>
+                  <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-2 mb-1 mt-2 uppercase tracking-wider">{t('settings_catalogue', lang)}</div>
                   {(Object.entries(categoryConfig) as [string, CategoryDefinition][]).map(([key, config]) => (
                       <button
                         key={key}
@@ -184,7 +184,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <DynamicIcon iconKey={config.iconKey} className="text-white w-3 h-3" />
                         </div>
                         <div className="text-left flex-1 min-w-0">
-                            <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-200 truncate">{config.label}</div>
+                            <div className="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate">{config.label}</div>
                         </div>
                       </button>
                   ))}

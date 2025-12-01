@@ -788,7 +788,7 @@ export default function App() {
                     <StatusZone key={statusDef.id} status={statusDef.id}>
                       <div className="flex items-center gap-2">
                          <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
-                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                         <h3 className="text-[10px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                            {appSettings.statusMode === 'CUSTOM' ? statusDef.label : getStatusText(statusDef.id, lang, statusDef.label)}
                          </h3>
                          <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
@@ -893,7 +893,7 @@ export default function App() {
              {/* Left: Navigation & Trash */}
              <div className="flex items-center gap-6">
                <div className="w-60">
-                 <h2 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight capitalize">
+                 <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight capitalize">
                    {format(currentMonth, 'MMMM yyyy', { locale: dateLocale })}
                  </h2>
                </div>
@@ -962,7 +962,7 @@ export default function App() {
             {/* Day Headers */}
             <div className="grid grid-cols-7 mb-2">
               {weekDays.map(day => (
-                <div key={day} className="text-center text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+                <div key={day} className="text-center text-[10px] font-medium text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
                   {day}
                 </div>
               ))}

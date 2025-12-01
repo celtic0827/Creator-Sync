@@ -25,7 +25,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     <BookOpen size={20} />
                 </div>
                 <div>
-                    <h2 className="text-lg font-bold text-zinc-900 dark:text-white tracking-tight">{isZh ? 'Creator Sync 使用指南' : 'Creator Sync Guide'}</h2>
+                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-white tracking-tight">{isZh ? 'Creator Sync 使用指南' : 'Creator Sync Guide'}</h2>
                     <p className="text-xs text-zinc-500">{isZh ? '掌握您的生產管線' : 'Mastering your production pipeline'}</p>
                 </div>
               </div>
@@ -43,7 +43,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                 
                 {/* Section 1: Concept */}
                 <section className="space-y-3">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Layers size={14} className="text-indigo-600 dark:text-indigo-500" /> {isZh ? '核心流程' : 'Core Workflow'}
                     </h3>
                     <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
@@ -69,7 +69,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
 
                 {/* Section 2: Scheduling */}
                 <section className="space-y-3">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Calendar size={14} className="text-emerald-600 dark:text-emerald-500" /> {isZh ? '排程與導航' : 'Scheduling & Navigation'}
                     </h3>
                     <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
@@ -93,7 +93,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                 {/* Section 3: Statuses */}
                 <section className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                         <ListTodo size={14} className="text-amber-600 dark:text-amber-500" /> {isZh ? '專案狀態' : 'Project Statuses'}
                       </h3>
                       <span className="text-[9px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 font-medium">
@@ -130,7 +130,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
 
                 {/* Section 4: Project Categories (NEW) */}
                 <section className="space-y-3">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Shapes size={14} className="text-pink-600 dark:text-pink-500" /> {isZh ? '專案分類' : 'Project Categories'}
                     </h3>
                     <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
@@ -152,7 +152,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
 
                 {/* Section 5: Alerts & Settings */}
                 <section className="space-y-3">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Clock size={14} className="text-red-500 dark:text-red-400" /> {isZh ? '截止日與警示' : 'Deadlines & Alerts'}
                     </h3>
                     <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
@@ -178,7 +178,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
 
                 {/* Section 6: Archiving */}
                 <section className="space-y-3">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Archive size={14} className="text-violet-600 dark:text-violet-500" /> {isZh ? '已發布與封存' : 'Published vs. Archive'}
                     </h3>
                     <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
@@ -201,7 +201,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
 
                 {/* Section 7: Deletion */}
                 <section className="space-y-3 border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-2">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Trash2 size={14} className="text-red-500 dark:text-red-500" /> {isZh ? '垃圾桶與刪除' : 'Trash & Deletion'}
                     </h3>
                     <div className="flex items-start gap-4 bg-red-50 dark:bg-red-950/10 border border-red-200 dark:border-red-900/20 p-4 rounded-lg">
@@ -215,7 +215,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
 
                 {/* Section 8: Data & Safety */}
                 <section className="space-y-3 border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-2">
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <ShieldCheck size={14} className="text-blue-500" /> {isZh ? '資料安全' : 'Data & Safety'}
                     </h3>
                     <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
