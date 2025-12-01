@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, BookOpen, Layers, Calendar, ListTodo, Archive, Trash2, ShieldCheck, AlertTriangle, Undo2, Edit2, Settings, Clock, Globe } from 'lucide-react';
+import { X, BookOpen, Layers, Calendar, ListTodo, Archive, Trash2, ShieldCheck, AlertTriangle, Undo2, Edit2, Settings, Clock, Globe, Shapes } from 'lucide-react';
 import { Language } from '../../types';
 import { t } from '../../translations';
 
@@ -128,7 +128,29 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 4: Alerts & Settings (NEW) */}
+                {/* Section 4: Project Categories (NEW) */}
+                <section className="space-y-3">
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <Shapes size={14} className="text-pink-600 dark:text-pink-500" /> {isZh ? '專案分類' : 'Project Categories'}
+                    </h3>
+                    <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
+                      <p>
+                          {isZh 
+                            ? '系統採用 **8 個固定分類槽** 來保持介面整潔。' 
+                            : 'The system uses **8 fixed category slots** to keep the interface clean.'}
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1">
+                          <li>
+                            <strong className="text-zinc-700 dark:text-zinc-300">{isZh ? '預設類別:' : 'Defaults:'}</strong> {isZh ? '影片、繪圖、寫作、音頻、3D、直播、社群、其他。' : 'Video, Art, Writing, Audio, 3D, Live, Social, Other.'}
+                          </li>
+                          <li>
+                            <strong className="text-zinc-700 dark:text-zinc-300">{isZh ? '客製化:' : 'Customization:'}</strong> {isZh ? '在 設定 > 類別目錄 中可更改名稱與外觀。' : 'Rename and recolor them in Settings > Catalogue.'}
+                          </li>
+                      </ul>
+                    </div>
+                </section>
+
+                {/* Section 5: Alerts & Settings */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Clock size={14} className="text-red-500 dark:text-red-400" /> {isZh ? '截止日與警示' : 'Deadlines & Alerts'}
@@ -154,7 +176,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 5: Archiving */}
+                {/* Section 6: Archiving */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Archive size={14} className="text-violet-600 dark:text-violet-500" /> {isZh ? '已發布與封存' : 'Published vs. Archive'}
@@ -177,7 +199,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 6: Deletion */}
+                {/* Section 7: Deletion */}
                 <section className="space-y-3 border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-2">
                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Trash2 size={14} className="text-red-500 dark:text-red-500" /> {isZh ? '垃圾桶與刪除' : 'Trash & Deletion'}
@@ -191,7 +213,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 7: Data & Safety */}
+                {/* Section 8: Data & Safety */}
                 <section className="space-y-3 border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-2">
                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <ShieldCheck size={14} className="text-blue-500" /> {isZh ? '資料安全' : 'Data & Safety'}

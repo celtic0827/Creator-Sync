@@ -133,7 +133,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
           </div>
           <div className="space-y-1.5">
             <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{t('modal_category', lang)}</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {(Object.entries(categoryConfig) as [string, CategoryDefinition][]).map(([key, config]) => (
                 <button
                   key={key}

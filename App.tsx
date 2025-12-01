@@ -77,6 +77,8 @@ const DEFAULT_CATEGORY_CONFIG: CategoryConfig = {
   WRITING: { label: 'Writing / Lore', color: 'bg-amber-600', iconKey: 'FileText' },
   AUDIO: { label: 'Audio / Podcast', color: 'bg-emerald-600', iconKey: 'Mic' },
   '3D': { label: '3D / Assets', color: 'bg-violet-600', iconKey: 'Box' },
+  LIVE: { label: 'Live / Stream', color: 'bg-cyan-600', iconKey: 'Zap' },
+  SOCIAL: { label: 'Social / Promo', color: 'bg-orange-600', iconKey: 'Globe' },
   OTHER: { label: 'Other', color: 'bg-pink-900', iconKey: 'Layers' }
 };
 
@@ -203,6 +205,24 @@ export default function App() {
       return DEFAULT_CATEGORY_CONFIG;
     }
   });
+
+  // Data Migration for New Categories (Fixed 8 slots)
+  useEffect(() => {
+     setCategoryConfig(prev => {
+        const requiredKeys = Object.keys(DEFAULT_CATEGORY_CONFIG);
+        const missingKeys = requiredKeys.filter(key => !prev[key as keyof CategoryConfig]);
+        
+        if (missingKeys.length > 0) {
+           console.log("Migrating Category Config, adding:", missingKeys);
+           const updated = { ...prev };
+           missingKeys.forEach(key => {
+              updated[key as keyof CategoryConfig] = DEFAULT_CATEGORY_CONFIG[key as keyof CategoryConfig];
+           });
+           return updated;
+        }
+        return prev;
+     });
+  }, []);
 
   const [appSettings, setAppSettings] = useState<AppSettings>(() => {
     try {

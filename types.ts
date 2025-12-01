@@ -7,7 +7,7 @@ export enum ProjectStatus {
   ARCHIVED = 'ARCHIVED'
 }
 
-export type ProjectType = 'VIDEO' | 'ART' | 'WRITING' | 'AUDIO' | '3D' | 'OTHER';
+export type ProjectType = 'VIDEO' | 'ART' | 'WRITING' | 'AUDIO' | '3D' | 'LIVE' | 'SOCIAL' | 'OTHER';
 
 export interface CategoryDefinition {
   label: string;
