@@ -35,10 +35,12 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({ date, items, project
       className={`
         relative min-h-[85px] flex flex-col p-1.5 transition-all duration-200
         ${isOver 
-            ? 'bg-indigo-50 dark:bg-indigo-500/10' 
-            : isWknd 
-                ? 'bg-zinc-100 dark:bg-[#0c0c0e]/50' 
-                : 'bg-white dark:bg-[#09090b]'
+            ? 'bg-indigo-100 dark:bg-indigo-500/20' // Drag over state (stronger)
+            : isCurrentDay
+                ? 'bg-indigo-50/60 dark:bg-indigo-500/10 pattern-today ring-1 ring-indigo-500/10 dark:ring-indigo-400/20 inset-ring inset-ring-indigo-500/5' // Today state (Pattern + Subtle tint)
+                : isWknd 
+                    ? 'bg-zinc-100 dark:bg-[#0c0c0e]/50' // Weekend
+                    : 'bg-white dark:bg-[#09090b]' // Default
         }
       `}
     >
@@ -66,7 +68,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({ date, items, project
         <span className={`
           flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold
           ${isCurrentDay 
-            ? 'bg-zinc-800 dark:bg-zinc-700 text-white shadow-lg shadow-zinc-500/20 dark:shadow-zinc-900/50' 
+            ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-md shadow-indigo-500/30' 
             : 'text-zinc-400 dark:text-zinc-500'
           }
         `}>
