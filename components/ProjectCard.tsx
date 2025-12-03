@@ -3,7 +3,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
-import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertTriangle, AlertCircle, ListTodo } from 'lucide-react';
+import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertTriangle, AlertCircle, ListTodo, CheckSquare, Square } from 'lucide-react';
 import { format, differenceInCalendarDays } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
 import zhTW from 'date-fns/locale/zh-TW';
@@ -95,7 +95,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   // Professional Design Classes
   const baseClasses = `
-    group relative flex items-stretch rounded-md border transition-all duration-200 overflow-hidden
+    group relative flex items-stretch rounded-md border transition-all duration-200 overflow-visible
     ${isOverlay 
       ? 'cursor-grabbing scale-105 shadow-2xl rotate-1 z-50 bg-white dark:bg-zinc-800 border-indigo-500 ring-1 ring-indigo-500/50' 
       : `cursor-grab ${bgClasses} ${borderClasses}`
@@ -122,17 +122,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     >
       {/* Left Color Bar & Icon */}
       <div className={`
-        w-10 flex flex-col items-center justify-center shrink-0 relative
+        w-10 flex flex-col items-center justify-center shrink-0 relative rounded-l-md overflow-visible
         ${config.color} 
         ${(isScheduled || isArchived) && !isOverlay ? 'opacity-80' : 'opacity-100'}
       `}>
          <div className="flex-1 flex flex-col items-center justify-center gap-2">
             <DynamicIcon iconKey={config.iconKey} className="text-white/90 w-5 h-5 drop-shadow-md" />
             
-            {/* Mini Progress Indicator */}
+            {/* Mini Progress Indicator & Tooltip */}
             {hasChecklist && !isOverlay && (
-              <div className="flex flex-col items-center w-full px-1.5">
-                <span className="text-[8px] font-bold text-white/90 leading-none mb-0.5">
+              <div className="relative group/progress flex flex-col items-center w-full px-1.5 gap-0.5 cursor-help">
+                <span className="text-[8px] font-bold text-white/90 leading-none">
                    {completedChecks}/{totalChecks}
                 </span>
                 <div className="w-full h-[2px] bg-black/20 rounded-full overflow-hidden">
@@ -141,6 +141,34 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                      style={{ width: `${progressPercent}%` }}
                    />
                 </div>
+
+                {/* Tooltip Popup */}
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 w-48 bg-zinc-800 text-zinc-100 text-[10px] rounded-md shadow-xl border border-zinc-700/50 p-2 invisible opacity-0 group-hover/progress:visible group-hover/progress:opacity-100 transition-all duration-200 delay-300 z-[60] pointer-events-none origin-left">
+                  {/* Tooltip Arrow */}
+                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-zinc-800 border-l border-b border-zinc-700/50 rotate-45"></div>
+                  
+                  <div className="relative font-bold mb-1.5 pb-1 border-b border-white/10 flex justify-between z-10">
+                     <span>Tasks</span>
+                     <span className="text-zinc-400">{completedChecks}/{totalChecks}</span>
+                  </div>
+                  <div className="space-y-1 relative z-10">
+                     {checklist.slice(0, 5).map(item => (
+                        <div key={item.id} className="flex items-start gap-1.5">
+                           <div className={`mt-0.5 shrink-0 ${item.isCompleted ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                              {item.isCompleted ? <CheckSquare size={10} /> : <Square size={10} />}
+                           </div>
+                           <span className={`truncate leading-tight ${item.isCompleted ? 'text-zinc-500 line-through' : 'text-zinc-200'}`}>
+                              {item.text}
+                           </span>
+                        </div>
+                     ))}
+                     {totalChecks > 5 && (
+                        <div className="text-zinc-500 italic pl-4">
+                           + {totalChecks - 5} more...
+                        </div>
+                     )}
+                  </div>
+               </div>
               </div>
             )}
          </div>
