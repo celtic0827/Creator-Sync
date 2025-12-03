@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { 
   DndContext, 
@@ -44,6 +45,7 @@ import { ProjectCard } from './components/ProjectCard';
 import { CalendarCell } from './components/CalendarCell';
 import { DraggableScheduleItem } from './components/DraggableScheduleItem';
 import { ProjectFormModal } from './components/modals/ProjectFormModal';
+import { ChecklistModal } from './components/modals/ChecklistModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { HelpModal } from './components/modals/HelpModal';
 import { t, getStatusText } from './translations';
@@ -109,7 +111,22 @@ const DEFAULT_APP_SETTINGS: AppSettings = {
 // Mock Initial Data (Used as fallback if localStorage is empty)
 const INITIAL_PROJECTS: Project[] = [
   // In Progress
-  { id: 'p1', name: 'Cyberpunk Character Pack', description: 'Tier 1 Rewards', tags: ['Sci-Fi', 'NSFW'], status: ProjectStatus.IN_PROGRESS, type: 'ART', color: '' },
+  { 
+    id: 'p1', 
+    name: 'Cyberpunk Character Pack', 
+    description: 'Tier 1 Rewards', 
+    tags: ['Sci-Fi', 'NSFW'], 
+    status: ProjectStatus.IN_PROGRESS, 
+    type: 'ART', 
+    color: '',
+    checklist: [
+      { id: 'c1', text: 'Sketch variations', isCompleted: true },
+      { id: 'c2', text: 'Lineart', isCompleted: true },
+      { id: 'c3', text: 'Flat colors', isCompleted: false },
+      { id: 'c4', text: 'Shading & Highlights', isCompleted: false },
+      { id: 'c5', text: 'Export High-Res', isCompleted: false },
+    ]
+  },
   { id: 'p4', name: 'Sketchbook Scan Vol. 5', description: 'Raw PDF', tags: ['Bonus'], status: ProjectStatus.IN_PROGRESS, type: 'ART', color: '' },
   { id: 'p6', name: 'Speedpaint: Neon City', description: 'Timelapse video', tags: ['YouTube', 'Short'], status: ProjectStatus.IN_PROGRESS, type: 'VIDEO', color: '' },
   { id: 'p7', name: 'Lore: The Great War', description: 'Worldbuilding post', tags: ['History', 'Public'], status: ProjectStatus.IN_PROGRESS, type: 'WRITING', color: '' },
@@ -277,7 +294,8 @@ export default function App() {
         return {
           ...p,
           tags: Array.isArray(p.tags) ? p.tags : [],
-          color: (typeConfig ? typeConfig.color : null) || defaultConfig.color || 'bg-zinc-800'
+          color: (typeConfig ? typeConfig.color : null) || defaultConfig.color || 'bg-zinc-800',
+          checklist: Array.isArray(p.checklist) ? p.checklist : []
         };
       });
       return parsedProjects;
@@ -365,6 +383,9 @@ export default function App() {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  
+  // Checklist Modal State
+  const [checklistProjectId, setChecklistProjectId] = useState<string | null>(null);
   
   // DnD Sensors
   const sensors = useSensors(
@@ -658,6 +679,11 @@ export default function App() {
     ));
   };
 
+  // Generic Update Project Function (Used for Checklists without closing modals)
+  const handleUpdateProject = (updatedProject: Project) => {
+    setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+  };
+
   const handleSaveProject = (formData: Partial<Project>) => {
     saveHistory();
     
@@ -678,7 +704,8 @@ export default function App() {
         tags: formData.tags || [],
         status: formData.status || activeStatuses[0].id,
         type: projectType,
-        color: config.color
+        color: config.color,
+        checklist: []
       };
       setProjects(prev => [...prev, newProject]);
     }
@@ -812,6 +839,7 @@ export default function App() {
                               onJumpToDate={scheduledDate ? (date) => handleJumpToProject(project.id, date) : undefined}
                               onEdit={() => handleEditProject(project)}
                               onToggleArchive={() => handleToggleArchive(project)}
+                              onOpenChecklist={() => setChecklistProjectId(project.id)}
                             />
                           );
                         })}
@@ -857,6 +885,7 @@ export default function App() {
                             onJumpToDate={scheduledDate ? (date) => handleJumpToProject(project.id, date) : undefined}
                             onEdit={() => handleEditProject(project)}
                             onToggleArchive={() => handleToggleArchive(project)}
+                            onOpenChecklist={() => setChecklistProjectId(project.id)}
                           />
                         </div>
                       );
@@ -1033,6 +1062,14 @@ export default function App() {
           lang={lang}
           activeStatuses={activeStatuses}
           statusMode={appSettings.statusMode}
+        />
+
+        <ChecklistModal 
+          isOpen={!!checklistProjectId}
+          onClose={() => setChecklistProjectId(null)}
+          project={checklistProjectId ? projects.find(p => p.id === checklistProjectId) || null : null}
+          onUpdateProject={handleUpdateProject}
+          lang={lang}
         />
 
         <SettingsModal 

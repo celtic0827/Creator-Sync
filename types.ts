@@ -35,6 +35,12 @@ export interface AppSettings {
   customStatuses: StatusDefinition[];
 }
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -43,6 +49,7 @@ export interface Project {
   status: string; // Changed from ProjectStatus enum to string to support custom statuses
   type: ProjectType;
   color: string; // Legacy support, generally derived from config now
+  checklist?: ChecklistItem[];
 }
 
 export interface ScheduleItem {

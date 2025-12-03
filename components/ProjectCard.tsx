@@ -1,8 +1,9 @@
 
+
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
-import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertTriangle, AlertCircle } from 'lucide-react';
+import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertTriangle, AlertCircle, ListTodo } from 'lucide-react';
 import { format, differenceInCalendarDays } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
 import zhTW from 'date-fns/locale/zh-TW';
@@ -18,6 +19,7 @@ interface ProjectCardProps {
   onJumpToDate?: (date: string) => void;
   onEdit?: () => void;
   onToggleArchive?: () => void;
+  onOpenChecklist?: () => void;
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ 
@@ -28,7 +30,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   appSettings,
   onJumpToDate, 
   onEdit,
-  onToggleArchive
+  onToggleArchive,
+  onOpenChecklist
 }) => {
   const dragData: DragData = {
     type: 'PROJECT_SOURCE',
@@ -52,6 +55,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const config = categoryConfig[project.type] || { color: 'bg-zinc-800', iconKey: 'Layers' };
   const lang = appSettings?.language || 'en';
   const dateLocale = lang === 'zh-TW' ? zhTW : enUS;
+
+  // Checklist Stats
+  const checklist = project.checklist || [];
+  const totalChecks = checklist.length;
+  const completedChecks = checklist.filter(c => c.isCompleted).length;
+  const hasChecklist = totalChecks > 0;
+  const progressPercent = hasChecklist ? (completedChecks / totalChecks) * 100 : 0;
 
   // Alert Logic
   let alertState: 'NONE' | 'WARNING' | 'CRITICAL' = 'NONE';
@@ -112,11 +122,28 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     >
       {/* Left Color Bar & Icon */}
       <div className={`
-        w-10 flex items-center justify-center shrink-0
+        w-10 flex flex-col items-center justify-center shrink-0 relative
         ${config.color} 
         ${(isScheduled || isArchived) && !isOverlay ? 'opacity-80' : 'opacity-100'}
       `}>
-         <DynamicIcon iconKey={config.iconKey} className="text-white/90 w-5 h-5 drop-shadow-md" />
+         <div className="flex-1 flex flex-col items-center justify-center gap-2">
+            <DynamicIcon iconKey={config.iconKey} className="text-white/90 w-5 h-5 drop-shadow-md" />
+            
+            {/* Mini Progress Indicator */}
+            {hasChecklist && !isOverlay && (
+              <div className="flex flex-col items-center w-full px-1.5">
+                <span className="text-[8px] font-bold text-white/90 leading-none mb-0.5">
+                   {completedChecks}/{totalChecks}
+                </span>
+                <div className="w-full h-[2px] bg-black/20 rounded-full overflow-hidden">
+                   <div 
+                     className="h-full bg-white/90 transition-all duration-300"
+                     style={{ width: `${progressPercent}%` }}
+                   />
+                </div>
+              </div>
+            )}
+         </div>
       </div>
 
       {/* Main Content Column */}
@@ -130,8 +157,22 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
            
            {/* Action Buttons Container (Top Right) */}
            <div className="flex items-center gap-1 shrink-0">
-              {/* Edit/Archive - Fade in on hover */}
+              {/* Fade in on hover */}
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {!isOverlay && onOpenChecklist && (
+                    <button
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); onOpenChecklist(); }}
+                      className={`
+                        p-1 rounded transition-all flex items-center gap-1
+                        ${hasChecklist && completedChecks < totalChecks ? 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'text-zinc-400 hover:text-indigo-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'}
+                      `}
+                      title={t('checklist_title', lang)}
+                    >
+                      <ListTodo size={12} />
+                    </button>
+                  )}
+
                   {!isOverlay && onToggleArchive && (
                     <button 
                       onPointerDown={(e) => e.stopPropagation()}

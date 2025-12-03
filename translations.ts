@@ -1,4 +1,5 @@
 
+
 import { Language, ProjectStatus } from './types';
 
 type TranslationKey = 
@@ -16,7 +17,8 @@ type TranslationKey =
   | 'cat_label' | 'cat_preview' | 'cat_color' | 'cat_icon'
   | 'sort_default' | 'sort_alpha' | 'sort_category' | 'sort_date'
   | 'pipeline_mode_default' | 'pipeline_mode_custom' | 'pipeline_add' | 'pipeline_max_limit' | 'pipeline_placeholder'
-  | 'pipeline_set_completed';
+  | 'pipeline_set_completed'
+  | 'checklist_title' | 'checklist_placeholder' | 'checklist_add' | 'checklist_empty';
 
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
@@ -83,6 +85,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     pipeline_max_limit: 'Max 8 statuses reached',
     pipeline_placeholder: 'Status Name',
     pipeline_set_completed: 'Select which status represents "Completed" to stop deadline alerts.',
+    checklist_title: 'To-Do List',
+    checklist_placeholder: 'Add a new task...',
+    checklist_add: 'Add',
+    checklist_empty: 'No tasks yet. Add one above!',
   },
   'zh-TW': {
     pipeline: '專案管線',
@@ -148,6 +154,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     pipeline_max_limit: '最多只能有 8 個狀態',
     pipeline_placeholder: '狀態名稱',
     pipeline_set_completed: '請選擇代表「已完成」的狀態，以停止過期警示。',
+    checklist_title: '待辦清單',
+    checklist_placeholder: '新增子任務...',
+    checklist_add: '新增',
+    checklist_empty: '尚無任務，請從上方新增！',
   }
 };
 
