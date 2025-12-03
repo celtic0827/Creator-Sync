@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, BookOpen, Layers, Calendar, ListTodo, Archive, Trash2, ShieldCheck, AlertTriangle, Undo2, Edit2, Settings, Clock, Globe, Shapes } from 'lucide-react';
+import { X, BookOpen, Layers, Calendar, ListTodo, Archive, Trash2, ShieldCheck, AlertTriangle, Undo2, Edit2, Settings, Clock, Globe, Shapes, CheckSquare } from 'lucide-react';
 import { Language } from '../../types';
 import { t } from '../../translations';
 
@@ -128,7 +128,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 4: Project Categories (NEW) */}
+                {/* Section 4: Project Categories */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Shapes size={14} className="text-pink-600 dark:text-pink-500" /> {isZh ? '專案分類' : 'Project Categories'}
@@ -150,7 +150,32 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 5: Alerts & Settings */}
+                {/* Section 5: Checklists & Tasks (NEW) */}
+                <section className="space-y-3">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <CheckSquare size={14} className="text-sky-500 dark:text-sky-400" /> {isZh ? '待辦清單與任務' : 'Checklists & Tasks'}
+                    </h3>
+                    <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
+                      <p>
+                          {isZh 
+                            ? '將大型專案拆解為更小的執行步驟。' 
+                            : 'Break down large projects into smaller actionable steps.'}
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1">
+                          <li>
+                            <strong className="text-zinc-700 dark:text-zinc-300">{isZh ? '開啟清單:' : 'Open Checklist:'}</strong> {isZh ? '點擊專案卡片右上角的' : 'Click the'} <ListTodo size={10} className="inline text-zinc-500" /> {isZh ? '圖示。' : 'icon on any project card.'}
+                          </li>
+                          <li>
+                            <strong className="text-zinc-700 dark:text-zinc-300">{isZh ? '追蹤進度:' : 'Track Progress:'}</strong> {isZh ? '完成度會以迷你進度條顯示於卡片左側色條上（例如 2/5）。' : 'Completion status is shown as a mini progress bar on the left colored edge of the card (e.g., 2/5).'}
+                          </li>
+                          <li>
+                            <strong className="text-zinc-700 dark:text-zinc-300">{isZh ? '編輯:' : 'Edit:'}</strong> {isZh ? '點擊任何現有的任務文字即可直接修改。' : 'Click on any existing task text to edit it inline.'}
+                          </li>
+                      </ul>
+                    </div>
+                </section>
+
+                {/* Section 6: Alerts & Settings */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Clock size={14} className="text-red-500 dark:text-red-400" /> {isZh ? '截止日與警示' : 'Deadlines & Alerts'}
@@ -176,7 +201,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 6: Archiving */}
+                {/* Section 7: Archiving */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Archive size={14} className="text-violet-600 dark:text-violet-500" /> {isZh ? '已發布與封存' : 'Published vs. Archive'}
@@ -199,7 +224,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 7: Deletion */}
+                {/* Section 8: Deletion */}
                 <section className="space-y-3 border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-2">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Trash2 size={14} className="text-red-500 dark:text-red-500" /> {isZh ? '垃圾桶與刪除' : 'Trash & Deletion'}
@@ -213,7 +238,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 8: Data & Safety */}
+                {/* Section 9: Data & Safety */}
                 <section className="space-y-3 border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-2">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <ShieldCheck size={14} className="text-blue-500" /> {isZh ? '資料安全' : 'Data & Safety'}

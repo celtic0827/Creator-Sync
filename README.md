@@ -9,6 +9,7 @@
 
 *   **Pipeline-to-Calendar Sync**: Instantly turn your backlog into a release schedule. Drag projects from your "Pipeline" directly onto calendar dates.
 *   **Customizable Pipeline**: Adapt the workflow to your specific needs. Switch between standard production stages or define your own custom statuses (e.g., "Writing", "Recording", "Editing") in Settings.
+*   **Project Checklists**: Break down complex projects into sub-tasks. Track progress (e.g., "3/5") with visual mini-bars directly on the project cards.
 *   **Smart Deadline Alerts**: Visual urgency indicators. Unfinished projects glow **Yellow** (Warning) or **Red** (Critical) as release dates approach.
 *   **Catalogue Editor**: Fully customizable project taxonomy. Manage your **8 fixed category slots** (e.g., Video, Live, Social) with 24 color themes and 27 icon options.
 *   **Dual View Workflow**:
@@ -52,6 +53,7 @@
 
 *   **管線與日曆同步**：將側邊欄的待辦事項直接拖曳至月曆，瞬間完成排程規劃。
 *   **客製化管線**：適應您的工作流程。可切換標準模式，或在設定中定義您專屬的狀態（如：撰寫中、錄製中、剪輯中）。
+*   **專案待辦清單**：將大型專案拆解為子任務。透過卡片上的迷你進度條與數字（如 "3/5"）隨時掌握執行狀況。
 *   **智慧截止日警示**：自動監控進度。當專案已排程但未完成時，系統會依據剩餘天數顯示 **黃色警示** 或 **紅色緊急** 訊號。
 *   **高度客製化目錄**：內建「目錄編輯器」，管理 **8 個固定分類槽**（如：影片、直播、社群），並搭配 24 種主題色與 27 款圖示。
 *   **雙視圖工作流**：
@@ -64,7 +66,6 @@
 
 *   **核心**: React 19, TypeScript, Vite
 *   **介面**: Tailwind CSS, Lucide Icons
-*   **互動**: @dnd-kit
 *   **互動**: @dnd-kit
 *   **邏輯**: date-fns, Google Gemini API
 

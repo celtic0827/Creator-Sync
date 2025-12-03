@@ -14,7 +14,11 @@ interface ChecklistModalProps {
 
 export const ChecklistModal: React.FC<ChecklistModalProps> = ({ isOpen, onClose, project, onUpdateProject, lang }) => {
   const [newTaskText, setNewTaskText] = useState('');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemText, setEditItemText] = useState('');
+  
   const inputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   // Focus input when modal opens
   useEffect(() => {
@@ -22,6 +26,13 @@ export const ChecklistModal: React.FC<ChecklistModalProps> = ({ isOpen, onClose,
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
+
+  // Focus edit input when editing starts
+  useEffect(() => {
+    if (editingItemId && editInputRef.current) {
+        editInputRef.current.focus();
+    }
+  }, [editingItemId]);
 
   if (!isOpen || !project) return null;
 
@@ -56,6 +67,41 @@ export const ChecklistModal: React.FC<ChecklistModalProps> = ({ isOpen, onClose,
   const handleDeleteTask = (itemId: string) => {
     const updatedChecklist = checklist.filter(item => item.id !== itemId);
     onUpdateProject({ ...project, checklist: updatedChecklist });
+  };
+
+  const handleStartEdit = (item: ChecklistItem) => {
+    setEditingItemId(item.id);
+    setEditItemText(item.text);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingItemId) return;
+
+    // If empty, revert to original or could delete (choosing to revert here for safety)
+    if (!editItemText.trim()) {
+        setEditingItemId(null);
+        return;
+    }
+
+    const updatedChecklist = checklist.map(item => 
+      item.id === editingItemId ? { ...item, text: editItemText.trim() } : item
+    );
+    onUpdateProject({ ...project, checklist: updatedChecklist });
+    setEditingItemId(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setEditItemText('');
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+        e.preventDefault(); // Prevent form submission if inside form (though it's not)
+        handleSaveEdit();
+    } else if (e.key === 'Escape') {
+        handleCancelEdit();
+    }
   };
 
   return (
@@ -138,9 +184,27 @@ export const ChecklistModal: React.FC<ChecklistModalProps> = ({ isOpen, onClose,
                       {item.isCompleted ? <CheckSquare size={18} /> : <Square size={18} />}
                     </button>
                     
-                    <span className={`flex-1 text-xs break-all ${item.isCompleted ? 'line-through decoration-zinc-400' : ''}`}>
-                      {item.text}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                        {editingItemId === item.id ? (
+                            <input
+                                ref={editInputRef}
+                                type="text"
+                                value={editItemText}
+                                onChange={(e) => setEditItemText(e.target.value)}
+                                onBlur={handleSaveEdit}
+                                onKeyDown={handleEditKeyDown}
+                                className="w-full bg-white dark:bg-black border border-indigo-500 rounded px-1.5 py-0.5 text-xs text-zinc-900 dark:text-white focus:outline-none"
+                            />
+                        ) : (
+                            <span 
+                                onClick={() => handleStartEdit(item)}
+                                className={`block text-xs break-all cursor-text hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${item.isCompleted ? 'line-through decoration-zinc-400' : ''}`}
+                                title="Click to edit"
+                            >
+                                {item.text}
+                            </span>
+                        )}
+                    </div>
 
                     <button
                       onClick={() => handleDeleteTask(item.id)}
