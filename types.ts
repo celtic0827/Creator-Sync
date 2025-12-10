@@ -19,6 +19,7 @@ export type CategoryConfig = Record<ProjectType, CategoryDefinition>;
 
 export type Language = 'en' | 'zh-TW';
 export type Theme = 'light' | 'dark';
+export type CalendarViewMode = 'COMPACT' | 'BLOCK';
 
 export interface StatusDefinition {
   id: string;
@@ -33,6 +34,7 @@ export interface AppSettings {
   theme: Theme;
   statusMode: 'DEFAULT' | 'CUSTOM';
   customStatuses: StatusDefinition[];
+  calendarViewMode: CalendarViewMode;
 }
 
 export interface ChecklistItem {

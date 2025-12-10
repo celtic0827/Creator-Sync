@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { 
   DndContext, 
@@ -37,7 +38,8 @@ import {
   ArrowDownAZ,
   CalendarClock,
   Shapes,
-  List
+  List,
+  LayoutGrid
 } from 'lucide-react';
 
 import { Project, ProjectStatus, ScheduleItem, DragData, CategoryConfig, CategoryDefinition, AppSettings, Language, SortMode, StatusDefinition } from './types';
@@ -105,7 +107,8 @@ const DEFAULT_APP_SETTINGS: AppSettings = {
   language: getDefaultLanguage(),
   theme: 'dark',
   statusMode: 'DEFAULT',
-  customStatuses: [...DEFAULT_STATUS_DEFS]
+  customStatuses: [...DEFAULT_STATUS_DEFS],
+  calendarViewMode: 'COMPACT'
 };
 
 // Mock Initial Data (Used as fallback if localStorage is empty)
@@ -251,6 +254,7 @@ export default function App() {
       if (!settings.theme) settings.theme = 'dark'; // Default to dark for existing users
       if (!settings.statusMode) settings.statusMode = 'DEFAULT';
       if (!settings.customStatuses) settings.customStatuses = [...DEFAULT_STATUS_DEFS];
+      if (!settings.calendarViewMode) settings.calendarViewMode = 'COMPACT';
       return settings;
     } catch {
       return { ...DEFAULT_APP_SETTINGS };
@@ -724,6 +728,11 @@ export default function App() {
      return schedule.find(s => s.id === activeDragData.scheduleId);
   }
 
+  // Handle View Mode Toggle
+  const toggleViewMode = (mode: 'COMPACT' | 'BLOCK') => {
+    setAppSettings(prev => ({ ...prev, calendarViewMode: mode }));
+  };
+
   return (
     <DndContext 
       sensors={sensors} 
@@ -956,6 +965,26 @@ export default function App() {
 
                <div className="h-6 w-px bg-zinc-300 dark:bg-zinc-800/50 mx-2"></div>
 
+               {/* View Mode Toggle */}
+               <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/50 p-0.5">
+                  <button 
+                    onClick={() => toggleViewMode('COMPACT')}
+                    className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'COMPACT' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                    title={t('view_compact', lang)}
+                  >
+                    <List size={14} />
+                  </button>
+                  <button 
+                    onClick={() => toggleViewMode('BLOCK')}
+                    className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'BLOCK' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                    title={t('view_block', lang)}
+                  >
+                    <LayoutGrid size={14} />
+                  </button>
+               </div>
+
+               <div className="h-6 w-px bg-zinc-300 dark:bg-zinc-800/50 mx-2"></div>
+
                 {/* Undo Button */}
                 <button
                    onClick={handleUndo}
@@ -1019,6 +1048,7 @@ export default function App() {
                       highlightedProjectId={highlightedProjectId}
                       onItemClick={handleScheduleItemClick}
                       onRemoveItem={handleRemoveScheduleItem}
+                      viewMode={appSettings.calendarViewMode}
                     />
                   );
                 })}
@@ -1045,6 +1075,7 @@ export default function App() {
                    project={getActiveOverlayProject()!} 
                    categoryConfig={categoryConfig}
                    isOverlay
+                   viewMode={appSettings.calendarViewMode}
                  />
                </div>
             )
