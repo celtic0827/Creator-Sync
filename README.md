@@ -12,6 +12,7 @@
 *   **Project Checklists**: Break down complex projects into sub-tasks. Track progress (e.g., "3/5") with visual mini-bars directly on the project cards.
 *   **Smart Deadline Alerts**: Visual urgency indicators. Unfinished projects glow **Yellow** (Warning) or **Red** (Critical) as release dates approach.
 *   **Catalogue Editor**: Fully customizable project taxonomy. Manage your **8 fixed category slots** (e.g., Video, Live, Social) with 24 color themes and 27 icon options.
+*   **Flexible Calendar Views**: Toggle between **Compact List** and **Block Grid** modes to visualize your schedule effectively.
 *   **Dual View Workflow**:
     *   **Pipeline**: Focus on active production.
     *   **Published**: Auto-archives completed releases to keep your workspace clean.
@@ -56,6 +57,7 @@
 *   **專案待辦清單**：將大型專案拆解為子任務。透過卡片上的迷你進度條與數字（如 "3/5"）隨時掌握執行狀況。
 *   **智慧截止日警示**：自動監控進度。當專案已排程但未完成時，系統會依據剩餘天數顯示 **黃色警示** 或 **紅色緊急** 訊號。
 *   **高度客製化目錄**：內建「目錄編輯器」，管理 **8 個固定分類槽**（如：影片、直播、社群），並搭配 24 種主題色與 27 款圖示。
+*   **彈性日曆視圖**：一鍵切換「清單模式」與「色塊模式」，視覺化管理您的排程。
 *   **雙視圖工作流**：
     *   **管線 (Pipeline)**：專注於當前的開發進度。
     *   **已發布 (Published)**：自動收納過期或已完成的專案，保持工作區整潔。

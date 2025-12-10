@@ -11,7 +11,7 @@ interface SettingsModalProps {
   categoryConfig: CategoryConfig;
   onUpdateCategory: (config: CategoryConfig) => void;
   onExportData: () => void;
-  onImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onImportData: (file: File) => void;
   appSettings: AppSettings;
   onUpdateAppSettings: (settings: AppSettings) => void;
 }
@@ -239,7 +239,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             </p>
                           </div>
                           <label className="mt-auto w-full py-2 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-medium rounded border border-zinc-200 dark:border-zinc-700 text-center cursor-pointer">
-                            <input type="file" accept=".json" onChange={onImportData} className="hidden" />
+                            <input 
+                              type="file" 
+                              accept=".json" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) onImportData(file);
+                                e.target.value = '';
+                              }} 
+                              className="hidden" 
+                            />
                             Select File
                           </label>
                       </div>

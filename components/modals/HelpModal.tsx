@@ -86,6 +86,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                           <li>
                             <span className="text-zinc-700 dark:text-zinc-300">{isZh ? '移除排程:' : 'Remove Schedule:'}</span> {isZh ? '將滑鼠停在日曆項目上並點擊 X，或將其拖曳至上方的垃圾桶。這只會移除日期，不會刪除專案。' : 'Hover over a calendar item and click the X button, or drag it to the Trash at the top. This removes the date but keeps the project.'}
                           </li>
+                          <li>
+                            <span className="text-zinc-700 dark:text-zinc-300">{isZh ? '切換視圖:' : 'View Modes:'}</span> {isZh ? '使用頂部的工具列按鈕，在「清單模式」與「色塊模式」間自由切換。' : 'Use the toolbar buttons to switch between Compact (List) and Block (Colored) calendar views.'}
+                          </li>
                       </ul>
                     </div>
                 </section>
