@@ -10,7 +10,8 @@ import {
   AppSettings, 
   ProjectStatus, 
   Language,
-  StatusDefinition 
+  StatusDefinition,
+  ProjectType
 } from '../types';
 
 // --- Constants & Defaults ---
@@ -47,7 +48,8 @@ const DEFAULT_APP_SETTINGS: AppSettings = {
   theme: 'dark',
   statusMode: 'DEFAULT',
   customStatuses: [...DEFAULT_STATUS_DEFS],
-  calendarViewMode: 'COMPACT'
+  calendarViewMode: 'COMPACT',
+  categoryOrder: ['VIDEO', 'ART', 'WRITING', 'AUDIO', '3D', 'LIVE', 'SOCIAL', 'OTHER']
 };
 
 const INITIAL_PROJECTS: Project[] = [
@@ -105,6 +107,10 @@ export const useAppStore = () => {
       if (!settings.statusMode) settings.statusMode = 'DEFAULT';
       if (!settings.customStatuses) settings.customStatuses = [...DEFAULT_STATUS_DEFS];
       if (!settings.calendarViewMode) settings.calendarViewMode = 'COMPACT';
+      // Migration: Ensure categoryOrder exists
+      if (!settings.categoryOrder || settings.categoryOrder.length === 0) {
+          settings.categoryOrder = [...DEFAULT_APP_SETTINGS.categoryOrder];
+      }
       return settings;
     } catch { return { ...DEFAULT_APP_SETTINGS }; }
   });

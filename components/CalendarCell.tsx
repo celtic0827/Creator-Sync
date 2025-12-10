@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { format, isToday, isWeekend } from 'date-fns';
 import { ScheduleItem, Project, CategoryConfig, CalendarViewMode, AppSettings } from '../types';
@@ -37,6 +37,26 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   });
 
   const getProject = (id: string) => projects.find((p) => p.id === id);
+
+  // Sort items based on user defined category order
+  const sortedItems = useMemo(() => {
+    if (!appSettings?.categoryOrder) return items;
+    
+    return [...items].sort((a, b) => {
+        const pA = getProject(a.projectId);
+        const pB = getProject(b.projectId);
+        if (!pA || !pB) return 0;
+        
+        const indexA = appSettings.categoryOrder.indexOf(pA.type);
+        const indexB = appSettings.categoryOrder.indexOf(pB.type);
+        
+        // If type not found in order (e.g. legacy/error), put at end
+        const safeIndexA = indexA === -1 ? 999 : indexA;
+        const safeIndexB = indexB === -1 ? 999 : indexB;
+        
+        return safeIndexA - safeIndexB;
+    });
+  }, [items, projects, appSettings?.categoryOrder]);
 
   const isCurrentDay = isToday(date);
   const isWknd = isWeekend(date);
@@ -90,7 +110,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
       
       {/* Content Area */}
       <div className="flex-1 flex flex-col gap-1 overflow-y-auto max-h-[85px] no-scrollbar">
-        {items.map((item) => {
+        {sortedItems.map((item) => {
           const project = getProject(item.projectId);
           if (!project) return null;
           return (

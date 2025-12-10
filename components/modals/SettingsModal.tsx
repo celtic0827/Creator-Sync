@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, GripVertical, CheckCircle, Circle, Sun, Moon } from 'lucide-react';
+import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, GripVertical, CheckCircle, Circle, Sun, Moon, ChevronUp, ChevronDown } from 'lucide-react';
 import { ProjectType, CategoryConfig, CategoryDefinition, AppSettings, Language, StatusDefinition, ProjectStatus } from '../../types';
 import { DynamicIcon, COLOR_PALETTE, ICON_MAP } from '../IconUtils';
 import { t } from '../../translations';
@@ -109,12 +109,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }))
     }));
   };
+
+  const handleMoveCategory = (e: React.MouseEvent, index: number, direction: -1 | 1) => {
+    e.stopPropagation();
+    const newOrder = [...(appSettings.categoryOrder || Object.keys(categoryConfig) as ProjectType[])];
+    if (index + direction < 0 || index + direction >= newOrder.length) return;
+    
+    const item = newOrder[index];
+    newOrder.splice(index, 1);
+    newOrder.splice(index + direction, 0, item);
+    
+    onUpdateAppSettings({
+        ...appSettings,
+        categoryOrder: newOrder
+    });
+  };
   
   // Safe accessor to avoid 'unknown' type errors if inference fails
   const safeEditCategoryForm = editCategoryForm as CategoryDefinition;
   const lang = prefForm.language;
 
-  if (!isOpen) return null;
+  // Ensure order exists (fallback to default keys if empty)
+  const currentCategoryOrder = appSettings.categoryOrder && appSettings.categoryOrder.length > 0 
+    ? appSettings.categoryOrder 
+    : (Object.keys(categoryConfig) as ProjectType[]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -170,11 +188,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {/* Catalogue Section */}
                 <div className="px-2 pb-2">
                   <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-2 mb-1 mt-2 uppercase tracking-wider">{t('settings_catalogue', lang)}</div>
-                  {(Object.entries(categoryConfig) as [string, CategoryDefinition][]).map(([key, config]) => (
+                  {currentCategoryOrder.map((key, index) => {
+                      const config = categoryConfig[key];
+                      if(!config) return null;
+                      
+                      return (
                       <button
                         key={key}
                         onClick={() => setActiveSettingsTab(key)}
-                        className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
+                        className={`w-full flex items-center gap-3 p-2 rounded-md transition-all group relative ${
                           activeSettingsTab === key 
                             ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm' 
                             : 'hover:bg-zinc-200 dark:hover:bg-zinc-900 border border-transparent'
@@ -186,8 +208,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="text-left flex-1 min-w-0">
                             <div className="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate">{config.label}</div>
                         </div>
+
+                        {/* Reordering Buttons (Visible on Hover/Active) */}
+                        <div className={`flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${activeSettingsTab === key ? 'opacity-100' : ''}`}>
+                            <div 
+                                role="button"
+                                onClick={(e) => handleMoveCategory(e, index, -1)}
+                                className={`p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 ${index === 0 ? 'invisible' : ''}`}
+                            >
+                                <ChevronUp size={10} className="text-zinc-400 dark:text-zinc-500" />
+                            </div>
+                            <div 
+                                role="button"
+                                onClick={(e) => handleMoveCategory(e, index, 1)}
+                                className={`p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 ${index === currentCategoryOrder.length - 1 ? 'invisible' : ''}`}
+                            >
+                                <ChevronDown size={10} className="text-zinc-400 dark:text-zinc-500" />
+                            </div>
+                        </div>
                       </button>
-                  ))}
+                  )})}
                 </div>
               </div>
               <div className="p-3 border-t border-zinc-200 dark:border-zinc-800">

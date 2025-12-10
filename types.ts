@@ -35,6 +35,7 @@ export interface AppSettings {
   statusMode: 'DEFAULT' | 'CUSTOM';
   customStatuses: StatusDefinition[];
   calendarViewMode: CalendarViewMode;
+  categoryOrder: ProjectType[]; // New field for storing the sort order
 }
 
 export interface ChecklistItem {

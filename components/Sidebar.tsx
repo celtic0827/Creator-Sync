@@ -59,6 +59,18 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       switch (mode) {
         case 'ALPHA': return a.name.localeCompare(b.name);
         case 'CATEGORY': 
+          // Use custom order from AppSettings if available
+          if (appSettings.categoryOrder) {
+             const indexA = appSettings.categoryOrder.indexOf(a.type);
+             const indexB = appSettings.categoryOrder.indexOf(b.type);
+             const safeIndexA = indexA === -1 ? 999 : indexA;
+             const safeIndexB = indexB === -1 ? 999 : indexB;
+             // If different types, sort by order
+             if (safeIndexA !== safeIndexB) return safeIndexA - safeIndexB;
+             // If same type, fallback to name
+             return a.name.localeCompare(b.name);
+          }
+          // Fallback to label comparison (legacy)
           const catA = categoryConfig[a.type]?.label || '';
           const catB = categoryConfig[b.type]?.label || '';
           return catA.localeCompare(catB);
