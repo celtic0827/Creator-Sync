@@ -72,3 +72,4 @@ export interface DragData {
 }
 
 export type SortMode = 'DEFAULT' | 'ALPHA' | 'CATEGORY' | 'DATE';
+export type SidebarTab = 'pipeline' | 'published';
