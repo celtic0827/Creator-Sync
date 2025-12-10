@@ -89,7 +89,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
         : isDragging 
             ? 'opacity-30 text-left' 
             : isBlock 
-                ? `${config.color} border-transparent hover:brightness-110 cursor-grab justify-center text-center shadow-sm` 
+                ? `${config.color} border-transparent hover:brightness-110 cursor-grab justify-center shadow-sm` 
                 : `cursor-grab text-left border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 ${alertClasses ? alertClasses : 'bg-zinc-50 dark:bg-zinc-900/40'}`
     }
     ${isHighlighted ? 'ring-2 ring-inset ring-indigo-500 z-20' : ''}
@@ -105,17 +105,17 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
     >
       {/* 
           BLOCK MODE ALERT BADGE 
-          Solves contrast issues by providing a white background for the alert icon
+          Moved to Top-Left inside the card to prevent clipping by parent scroll container.
       */}
       {isBlock && alertState !== 'NONE' && !isOverlay && (
         <div className={`
-            absolute -top-1 -right-1 z-10 w-4 h-4 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-md ring-1 ring-black/5
+            absolute top-0.5 left-0.5 z-10 w-3.5 h-3.5 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm ring-1 ring-black/5
             ${alertState === 'CRITICAL' ? 'animate-bounce-slow' : ''}
         `}>
             {alertState === 'CRITICAL' ? (
-                <AlertCircle size={12} className="text-red-600 dark:text-red-500 fill-red-100 dark:fill-red-900/30" />
+                <AlertCircle size={10} className="text-red-600 dark:text-red-500 fill-red-100 dark:fill-red-900/30" />
             ) : (
-                <AlertTriangle size={10} className="text-amber-500 fill-amber-100 dark:fill-amber-900/30" />
+                <AlertTriangle size={8} className="text-amber-500 fill-amber-100 dark:fill-amber-900/30" />
             )}
         </div>
       )}
@@ -126,8 +126,8 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
       )}
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
-        <h4 className={`text-[11px] font-medium truncate leading-tight ${isBlock ? 'text-white drop-shadow-md' : 'text-zinc-700 dark:text-zinc-200'}`}>
+      <div className={`flex-1 min-w-0 ${isBlock ? 'text-center w-full' : ''}`}>
+        <h4 className={`text-[11px] font-medium truncate leading-tight ${isBlock ? 'text-white drop-shadow-md mx-auto px-1' : 'text-zinc-700 dark:text-zinc-200'}`}>
            {project.name}
         </h4>
         
