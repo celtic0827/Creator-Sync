@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { X } from 'lucide-react';
+import { X, AlertCircle, AlertTriangle } from 'lucide-react';
 import { differenceInCalendarDays } from 'date-fns';
 import { ScheduleItem, Project, CategoryConfig, DragData, CalendarViewMode, AppSettings, ProjectStatus } from '../types';
 
@@ -69,16 +69,19 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   }
 
   // Visual Styles based on Alert State
-  // Fixed: Use ring-inset and inset shadows to prevent clipping in scrollable containers
   let alertClasses = '';
-  if (alertState === 'CRITICAL') {
-      alertClasses = 'ring-2 ring-inset ring-red-500 dark:ring-red-500 shadow-[inset_0_0_8px_rgba(239,68,68,0.6)] z-10';
-  } else if (alertState === 'WARNING') {
-      alertClasses = 'ring-2 ring-inset ring-amber-500 dark:ring-amber-500 shadow-[inset_0_0_8px_rgba(245,158,11,0.6)] z-10';
+  
+  // In COMPACT mode, we use ring/borders. 
+  // In BLOCK mode, we use the Floating Badge (rendered below) instead of rings to avoid contrast issues.
+  if (!isBlock) {
+    if (alertState === 'CRITICAL') {
+        alertClasses = 'ring-1 ring-inset ring-red-500 dark:ring-red-500 bg-red-50 dark:bg-red-900/10';
+    } else if (alertState === 'WARNING') {
+        alertClasses = 'ring-1 ring-inset ring-amber-500 dark:ring-amber-500 bg-amber-50 dark:bg-amber-900/10';
+    }
   }
 
   // Base classes used for both modes
-  // Added justify-center and text-center for Block mode to fix centering alignment
   const baseClasses = `
     group relative flex items-center gap-2 p-1.5 rounded-md border transition-all select-none
     ${isOverlay 
@@ -86,10 +89,10 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
         : isDragging 
             ? 'opacity-30 text-left' 
             : isBlock 
-                ? `${config.color} border-transparent hover:brightness-110 cursor-grab justify-center text-center` 
-                : 'bg-zinc-50 dark:bg-zinc-900/40 hover:bg-white dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-grab text-left'
+                ? `${config.color} border-transparent hover:brightness-110 cursor-grab justify-center text-center shadow-sm` 
+                : `cursor-grab text-left border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 ${alertClasses ? alertClasses : 'bg-zinc-50 dark:bg-zinc-900/40'}`
     }
-    ${isHighlighted ? 'ring-2 ring-inset ring-indigo-500 z-20' : alertClasses}
+    ${isHighlighted ? 'ring-2 ring-inset ring-indigo-500 z-20' : ''}
   `;
 
   return (
@@ -100,6 +103,23 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
       onClick={onClick}
       className={baseClasses}
     >
+      {/* 
+          BLOCK MODE ALERT BADGE 
+          Solves contrast issues by providing a white background for the alert icon
+      */}
+      {isBlock && alertState !== 'NONE' && !isOverlay && (
+        <div className={`
+            absolute -top-1 -right-1 z-10 w-4 h-4 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-md ring-1 ring-black/5
+            ${alertState === 'CRITICAL' ? 'animate-bounce-slow' : ''}
+        `}>
+            {alertState === 'CRITICAL' ? (
+                <AlertCircle size={12} className="text-red-600 dark:text-red-500 fill-red-100 dark:fill-red-900/30" />
+            ) : (
+                <AlertTriangle size={10} className="text-amber-500 fill-amber-100 dark:fill-amber-900/30" />
+            )}
+        </div>
+      )}
+
       {/* Color Indicator (Only for Compact Mode) */}
       {!isBlock && (
         <div className={`w-1.5 self-stretch rounded-full ${config.color} shrink-0`} />
@@ -107,9 +127,11 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <h4 className={`text-[11px] font-medium truncate leading-tight ${isBlock ? 'text-white drop-shadow-sm' : 'text-zinc-700 dark:text-zinc-200'}`}>
+        <h4 className={`text-[11px] font-medium truncate leading-tight ${isBlock ? 'text-white drop-shadow-md' : 'text-zinc-700 dark:text-zinc-200'}`}>
            {project.name}
         </h4>
+        
+        {/* Tags */}
         {project.tags && project.tags.length > 0 && (
            <div className={`flex flex-wrap gap-1 mt-0.5 ${isBlock ? 'justify-center' : ''}`}>
               {project.tags.slice(0, 2).map((tag, i) => (
@@ -118,7 +140,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
                     className={`
                       text-[9px] font-normal truncate
                       ${isBlock 
-                         ? 'text-white/80' 
+                         ? 'text-white/90' 
                          : 'text-zinc-400 dark:text-zinc-500'
                       }
                     `}
@@ -127,6 +149,21 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
                   </span>
               ))}
            </div>
+        )}
+
+        {/* Compact Mode Alert Icon (Inline) */}
+        {!isBlock && alertState !== 'NONE' && (
+            <div className="flex items-center gap-1 mt-1">
+                 {alertState === 'CRITICAL' ? (
+                    <span className="flex items-center gap-1 text-[9px] font-bold text-red-600 dark:text-red-400">
+                        <AlertCircle size={10} /> Due soon
+                    </span>
+                 ) : (
+                    <span className="flex items-center gap-1 text-[9px] font-bold text-amber-600 dark:text-amber-500">
+                        <AlertTriangle size={10} /> Upcoming
+                    </span>
+                 )}
+            </div>
         )}
       </div>
 
