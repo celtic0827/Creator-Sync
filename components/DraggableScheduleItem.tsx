@@ -72,7 +72,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   let alertClasses = '';
   
   // In COMPACT mode, we use ring/borders. 
-  // In BLOCK mode, we use the Floating Badge (rendered below) instead of rings to avoid contrast issues.
+  // In BLOCK mode, we use the Dot Badge (rendered below) instead of rings.
   if (!isBlock) {
     if (alertState === 'CRITICAL') {
         alertClasses = 'ring-1 ring-inset ring-red-500 dark:ring-red-500 bg-red-50 dark:bg-red-900/10';
@@ -105,18 +105,15 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
     >
       {/* 
           BLOCK MODE ALERT BADGE 
-          Moved to Top-Left inside the card to prevent clipping by parent scroll container.
+          Design: Black background circle with a colored dot inside.
+          Provides high contrast on any colored background without relying on small icons.
       */}
       {isBlock && alertState !== 'NONE' && !isOverlay && (
         <div className={`
-            absolute top-0.5 left-0.5 z-10 w-3.5 h-3.5 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm ring-1 ring-black/5
-            ${alertState === 'CRITICAL' ? 'animate-bounce-slow' : ''}
+            absolute top-0.5 left-0.5 z-10 w-3 h-3 rounded-full bg-zinc-900 dark:bg-black flex items-center justify-center shadow-sm ring-1 ring-white/10
+            ${alertState === 'CRITICAL' ? 'animate-pulse' : ''}
         `}>
-            {alertState === 'CRITICAL' ? (
-                <AlertCircle size={10} className="text-red-600 dark:text-red-500 fill-red-100 dark:fill-red-900/30" />
-            ) : (
-                <AlertTriangle size={8} className="text-amber-500 fill-amber-100 dark:fill-amber-900/30" />
-            )}
+            <div className={`w-1.5 h-1.5 rounded-full ${alertState === 'CRITICAL' ? 'bg-red-500 shadow-[0_0_4px_rgba(239,68,68,1)]' : 'bg-amber-500'}`} />
         </div>
       )}
 
