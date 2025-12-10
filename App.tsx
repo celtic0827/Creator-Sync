@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { 
   DndContext, 
@@ -166,7 +168,7 @@ interface HistoryState {
 }
 
 // Status Zone Component for Droppable Sidebar Sections
-const StatusZone: React.FC<{ status: string; children: React.ReactNode }> = ({ status, children }) => {
+const StatusZone: React.FC<{ status: string; children: React.ReactNode }> = React.memo(({ status, children }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: `status-${status}`,
     data: { status }
@@ -182,10 +184,10 @@ const StatusZone: React.FC<{ status: string; children: React.ReactNode }> = ({ s
       {children}
     </div>
   );
-};
+});
 
 // Trash Drop Zone Component
-const TrashDropZone: React.FC<{ activeDragId: string | null; lang: Language }> = ({ activeDragId, lang }) => {
+const TrashDropZone: React.FC<{ activeDragId: string | null; lang: Language }> = React.memo(({ activeDragId, lang }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: 'trash-zone',
   });
@@ -212,7 +214,7 @@ const TrashDropZone: React.FC<{ activeDragId: string | null; lang: Language }> =
        <span className="text-xs font-semibold">{t('dropToDelete', lang)}</span>
     </div>
   );
-};
+});
 
 export default function App() {
   // Load Config
@@ -317,6 +319,19 @@ export default function App() {
       return INITIAL_SCHEDULE;
     }
   });
+
+  // Optimization: Create a lookup map for schedule items by date
+  // This avoids O(N*M) filtering in the render loop and provides stable references for memoized cells
+  const scheduleLookup = useMemo(() => {
+    const map: Record<string, ScheduleItem[]> = {};
+    schedule.forEach(item => {
+      if (!map[item.date]) {
+        map[item.date] = [];
+      }
+      map[item.date].push(item);
+    });
+    return map;
+  }, [schedule]);
 
   // History Stack for Undo
   const [history, setHistory] = useState<HistoryState[]>([]);
@@ -461,16 +476,16 @@ export default function App() {
 
   const today = startOfToday();
 
-  const isScheduledInPast = (projectId: string) => {
+  const isScheduledInPast = useCallback((projectId: string) => {
     const item = schedule.find(s => s.projectId === projectId);
     if (!item) return false;
     return isBefore(parseISO(item.date), today);
-  };
+  }, [schedule, today]);
 
-  const getProjectScheduledDate = (projectId: string) => {
+  const getProjectScheduledDate = useCallback((projectId: string) => {
     const item = schedule.find(s => s.projectId === projectId);
     return item ? item.date : undefined;
-  };
+  }, [schedule]);
 
   const sortProjects = useCallback((projectsToSort: Project[], mode: SortMode) => {
     return [...projectsToSort].sort((a, b) => {
@@ -495,16 +510,16 @@ export default function App() {
           return 0;
       }
     });
-  }, [categoryConfig, schedule]);
+  }, [categoryConfig, getProjectScheduledDate]);
 
-  const handleJumpToProject = (projectId: string, dateStr: string) => {
+  const handleJumpToProject = useCallback((projectId: string, dateStr: string) => {
     const date = parseISO(dateStr);
     setCurrentMonth(date);
     setHighlightedProjectId(projectId);
     setTimeout(() => setHighlightedProjectId(null), 2000);
-  };
+  }, []);
 
-  const handleScheduleItemClick = (projectId: string) => {
+  const handleScheduleItemClick = useCallback((projectId: string) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
@@ -523,12 +538,12 @@ export default function App() {
       }
       setTimeout(() => setHighlightedProjectId(null), 2000);
     }, 100);
-  };
+  }, [projects, isScheduledInPast]);
 
-  const handleRemoveScheduleItem = (scheduleId: string) => {
+  const handleRemoveScheduleItem = useCallback((scheduleId: string) => {
     saveHistory();
     setSchedule(prev => prev.filter(s => s.id !== scheduleId));
-  };
+  }, [saveHistory]);
 
   const handleExportData = () => {
     const data = {
@@ -580,7 +595,7 @@ export default function App() {
 
   const pipelineProjects = useMemo(() => {
     return projects.filter(p => !isScheduledInPast(p.id) && p.status !== ProjectStatus.ARCHIVED);
-  }, [projects, schedule]);
+  }, [projects, isScheduledInPast]);
 
   const publishedProjects = useMemo(() => {
     return projects
@@ -594,7 +609,7 @@ export default function App() {
         if (dateB) return 1;
         return 0;
       });
-  }, [projects, schedule]);
+  }, [projects, isScheduledInPast, getProjectScheduledDate]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -654,15 +669,15 @@ export default function App() {
     }
   };
 
-  const openCreateModal = () => {
+  const openCreateModal = useCallback(() => {
     setEditingProjectId(null);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleEditProject = (project: Project) => {
+  const handleEditProject = useCallback((project: Project) => {
     setEditingProjectId(project.id);
     setIsModalOpen(true);
-  };
+  }, []);
 
   const handleDeleteProject = () => {
     if (!editingProjectId) return;
@@ -673,7 +688,7 @@ export default function App() {
     setEditingProjectId(null);
   };
 
-  const handleToggleArchive = (project: Project) => {
+  const handleToggleArchive = useCallback((project: Project) => {
     saveHistory();
     const isArchived = project.status === ProjectStatus.ARCHIVED;
     const newStatus = isArchived ? activeStatuses[0].id : ProjectStatus.ARCHIVED;
@@ -681,7 +696,7 @@ export default function App() {
     setProjects(prev => prev.map(p => 
        p.id === project.id ? { ...p, status: newStatus } : p
     ));
-  };
+  }, [saveHistory, activeStatuses]);
 
   // Generic Update Project Function (Used for Checklists without closing modals)
   const handleUpdateProject = (updatedProject: Project) => {
@@ -1037,7 +1052,8 @@ export default function App() {
                <div className="grid grid-cols-7 gap-px bg-zinc-200 dark:bg-zinc-800 h-full min-h-[500px]">
                 {calendarDays.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd');
-                  const dayItems = schedule.filter(s => s.date === dateStr);
+                  const dayItems = scheduleLookup[dateStr] || []; // Use O(1) lookup
+                  
                   return (
                     <CalendarCell 
                       key={day.toISOString()} 

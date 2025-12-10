@@ -1,6 +1,8 @@
 
 
 
+
+
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { X } from 'lucide-react';
@@ -17,7 +19,7 @@ interface DraggableScheduleItemProps {
   viewMode?: CalendarViewMode;
 }
 
-export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({
+export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React.memo(({
   item,
   project,
   categoryConfig,
@@ -117,4 +119,4 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = ({
       )}
     </div>
   );
-};
+});

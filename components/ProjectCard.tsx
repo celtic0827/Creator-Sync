@@ -1,5 +1,7 @@
 
 
+
+
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
@@ -22,7 +24,7 @@ interface ProjectCardProps {
   onOpenChecklist?: () => void;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ 
+export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({ 
   project, 
   categoryConfig, 
   isOverlay = false, 
@@ -143,9 +145,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 </div>
 
                 {/* Tooltip Popup */}
-                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 w-48 bg-zinc-800 text-zinc-100 text-[10px] rounded-md shadow-xl border border-zinc-700/50 p-2 invisible opacity-0 group-hover/progress:visible group-hover/progress:opacity-100 transition-all duration-200 delay-300 z-[60] pointer-events-none origin-left">
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 w-48 bg-zinc-900 text-zinc-100 text-[10px] rounded-md shadow-xl border border-zinc-700 p-2 invisible opacity-0 group-hover/progress:visible group-hover/progress:opacity-100 transition-all duration-200 delay-300 z-[60] pointer-events-none origin-left">
                   {/* Tooltip Arrow */}
-                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-zinc-800 border-l border-b border-zinc-700/50 rotate-45"></div>
+                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-zinc-900 border-l border-b border-zinc-700 rotate-45"></div>
                   
                   <div className="relative font-bold mb-1.5 pb-1 border-b border-white/10 flex justify-between z-10">
                      <span>Tasks</span>
@@ -304,4 +306,4 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       </div>
     </div>
   );
-};
+});

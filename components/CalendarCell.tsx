@@ -1,6 +1,8 @@
 
 
 
+
+
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { format, isToday, isWeekend } from 'date-fns';
@@ -19,7 +21,7 @@ interface CalendarCellProps {
   viewMode?: CalendarViewMode;
 }
 
-export const CalendarCell: React.FC<CalendarCellProps> = ({ 
+export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({ 
   date, 
   items, 
   projects, 
@@ -109,4 +111,4 @@ export const CalendarCell: React.FC<CalendarCellProps> = ({
       </div>
     </div>
   );
-};
+});

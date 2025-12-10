@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { 
   Video, Image as ImageIcon, FileText, Mic, Box, Layers, 
@@ -74,7 +76,7 @@ export const COLOR_PALETTE = [
   'bg-pink-900'
 ];
 
-export const DynamicIcon = ({ iconKey, className }: { iconKey: string, className?: string }) => {
+export const DynamicIcon = React.memo(({ iconKey, className }: { iconKey: string, className?: string }) => {
   const IconComponent = ICON_MAP[iconKey] || Layers;
   return <IconComponent className={className} />;
-};
+});
