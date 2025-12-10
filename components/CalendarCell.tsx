@@ -1,12 +1,8 @@
 
-
-
-
-
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { format, isToday, isWeekend } from 'date-fns';
-import { ScheduleItem, Project, CategoryConfig, CalendarViewMode } from '../types';
+import { ScheduleItem, Project, CategoryConfig, CalendarViewMode, AppSettings } from '../types';
 import { DraggableScheduleItem } from './DraggableScheduleItem';
 import { Layers } from 'lucide-react';
 
@@ -19,6 +15,7 @@ interface CalendarCellProps {
   onItemClick?: (projectId: string) => void;
   onRemoveItem?: (scheduleId: string) => void;
   viewMode?: CalendarViewMode;
+  appSettings?: AppSettings;
 }
 
 export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({ 
@@ -29,7 +26,8 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   highlightedProjectId, 
   onItemClick, 
   onRemoveItem,
-  viewMode = 'COMPACT'
+  viewMode = 'COMPACT',
+  appSettings
 }) => {
   const dateStr = format(date, 'yyyy-MM-dd');
   
@@ -105,6 +103,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
               onClick={() => onItemClick && onItemClick(project.id)}
               onRemove={() => onRemoveItem && onRemoveItem(item.id)}
               viewMode={viewMode}
+              appSettings={appSettings}
             />
           );
         })}

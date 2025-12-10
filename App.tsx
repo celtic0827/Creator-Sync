@@ -273,6 +273,7 @@ export default function App() {
                       onItemClick={handleScheduleItemClick}
                       onRemoveItem={(sid) => { saveHistory(); setSchedule(p => p.filter(s => s.id !== sid)); }}
                       viewMode={appSettings.calendarViewMode}
+                      appSettings={appSettings}
                     />
                   );
                 })}
@@ -285,7 +286,7 @@ export default function App() {
           {activeDragId && (
             activeDragData?.type === 'PROJECT_SOURCE' ? 
               <div className="w-[300px]"><ProjectCard project={projects.find(p => p.id === activeDragData.projectId)!} categoryConfig={categoryConfig} isOverlay appSettings={appSettings} /></div> : 
-              <div className="w-auto"><DraggableScheduleItem item={schedule.find(s => s.id === activeDragData.scheduleId)!} project={projects.find(p => p.id === activeDragData.projectId)!} categoryConfig={categoryConfig} isOverlay viewMode={appSettings.calendarViewMode} /></div>
+              <div className="w-auto"><DraggableScheduleItem item={schedule.find(s => s.id === activeDragData.scheduleId)!} project={projects.find(p => p.id === activeDragData.projectId)!} categoryConfig={categoryConfig} isOverlay viewMode={appSettings.calendarViewMode} appSettings={appSettings} /></div>
           )}
         </DragOverlay>
 
