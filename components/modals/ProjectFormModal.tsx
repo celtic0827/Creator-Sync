@@ -155,7 +155,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
             <div className="space-y-1.5">
                 <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{t('modal_priority', lang)}</label>
                 <div className="flex rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 p-0.5">
-                    {['LOW', 'MEDIUM', 'HIGH'].map((p) => (
+                    {['HIGH', 'MEDIUM', 'LOW'].map((p) => (
                         <button
                             key={p}
                             type="button"
