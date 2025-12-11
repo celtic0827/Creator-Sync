@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, GripVertical, CheckCircle, Circle, Sun, Moon, ChevronUp, ChevronDown } from 'lucide-react';
+import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, GripVertical, CheckCircle, Circle, Sun, Moon, ChevronUp, ChevronDown, RefreshCw, ArrowDownUp } from 'lucide-react';
 import { ProjectType, CategoryConfig, CategoryDefinition, AppSettings, Language, StatusDefinition, ProjectStatus } from '../../types';
 import { DynamicIcon, COLOR_PALETTE, ICON_MAP } from '../IconUtils';
 import { t } from '../../translations';
@@ -29,6 +29,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [activeSettingsTab, setActiveSettingsTab] = useState<string>('VIDEO');
   const [editCategoryForm, setEditCategoryForm] = useState<CategoryDefinition>({ label: '', color: '', iconKey: '' });
   const [prefForm, setPrefForm] = useState<AppSettings>(appSettings);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Initial Sync when modal opens
   useEffect(() => {
@@ -49,10 +50,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [appSettings]);
 
   const handleSwitchTab = (key: string) => {
-    // 1. Set the new tab key
     setActiveSettingsTab(key);
-    
-    // 2. Synchronously update the form data for Catalogue items to prevent "mixed up" parameters (flash of old content)
     if (!['DATA', 'PREFERENCES', 'PIPELINE'].includes(key)) {
         const config = categoryConfig[key as ProjectType];
         if (config) {
@@ -93,7 +91,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (prefForm.customStatuses.length <= 2) return;
     setPrefForm(prev => {
       const newList = [...prev.customStatuses];
-      // If removing the completed one, make the last one completed
       if (newList[index].isCompleted) {
          if (index > 0) newList[index-1].isCompleted = true;
          else if (index < newList.length - 1) newList[index+1].isCompleted = true;
@@ -138,12 +135,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         categoryOrder: currentOrder
     });
   };
+
+  const handleManualSync = () => {
+    setIsSyncing(true);
+    // Force update app settings to ensure calendar receives the latest order
+    onUpdateAppSettings({ ...appSettings });
+    setTimeout(() => setIsSyncing(false), 600);
+  };
   
-  // Safe accessor to prevent crash if editCategoryForm is undefined/null
   const safeEditCategoryForm = editCategoryForm || { label: '', color: '', iconKey: '' };
   const lang = prefForm.language || 'en';
 
-  // Ensure order exists and is valid
   const currentCategoryOrder = appSettings.categoryOrder && appSettings.categoryOrder.length > 0 
     ? appSettings.categoryOrder 
     : (Object.keys(categoryConfig) as ProjectType[]);
@@ -203,7 +205,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 {/* Catalogue Section */}
                 <div className="px-2 pb-2">
-                  <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-2 mb-1 mt-2 uppercase tracking-wider">{t('settings_catalogue', lang)}</div>
+                  <div className="flex items-center justify-between px-2 mb-1 mt-2">
+                     <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{t('settings_catalogue', lang)}</div>
+                     <button onClick={handleManualSync} title="Sync sort order to calendar" className={`p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 hover:text-indigo-500 transition-all ${isSyncing ? 'animate-spin text-indigo-500' : ''}`}>
+                        <RefreshCw size={10} />
+                     </button>
+                  </div>
                   {currentCategoryOrder.map((key, index) => {
                       const config = categoryConfig[key];
                       if(!config) return null;
@@ -258,6 +265,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {activeSettingsTab === 'DATA' ? (
                 // Data Management View
                 <div className="flex flex-col h-full">
+                    {/* ... (DATA content unchanged) ... */}
                     <div className="pb-4 border-b border-zinc-200 dark:border-zinc-800 mb-6">
                       <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wide">{t('settings_data', lang)}</h2>
                       <p className="text-xs text-zinc-500 mt-1">Export your data for backup or transfer to another device.</p>
@@ -311,7 +319,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                 </div>
               ) : activeSettingsTab === 'PIPELINE' ? (
-                 // Pipeline Settings View
+                 // Pipeline Settings View (unchanged)
                  <div className="flex flex-col h-full gap-4">
                     <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
                       <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wide">{t('settings_pipeline', lang)}</h2>
@@ -426,7 +434,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                  </div>
               ) : activeSettingsTab === 'PREFERENCES' ? (
-                // Preferences View
+                // Preferences View (unchanged)
                  <div className="flex flex-col h-full gap-4">
                     <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
                       <div>
@@ -545,7 +553,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     
                     {/* Header: Title & Save */}
                     <div className="flex items-center justify-end pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                      {/* Title Removed as requested */}
+                      <div className="mr-auto flex items-center gap-2 text-zinc-400">
+                         <ArrowDownUp size={12} />
+                         <span className="text-[10px] font-medium">Drag-and-drop sort coming soon. Use arrows to reorder.</span>
+                      </div>
                       <button 
                         onClick={handleSaveCategory}
                         className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
@@ -611,6 +622,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             </button>
                           ))}
                       </div>
+                    </div>
+                    
+                    {/* Explicit Sync Button for Order */}
+                    <div className="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+                        <div className="text-[10px] text-zinc-400">
+                           Category order determines vertical sorting on the calendar.
+                        </div>
+                        <button 
+                           onClick={handleManualSync}
+                           className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-xs font-medium rounded transition-colors"
+                        >
+                           <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+                           {isSyncing ? 'Syncing...' : 'Sync Order to Calendar'}
+                        </button>
                     </div>
 
                 </div>
