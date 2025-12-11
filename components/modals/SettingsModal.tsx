@@ -30,25 +30,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [editCategoryForm, setEditCategoryForm] = useState<CategoryDefinition>({ label: '', color: '', iconKey: '' });
   const [prefForm, setPrefForm] = useState<AppSettings>(appSettings);
 
-  // Reset/Sync form when tab or config changes
+  // Initial Sync when modal opens
   useEffect(() => {
-    if (activeSettingsTab && !['DATA', 'PREFERENCES', 'PIPELINE'].includes(activeSettingsTab) && isOpen) {
-       setEditCategoryForm(categoryConfig[activeSettingsTab as ProjectType]);
+    if (isOpen) {
+      setActiveSettingsTab('VIDEO');
+      if (categoryConfig['VIDEO']) {
+        setEditCategoryForm(categoryConfig['VIDEO']);
+      }
+      setPrefForm(appSettings);
     }
-  }, [activeSettingsTab, categoryConfig, isOpen]);
+  }, [isOpen]);
 
+  // Sync prefForm when appSettings changes externally (e.g. reordering)
   useEffect(() => {
     if (appSettings) {
       setPrefForm(appSettings);
     }
   }, [appSettings]);
 
-  // Handle setting default tab when opening
-  useEffect(() => {
-    if (isOpen) {
-      setActiveSettingsTab('VIDEO');
+  const handleSwitchTab = (key: string) => {
+    // 1. Set the new tab key
+    setActiveSettingsTab(key);
+    
+    // 2. Synchronously update the form data for Catalogue items to prevent "mixed up" parameters (flash of old content)
+    if (!['DATA', 'PREFERENCES', 'PIPELINE'].includes(key)) {
+        const config = categoryConfig[key as ProjectType];
+        if (config) {
+            setEditCategoryForm(config);
+        }
     }
-  }, [isOpen]);
+  };
 
   const handleSaveCategory = () => {
     if (activeSettingsTab && !['DATA', 'PREFERENCES', 'PIPELINE'].includes(activeSettingsTab)) {
@@ -112,27 +123,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const handleMoveCategory = (e: React.MouseEvent, index: number, direction: -1 | 1) => {
     e.stopPropagation();
-    const newOrder = [...(appSettings.categoryOrder || Object.keys(categoryConfig) as ProjectType[])];
-    if (index + direction < 0 || index + direction >= newOrder.length) return;
+    const currentOrder = appSettings.categoryOrder && appSettings.categoryOrder.length > 0 
+        ? [...appSettings.categoryOrder] 
+        : (Object.keys(categoryConfig) as ProjectType[]);
     
-    const item = newOrder[index];
-    newOrder.splice(index, 1);
-    newOrder.splice(index + direction, 0, item);
+    if (index + direction < 0 || index + direction >= currentOrder.length) return;
+    
+    const item = currentOrder[index];
+    currentOrder.splice(index, 1);
+    currentOrder.splice(index + direction, 0, item);
     
     onUpdateAppSettings({
         ...appSettings,
-        categoryOrder: newOrder
+        categoryOrder: currentOrder
     });
   };
   
-  // Safe accessor to avoid 'unknown' type errors if inference fails
-  const safeEditCategoryForm = editCategoryForm as CategoryDefinition;
-  const lang = prefForm.language;
+  // Safe accessor to prevent crash if editCategoryForm is undefined/null
+  const safeEditCategoryForm = editCategoryForm || { label: '', color: '', iconKey: '' };
+  const lang = prefForm.language || 'en';
 
-  // Ensure order exists (fallback to default keys if empty)
+  // Ensure order exists and is valid
   const currentCategoryOrder = appSettings.categoryOrder && appSettings.categoryOrder.length > 0 
     ? appSettings.categoryOrder 
     : (Object.keys(categoryConfig) as ProjectType[]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -151,7 +167,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="px-2 py-2">
                   <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-2 mb-1 uppercase tracking-wider">{t('settings_system', lang)}</div>
                   <button 
-                    onClick={() => setActiveSettingsTab('PREFERENCES')}
+                    onClick={() => handleSwitchTab('PREFERENCES')}
                     className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
                       activeSettingsTab === 'PREFERENCES' 
                         ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-900 dark:text-white' 
@@ -162,7 +178,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="text-xs font-medium">{t('settings_pref', lang)}</div>
                   </button>
                   <button 
-                    onClick={() => setActiveSettingsTab('PIPELINE')}
+                    onClick={() => handleSwitchTab('PIPELINE')}
                     className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
                       activeSettingsTab === 'PIPELINE' 
                         ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-900 dark:text-white' 
@@ -173,7 +189,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="text-xs font-medium">{t('settings_pipeline', lang)}</div>
                   </button>
                   <button 
-                    onClick={() => setActiveSettingsTab('DATA')}
+                    onClick={() => handleSwitchTab('DATA')}
                     className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
                       activeSettingsTab === 'DATA' 
                         ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-900 dark:text-white' 
@@ -195,7 +211,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       return (
                       <button
                         key={key}
-                        onClick={() => setActiveSettingsTab(key)}
+                        onClick={() => handleSwitchTab(key)}
                         className={`w-full flex items-center gap-3 p-2 rounded-md transition-all group relative ${
                           activeSettingsTab === key 
                             ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm' 
