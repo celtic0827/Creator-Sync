@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { format, isToday, isWeekend } from 'date-fns';
-import { ScheduleItem, Project, CategoryConfig, CalendarViewMode, AppSettings } from '../types';
+import { ScheduleItem, Project, CategoryConfig, CalendarViewMode, AppSettings, Priority } from '../types';
 import { DraggableScheduleItem } from './DraggableScheduleItem';
 import { Layers } from 'lucide-react';
 
@@ -38,23 +38,39 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
 
   const getProject = (id: string) => projects.find((p) => p.id === id);
 
-  // Sort items based on user defined category order
+  // Helper for priority weight
+  const getPriorityWeight = (priority?: Priority): number => {
+    if (priority === 'HIGH') return 3;
+    if (priority === 'LOW') return 1;
+    return 2; // Medium or undefined
+  };
+
+  // Sort items: Priority > Category Order > Name
   const sortedItems = useMemo(() => {
-    if (!appSettings?.categoryOrder) return items;
-    
     return [...items].sort((a, b) => {
         const pA = getProject(a.projectId);
         const pB = getProject(b.projectId);
         if (!pA || !pB) return 0;
         
-        const indexA = appSettings.categoryOrder.indexOf(pA.type);
-        const indexB = appSettings.categoryOrder.indexOf(pB.type);
+        // 1. Priority (High to Low)
+        const weightA = getPriorityWeight(pA.priority);
+        const weightB = getPriorityWeight(pB.priority);
+        if (weightA !== weightB) return weightB - weightA;
+
+        // 2. Category Order
+        if (appSettings?.categoryOrder) {
+            const indexA = appSettings.categoryOrder.indexOf(pA.type);
+            const indexB = appSettings.categoryOrder.indexOf(pB.type);
+            
+            // If type not found in order (e.g. legacy/error), put at end
+            const safeIndexA = indexA === -1 ? 999 : indexA;
+            const safeIndexB = indexB === -1 ? 999 : indexB;
+            
+            if (safeIndexA !== safeIndexB) return safeIndexA - safeIndexB;
+        }
         
-        // If type not found in order (e.g. legacy/error), put at end
-        const safeIndexA = indexA === -1 ? 999 : indexA;
-        const safeIndexB = indexB === -1 ? 999 : indexB;
-        
-        return safeIndexA - safeIndexB;
+        // 3. Name (A-Z)
+        return pA.name.localeCompare(pB.name);
     });
   }, [items, projects, appSettings?.categoryOrder]);
 
@@ -121,7 +137,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
               categoryConfig={categoryConfig}
               isHighlighted={highlightedProjectId === project.id}
               onClick={() => onItemClick && onItemClick(project.id)}
-              onRemove={() => onRemoveItem && onRemoveItem(item.id)}
+              onRemoveItem={() => onRemoveItem && onRemoveItem(item.id)}
               viewMode={viewMode}
               appSettings={appSettings}
             />
