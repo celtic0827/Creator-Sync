@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ListTodo, Archive, List, ArrowDownAZ, Shapes, CalendarClock, Inbox, Plus, Settings, CircleHelp } from 'lucide-react';
-import { Project, CategoryConfig, AppSettings, Language, SidebarTab, SortMode, StatusDefinition, ProjectStatus } from '../types';
+import { Project, CategoryConfig, AppSettings, Language, SidebarTab, SortMode, StatusDefinition, ProjectStatus, Priority } from '../types';
 import { ProjectCard } from './ProjectCard';
 import { StatusZone } from './StatusZone';
 import { t, getStatusText } from '../translations';
@@ -54,23 +54,35 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
     localStorage.setItem('patreon_scheduler_sort_v1', mode);
   };
 
+  const getPriorityWeight = (priority?: Priority): number => {
+      if (priority === 'HIGH') return 3;
+      if (priority === 'LOW') return 1;
+      return 2; // Medium or undefined
+  };
+
   const sortProjects = (projectsToSort: Project[], mode: SortMode) => {
     return [...projectsToSort].sort((a, b) => {
       switch (mode) {
         case 'ALPHA': return a.name.localeCompare(b.name);
         case 'CATEGORY': 
-          // Use custom order from AppSettings if available
+          // 1. Sort by Category Order
           if (appSettings.categoryOrder) {
              const indexA = appSettings.categoryOrder.indexOf(a.type);
              const indexB = appSettings.categoryOrder.indexOf(b.type);
              const safeIndexA = indexA === -1 ? 999 : indexA;
              const safeIndexB = indexB === -1 ? 999 : indexB;
-             // If different types, sort by order
+             
              if (safeIndexA !== safeIndexB) return safeIndexA - safeIndexB;
-             // If same type, fallback to name
+             
+             // 2. Same Category -> Sort by Priority (High to Low)
+             const weightA = getPriorityWeight(a.priority);
+             const weightB = getPriorityWeight(b.priority);
+             if (weightA !== weightB) return weightB - weightA;
+
+             // 3. Fallback to name
              return a.name.localeCompare(b.name);
           }
-          // Fallback to label comparison (legacy)
+          // Legacy Fallback
           const catA = categoryConfig[a.type]?.label || '';
           const catB = categoryConfig[b.type]?.label || '';
           return catA.localeCompare(catB);

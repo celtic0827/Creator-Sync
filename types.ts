@@ -9,6 +9,8 @@ export enum ProjectStatus {
 
 export type ProjectType = 'VIDEO' | 'ART' | 'WRITING' | 'AUDIO' | '3D' | 'LIVE' | 'SOCIAL' | 'OTHER';
 
+export type Priority = 'HIGH' | 'MEDIUM' | 'LOW';
+
 export interface CategoryDefinition {
   label: string;
   color: string;
@@ -53,6 +55,7 @@ export interface Project {
   type: ProjectType;
   color: string; // Legacy support, generally derived from config now
   checklist?: ChecklistItem[];
+  priority?: Priority;
 }
 
 export interface ScheduleItem {

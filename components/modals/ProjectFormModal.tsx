@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Tag, Check, AlertTriangle, Trash2 } from 'lucide-react';
-import { Project, ProjectStatus, ProjectType, CategoryConfig, CategoryDefinition, Language, StatusDefinition } from '../../types';
+import { X, Tag, Check, AlertTriangle, Trash2, Gauge } from 'lucide-react';
+import { Project, ProjectStatus, ProjectType, CategoryConfig, CategoryDefinition, Language, StatusDefinition, Priority } from '../../types';
 import { DynamicIcon } from '../IconUtils';
 import { t, getStatusText } from '../../translations';
 
@@ -33,7 +33,8 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
     description: '',
     tagsString: '',
     type: 'VIDEO' as ProjectType,
-    status: activeStatuses[0]?.id || ProjectStatus.PLANNING
+    status: activeStatuses[0]?.id || ProjectStatus.PLANNING,
+    priority: 'MEDIUM' as Priority
   });
   
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
@@ -46,7 +47,8 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
           description: editingProject.description,
           tagsString: editingProject.tags.join(', '),
           type: editingProject.type,
-          status: editingProject.status
+          status: editingProject.status,
+          priority: editingProject.priority || 'MEDIUM'
         });
       } else {
         // Reset for new project
@@ -55,7 +57,8 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
           description: '',
           tagsString: '',
           type: 'VIDEO' as ProjectType,
-          status: activeStatuses[0]?.id || ProjectStatus.PLANNING
+          status: activeStatuses[0]?.id || ProjectStatus.PLANNING,
+          priority: 'MEDIUM'
         });
       }
       setIsDeleteConfirming(false);
@@ -76,7 +79,8 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
       description: formData.description,
       tags,
       type: formData.type,
-      status: formData.status
+      status: formData.status,
+      priority: formData.priority
     });
     onClose();
   };
@@ -131,6 +135,44 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                 />
               </div>
           </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{t('modal_status', lang)}</label>
+                <select 
+                    value={formData.status}
+                    onChange={e => setFormData(prev => ({...prev, status: e.target.value}))}
+                    className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-2 text-xs text-zinc-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 appearance-none"
+                >
+                    {activeStatuses.map(s => (
+                    <option key={s.id} value={s.id}>
+                        {statusMode === 'CUSTOM' ? s.label : getStatusText(s.id, lang, s.label)}
+                    </option>
+                    ))}
+                </select>
+            </div>
+
+            <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{t('modal_priority', lang)}</label>
+                <div className="flex rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 p-0.5">
+                    {['LOW', 'MEDIUM', 'HIGH'].map((p) => (
+                        <button
+                            key={p}
+                            type="button"
+                            onClick={() => setFormData(prev => ({...prev, priority: p as Priority}))}
+                            className={`flex-1 py-1.5 text-[10px] font-bold rounded transition-all ${
+                                formData.priority === p 
+                                ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-white shadow-sm' 
+                                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                            }`}
+                        >
+                            {p === 'HIGH' ? 'H' : p === 'MEDIUM' ? 'M' : 'L'}
+                        </button>
+                    ))}
+                </div>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{t('modal_category', lang)}</label>
             <div className="grid grid-cols-4 gap-2">
@@ -154,20 +196,6 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                 </button>
               ))}
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{t('modal_status', lang)}</label>
-            <select 
-                value={formData.status}
-                onChange={e => setFormData(prev => ({...prev, status: e.target.value}))}
-                className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-2 text-xs text-zinc-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 appearance-none"
-            >
-                {activeStatuses.map(s => (
-                  <option key={s.id} value={s.id}>
-                     {statusMode === 'CUSTOM' ? s.label : getStatusText(s.id, lang, s.label)}
-                  </option>
-                ))}
-            </select>
           </div>
         </div>
         <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-4">

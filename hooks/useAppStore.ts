@@ -56,6 +56,7 @@ const INITIAL_PROJECTS: Project[] = [
   { 
     id: 'p1', name: 'Cyberpunk Character Pack', description: 'Tier 1 Rewards', tags: ['Sci-Fi', 'NSFW'], 
     status: ProjectStatus.IN_PROGRESS, type: 'ART', color: '',
+    priority: 'HIGH',
     checklist: [
       { id: 'c1', text: 'Sketch variations', isCompleted: true },
       { id: 'c2', text: 'Lineart', isCompleted: true },
@@ -64,10 +65,10 @@ const INITIAL_PROJECTS: Project[] = [
       { id: 'c5', text: 'Export High-Res', isCompleted: false },
     ]
   },
-  { id: 'p4', name: 'Sketchbook Scan Vol. 5', description: 'Raw PDF', tags: ['Bonus'], status: ProjectStatus.IN_PROGRESS, type: 'ART', color: '' },
-  { id: 'p6', name: 'Speedpaint: Neon City', description: 'Timelapse video', tags: ['YouTube', 'Short'], status: ProjectStatus.IN_PROGRESS, type: 'VIDEO', color: '' },
-  { id: 'p2', name: 'Fantasy Map Tutorial', description: 'Step-by-step', tags: ['Tutorial', 'Voiceover'], status: ProjectStatus.PLANNING, type: 'VIDEO', color: '' },
-  { id: 'p3', name: 'Podcast Episode #42', description: 'Audio file', tags: ['Guest'], status: ProjectStatus.COMPLETED, type: 'AUDIO', color: '' },
+  { id: 'p4', name: 'Sketchbook Scan Vol. 5', description: 'Raw PDF', tags: ['Bonus'], status: ProjectStatus.IN_PROGRESS, type: 'ART', color: '', priority: 'LOW' },
+  { id: 'p6', name: 'Speedpaint: Neon City', description: 'Timelapse video', tags: ['YouTube', 'Short'], status: ProjectStatus.IN_PROGRESS, type: 'VIDEO', color: '', priority: 'MEDIUM' },
+  { id: 'p2', name: 'Fantasy Map Tutorial', description: 'Step-by-step', tags: ['Tutorial', 'Voiceover'], status: ProjectStatus.PLANNING, type: 'VIDEO', color: '', priority: 'MEDIUM' },
+  { id: 'p3', name: 'Podcast Episode #42', description: 'Audio file', tags: ['Guest'], status: ProjectStatus.COMPLETED, type: 'AUDIO', color: '', priority: 'MEDIUM' },
 ];
 
 const INITIAL_SCHEDULE: ScheduleItem[] = [
@@ -141,7 +142,8 @@ export const useAppStore = () => {
            ...p,
            tags: Array.isArray(p.tags) ? p.tags : [],
            color: (typeConfig ? typeConfig.color : null) || 'bg-zinc-800',
-           checklist: Array.isArray(p.checklist) ? p.checklist : []
+           checklist: Array.isArray(p.checklist) ? p.checklist : [],
+           priority: p.priority || 'MEDIUM'
          };
       });
     } catch { return INITIAL_PROJECTS; }

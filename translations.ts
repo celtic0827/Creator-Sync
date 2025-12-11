@@ -1,6 +1,4 @@
 
-
-
 import { Language, ProjectStatus } from './types';
 
 type TranslationKey = 
@@ -9,7 +7,8 @@ type TranslationKey =
   | 'undo' | 'today' | 'restore' | 'archive' | 'edit' | 'jumpToDate'
   | 'status_PLANNING' | 'status_IN_PROGRESS' | 'status_COMPLETED' | 'status_PAUSED' | 'status_ARCHIVED'
   | 'modal_createTitle' | 'modal_editTitle' | 'modal_name' | 'modal_desc' | 'modal_tags'
-  | 'modal_category' | 'modal_status' | 'modal_delete' | 'modal_reallyDelete' | 'modal_save' | 'modal_cancel'
+  | 'modal_category' | 'modal_status' | 'modal_priority' | 'modal_delete' | 'modal_reallyDelete' | 'modal_save' | 'modal_cancel'
+  | 'priority_HIGH' | 'priority_MEDIUM' | 'priority_LOW'
   | 'settings_system' | 'settings_catalogue' | 'settings_pipeline' | 'settings_data' | 'settings_pref'
   | 'settings_lang' | 'settings_appearance' | 'settings_theme_light' | 'settings_theme_dark'
   | 'settings_alerts' | 'settings_export' | 'settings_import'
@@ -51,10 +50,14 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     modal_tags: 'Tags (Comma separated)',
     modal_category: 'Category Type',
     modal_status: 'Status',
+    modal_priority: 'Priority',
     modal_delete: 'Delete Project',
     modal_reallyDelete: 'Really Delete?',
     modal_save: 'Save',
     modal_cancel: 'Cancel',
+    priority_HIGH: 'High',
+    priority_MEDIUM: 'Medium',
+    priority_LOW: 'Low',
     settings_system: 'System',
     settings_catalogue: 'Catalogue',
     settings_pipeline: 'Pipeline Config',
@@ -122,10 +125,14 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     modal_tags: '標籤 (用逗號分隔)',
     modal_category: '類別',
     modal_status: '狀態',
+    modal_priority: '優先級',
     modal_delete: '刪除專案',
     modal_reallyDelete: '確定刪除？',
     modal_save: '儲存',
     modal_cancel: '取消',
+    priority_HIGH: '高 (High)',
+    priority_MEDIUM: '中 (Medium)',
+    priority_LOW: '低 (Low)',
     settings_system: '系統設定',
     settings_catalogue: '類別目錄',
     settings_pipeline: '管線設定',
@@ -174,7 +181,6 @@ export const t = (key: string, lang: Language): string => {
 export const getStatusText = (status: string, lang: Language, defaultLabel?: string): string => {
   const key = `status_${status}`;
   const translation = t(key, lang);
-  // If translation missing (key returned) and we have a custom label, use custom label
   if (translation === key && defaultLabel) return defaultLabel;
   return translation;
 };

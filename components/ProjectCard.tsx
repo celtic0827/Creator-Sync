@@ -1,11 +1,8 @@
 
-
-
-
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
-import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertTriangle, AlertCircle, ListTodo, CheckSquare, Square } from 'lucide-react';
+import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertTriangle, AlertCircle, ListTodo, CheckSquare, Square, ArrowUp } from 'lucide-react';
 import { format, differenceInCalendarDays } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
 import zhTW from 'date-fns/locale/zh-TW';
@@ -48,6 +45,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
 
   const isScheduled = !!scheduledDate;
   const isArchived = project.status === ProjectStatus.ARCHIVED;
+  const isHighPriority = project.priority === 'HIGH';
   
   // Determine if completed based on mode
   const isCompleted = appSettings?.statusMode === 'CUSTOM'
@@ -131,6 +129,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
          <div className="flex-1 flex flex-col items-center justify-center gap-2">
             <DynamicIcon iconKey={config.iconKey} className="text-white/90 w-5 h-5 drop-shadow-md" />
             
+            {/* High Priority Indicator */}
+            {isHighPriority && !isOverlay && (
+                <div title="High Priority" className="absolute -top-1 -left-1 bg-red-500 text-white rounded-full p-0.5 border border-white dark:border-zinc-900 shadow-sm z-10">
+                    <ArrowUp size={8} strokeWidth={4} />
+                </div>
+            )}
+
             {/* Mini Progress Indicator & Tooltip */}
             {hasChecklist && !isOverlay && (
               <div className="relative group/progress flex flex-col items-center w-full px-1.5 gap-0.5 cursor-help">
