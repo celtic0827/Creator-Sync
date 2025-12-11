@@ -1,4 +1,5 @@
 
+
 export enum ProjectStatus {
   PLANNING = 'PLANNING',
   IN_PROGRESS = 'IN_PROGRESS',
@@ -75,5 +76,5 @@ export interface DragData {
   status?: string; // For dropping into status zones
 }
 
-export type SortMode = 'DEFAULT' | 'ALPHA' | 'CATEGORY' | 'DATE';
+export type SortMode = 'DEFAULT' | 'ALPHA' | 'CATEGORY' | 'DATE' | 'PRIORITY';
 export type SidebarTab = 'pipeline' | 'published';

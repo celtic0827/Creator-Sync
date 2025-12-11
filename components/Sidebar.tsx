@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ListTodo, Archive, List, ArrowDownAZ, Shapes, CalendarClock, Inbox, Plus, Settings, CircleHelp } from 'lucide-react';
+import { ListTodo, Archive, List, ArrowDownAZ, Shapes, CalendarClock, Inbox, Plus, Settings, CircleHelp, ArrowUpWideNarrow } from 'lucide-react';
 import { Project, CategoryConfig, AppSettings, Language, SidebarTab, SortMode, StatusDefinition, ProjectStatus, Priority } from '../types';
 import { ProjectCard } from './ProjectCard';
 import { StatusZone } from './StatusZone';
@@ -62,38 +62,65 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
   const sortProjects = (projectsToSort: Project[], mode: SortMode) => {
     return [...projectsToSort].sort((a, b) => {
+      // Helper for Category Sort Index
+      const getCatIndex = (type: string) => {
+         if (!appSettings.categoryOrder) return 999;
+         const idx = appSettings.categoryOrder.indexOf(type as any);
+         return idx === -1 ? 999 : idx;
+      };
+
       switch (mode) {
-        case 'ALPHA': return a.name.localeCompare(b.name);
-        case 'CATEGORY': 
-          // 1. Sort by Category Order
-          if (appSettings.categoryOrder) {
-             const indexA = appSettings.categoryOrder.indexOf(a.type);
-             const indexB = appSettings.categoryOrder.indexOf(b.type);
-             const safeIndexA = indexA === -1 ? 999 : indexA;
-             const safeIndexB = indexB === -1 ? 999 : indexB;
+        case 'ALPHA': 
+             return a.name.localeCompare(b.name);
+        
+        case 'PRIORITY':
+             // 1. Sort by Priority (High to Low)
+             const pA = getPriorityWeight(a.priority);
+             const pB = getPriorityWeight(b.priority);
+             if (pA !== pB) return pB - pA;
              
-             if (safeIndexA !== safeIndexB) return safeIndexA - safeIndexB;
+             // 2. Secondary: Category Order
+             const catA1 = getCatIndex(a.type);
+             const catB1 = getCatIndex(b.type);
+             if (catA1 !== catB1) return catA1 - catB1;
+
+             return a.name.localeCompare(b.name);
+
+        case 'CATEGORY': 
+             // 1. Sort by Category Order
+             const catA2 = getCatIndex(a.type);
+             const catB2 = getCatIndex(b.type);
+             if (catA2 !== catB2) return catA2 - catB2;
              
              // 2. Same Category -> Sort by Priority (High to Low)
-             const weightA = getPriorityWeight(a.priority);
-             const weightB = getPriorityWeight(b.priority);
-             if (weightA !== weightB) return weightB - weightA;
+             const wA = getPriorityWeight(a.priority);
+             const wB = getPriorityWeight(b.priority);
+             if (wA !== wB) return wB - wA;
 
              // 3. Fallback to name
              return a.name.localeCompare(b.name);
-          }
-          // Legacy Fallback
-          const catA = categoryConfig[a.type]?.label || '';
-          const catB = categoryConfig[b.type]?.label || '';
-          return catA.localeCompare(catB);
+        
         case 'DATE':
-          const dateA = getProjectScheduledDate(a.id);
-          const dateB = getProjectScheduledDate(b.id);
-          if (dateA && dateB) return dateA.localeCompare(dateB);
-          if (dateA) return -1;
-          if (dateB) return 1;
-          return 0;
-        default: return 0;
+             const dateA = getProjectScheduledDate(a.id);
+             const dateB = getProjectScheduledDate(b.id);
+             if (dateA && dateB) return dateA.localeCompare(dateB);
+             if (dateA) return -1;
+             if (dateB) return 1;
+             return 0;
+
+        case 'DEFAULT':
+        default:
+             // Smart Default: Priority > Category > Name
+             // This ensures that when a user changes priority, the item moves immediately
+             const dpA = getPriorityWeight(a.priority);
+             const dpB = getPriorityWeight(b.priority);
+             if (dpA !== dpB) return dpB - dpA;
+
+             const dcA = getCatIndex(a.type);
+             const dcB = getCatIndex(b.type);
+             if (dcA !== dcB) return dcA - dcB;
+
+             return a.name.localeCompare(b.name);
       }
     });
   };
@@ -136,6 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           <div className="flex gap-1">
             {[
               { mode: 'DEFAULT', icon: List, label: 'sort_default' },
+              { mode: 'PRIORITY', icon: ArrowUpWideNarrow, label: 'sort_priority' },
               { mode: 'ALPHA', icon: ArrowDownAZ, label: 'sort_alpha' },
               { mode: 'CATEGORY', icon: Shapes, label: 'sort_category' },
               { mode: 'DATE', icon: CalendarClock, label: 'sort_date' }

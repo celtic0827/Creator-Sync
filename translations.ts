@@ -1,4 +1,5 @@
 
+
 import { Language, ProjectStatus } from './types';
 
 type TranslationKey = 
@@ -15,7 +16,7 @@ type TranslationKey =
   | 'settings_export_desc' | 'settings_import_desc' | 'settings_warning' | 'settings_critical'
   | 'settings_close' | 'settings_save'
   | 'cat_label' | 'cat_preview' | 'cat_color' | 'cat_icon'
-  | 'sort_default' | 'sort_alpha' | 'sort_category' | 'sort_date'
+  | 'sort_default' | 'sort_alpha' | 'sort_category' | 'sort_date' | 'sort_priority'
   | 'pipeline_mode_default' | 'pipeline_mode_custom' | 'pipeline_add' | 'pipeline_max_limit' | 'pipeline_placeholder'
   | 'pipeline_set_completed'
   | 'checklist_title' | 'checklist_placeholder' | 'checklist_add' | 'checklist_empty'
@@ -84,6 +85,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     sort_alpha: 'Name (A-Z)',
     sort_category: 'Category',
     sort_date: 'Scheduled Date',
+    sort_priority: 'Priority',
     pipeline_mode_default: 'Default Mode',
     pipeline_mode_custom: 'Custom Mode',
     pipeline_add: 'Add Status',
@@ -159,6 +161,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     sort_alpha: '名稱 (A-Z)',
     sort_category: '類別目錄',
     sort_date: '排程日期',
+    sort_priority: '優先級',
     pipeline_mode_default: '預設模式',
     pipeline_mode_custom: '客製模式',
     pipeline_add: '新增狀態',
