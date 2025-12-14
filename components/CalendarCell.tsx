@@ -137,7 +137,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
               categoryConfig={categoryConfig}
               isHighlighted={highlightedProjectId === project.id}
               onClick={() => onItemClick && onItemClick(project.id)}
-              onRemoveItem={() => onRemoveItem && onRemoveItem(item.id)}
+              onRemove={() => onRemoveItem && onRemoveItem(item.id)}
               viewMode={viewMode}
               appSettings={appSettings}
             />

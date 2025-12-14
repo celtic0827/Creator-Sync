@@ -186,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       </div>
       
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+      <div id="sidebar-content-container" className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
         {sidebarTab === 'pipeline' && (
           <div className="flex flex-col gap-6">
             {activeStatuses.map(statusDef => {

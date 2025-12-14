@@ -113,14 +113,38 @@ export default function App() {
   const handleScheduleItemClick = useCallback((projectId: string) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
+    
     const isArchived = project.status === ProjectStatus.ARCHIVED;
     const isPast = getProjectScheduledDate(projectId) && new Date(getProjectScheduledDate(projectId)!) < new Date();
+    
+    // Switch tab if needed
     setSidebarTab((isArchived || isPast) ? 'published' : 'pipeline');
     setHighlightedProjectId(projectId);
+    
     setTimeout(() => {
-      document.getElementById(`project-card-${projectId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // FIX: Use container-relative scrolling instead of generic scrollIntoView
+      // This prevents the entire browser window from scrolling/jumping
+      const container = document.getElementById('sidebar-content-container');
+      const target = document.getElementById(`project-card-${projectId}`);
+
+      if (container && target) {
+          // 1. Get positions relative to viewport
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+
+          // 2. Calculate current relative offset
+          const relativeTop = targetRect.top - containerRect.top;
+
+          // 3. Calculate target scroll position: currentScroll + offset - halfScreen + halfHeight
+          const targetScrollTop = container.scrollTop + relativeTop - (container.clientHeight / 2) + (target.clientHeight / 2);
+
+          container.scrollTo({
+            top: targetScrollTop,
+            behavior: 'smooth'
+          });
+      }
       setTimeout(() => setHighlightedProjectId(null), 2000);
-    }, 100);
+    }, 150); // Slight delay to allow tab switch rendering
   }, [projects, getProjectScheduledDate]);
 
   const handleDragStart = (event: DragStartEvent) => {
