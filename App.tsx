@@ -111,18 +111,21 @@ export default function App() {
   }, []);
 
   const handleScheduleItemClick = useCallback((projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
+    // FIX: Rely on the store's lists to determine location, avoiding logic mismatch
+    // between date comparisons (UTC vs Local) that caused incorrect tab switching.
+    const isPublished = publishedProjects.some(p => p.id === projectId);
+    const targetTab: SidebarTab = isPublished ? 'published' : 'pipeline';
     
-    const isArchived = project.status === ProjectStatus.ARCHIVED;
-    const isPast = getProjectScheduledDate(projectId) && new Date(getProjectScheduledDate(projectId)!) < new Date();
+    // Switch tab if we are not on the correct one
+    if (sidebarTab !== targetTab) {
+        setSidebarTab(targetTab);
+    }
     
-    // Switch tab if needed
-    setSidebarTab((isArchived || isPast) ? 'published' : 'pipeline');
     setHighlightedProjectId(projectId);
     
+    // Use setTimeout to allow the DOM to update (if tab switched) before scrolling
     setTimeout(() => {
-      // FIX: Use container-relative scrolling instead of generic scrollIntoView
+      // Use container-relative scrolling instead of generic scrollIntoView
       // This prevents the entire browser window from scrolling/jumping
       const container = document.getElementById('sidebar-content-container');
       const target = document.getElementById(`project-card-${projectId}`);
@@ -132,10 +135,12 @@ export default function App() {
           const containerRect = container.getBoundingClientRect();
           const targetRect = target.getBoundingClientRect();
 
-          // 2. Calculate current relative offset
+          // 2. Calculate current relative offset of the target within the container's viewport
           const relativeTop = targetRect.top - containerRect.top;
 
-          // 3. Calculate target scroll position: currentScroll + offset - halfScreen + halfHeight
+          // 3. Calculate target scroll position
+          // Formula: CurrentScroll + RelativeDifference - (HalfContainerHeight) + (HalfTargetHeight)
+          // This centers the element in the container.
           const targetScrollTop = container.scrollTop + relativeTop - (container.clientHeight / 2) + (target.clientHeight / 2);
 
           container.scrollTo({
@@ -144,8 +149,8 @@ export default function App() {
           });
       }
       setTimeout(() => setHighlightedProjectId(null), 2000);
-    }, 150); // Slight delay to allow tab switch rendering
-  }, [projects, getProjectScheduledDate]);
+    }, 100); 
+  }, [publishedProjects, sidebarTab]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
