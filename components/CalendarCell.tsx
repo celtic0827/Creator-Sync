@@ -14,6 +14,7 @@ interface CalendarCellProps {
   highlightedProjectId?: string | null;
   onItemClick?: (projectId: string) => void;
   onRemoveItem?: (scheduleId: string) => void;
+  onEditProject?: (project: Project) => void;
   viewMode?: CalendarViewMode;
   appSettings?: AppSettings;
 }
@@ -26,6 +27,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   highlightedProjectId, 
   onItemClick, 
   onRemoveItem,
+  onEditProject,
   viewMode = 'COMPACT',
   appSettings
 }) => {
@@ -138,6 +140,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
               isHighlighted={highlightedProjectId === project.id}
               onClick={() => onItemClick && onItemClick(project.id)}
               onRemove={() => onRemoveItem && onRemoveItem(item.id)}
+              onEdit={() => onEditProject && onEditProject(project)}
               viewMode={viewMode}
               appSettings={appSettings}
             />

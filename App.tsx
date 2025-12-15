@@ -301,6 +301,7 @@ export default function App() {
                       highlightedProjectId={highlightedProjectId}
                       onItemClick={handleScheduleItemClick}
                       onRemoveItem={(sid) => { saveHistory(); setSchedule(p => p.filter(s => s.id !== sid)); }}
+                      onEditProject={(p) => { setEditingProjectId(p.id); setIsModalOpen(true); }}
                       viewMode={appSettings.calendarViewMode}
                       appSettings={appSettings}
                     />

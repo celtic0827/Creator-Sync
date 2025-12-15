@@ -12,6 +12,7 @@ interface DraggableScheduleItemProps {
   isHighlighted?: boolean;
   onClick?: () => void;
   onRemove?: () => void;
+  onEdit?: () => void; // New Prop
   isOverlay?: boolean;
   viewMode?: CalendarViewMode;
   appSettings?: AppSettings;
@@ -24,6 +25,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   isHighlighted,
   onClick,
   onRemove,
+  onEdit,
   isOverlay,
   viewMode = 'COMPACT',
   appSettings
@@ -95,12 +97,20 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
     ${isHighlighted ? 'ring-2 ring-inset ring-indigo-500 z-20' : ''}
   `;
 
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!isOverlay && onEdit) {
+      e.stopPropagation();
+      onEdit();
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
       onClick={onClick}
+      onDoubleClick={handleDoubleClick}
       className={baseClasses}
     >
       {/* 

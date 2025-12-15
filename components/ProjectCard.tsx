@@ -112,6 +112,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
     }
   };
 
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!isOverlay && onEdit) {
+      e.stopPropagation();
+      onEdit();
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -119,6 +126,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
       {...attributes}
       className={baseClasses}
       id={`project-card-${project.id}`}
+      onDoubleClick={handleDoubleClick}
+      title={isOverlay ? '' : t('edit', lang) + ' (Double Click)'}
     >
       {/* Left Color Bar & Icon */}
       <div className={`
