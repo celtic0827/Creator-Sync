@@ -240,13 +240,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 <p className="text-xs">{t('noPending', lang)}</p>
               </div>
             )}
-
-            <button 
-              onClick={onOpenCreateModal}
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-zinc-300 dark:border-zinc-800 py-3 text-xs font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors mt-2"
-            >
-              <Plus size={14} /> {t('newProject', lang)}
-            </button>
+            
+            {/* New Project Button removed from here */}
           </div>
         )}
 
@@ -282,12 +277,20 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
       {/* Footer */}
       <div className="p-3 border-t border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-950 flex items-center gap-2 transition-colors">
+         {/* New Project Button moved here */}
+         <button 
+            onClick={onOpenCreateModal}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-sm"
+          >
+            <Plus size={14} /> {t('newProject', lang)}
+          </button>
+
          <button 
            onClick={onOpenSettings}
-           className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-md transition-colors"
-           title="App Settings & Configuration"
+           className="flex items-center justify-center gap-2 px-3 py-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-md transition-colors"
+           title={t('settings', lang)}
          >
-           <Settings size={14} /> {t('settings', lang)}
+           <Settings size={16} />
          </button>
          <button 
            onClick={onOpenHelp}
