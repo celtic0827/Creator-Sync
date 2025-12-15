@@ -93,16 +93,15 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   let focusOpacity = 0;
   
   if (dayDiff < 0) {
-      // Past: Static 30% dim (matched to max future dim)
-      focusOpacity = 0.3;
+      // Past: Static 70% dim (Visible 30%)
+      focusOpacity = 0.7;
   } else if (dayDiff >= 0 && dayDiff <= 2) {
       // Immediate Future (Today, Tmrw, Next Day): 0% dim (Full Focus)
       focusOpacity = 0;
   } else {
-      // Future Gradient (Day 3+): Increases by 5% per day, capped at 30%
-      // Day 3 = 0.05, Day 4 = 0.10 ... Day 8+ = 0.30
+      // Future Gradient (Day 3+): Increases by 5% per day, capped at 70%
       const daysIntoFuture = dayDiff - 2;
-      focusOpacity = Math.min(daysIntoFuture * 0.05, 0.3);
+      focusOpacity = Math.min(daysIntoFuture * 0.05, 0.7);
   }
 
   return (
