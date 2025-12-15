@@ -240,8 +240,6 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 <p className="text-xs">{t('noPending', lang)}</p>
               </div>
             )}
-            
-            {/* New Project Button removed from here */}
           </div>
         )}
 
@@ -280,7 +278,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
          {/* New Project Button moved here */}
          <button 
             onClick={onOpenCreateModal}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 transition-colors shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors shadow-sm"
           >
             <Plus size={14} /> {t('newProject', lang)}
           </button>
