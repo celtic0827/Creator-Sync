@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { format, isToday, isWeekend } from 'date-fns';
+import { format, isToday, isWeekend, differenceInCalendarDays } from 'date-fns';
 import { ScheduleItem, Project, CategoryConfig, CalendarViewMode, AppSettings, Priority } from '../types';
 import { DraggableScheduleItem } from './DraggableScheduleItem';
 import { Layers } from 'lucide-react';
@@ -81,6 +81,30 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   const isCurrentDay = isToday(date);
   const isWknd = isWeekend(date);
 
+  // --- Visual Focus Logic ---
+  const today = new Date();
+  // Normalize time to ensure accurate day difference
+  today.setHours(0, 0, 0, 0);
+  const cellDate = new Date(date);
+  cellDate.setHours(0, 0, 0, 0);
+  
+  const dayDiff = differenceInCalendarDays(cellDate, today);
+  
+  let focusOpacity = 0;
+  
+  if (dayDiff < 0) {
+      // Past: Static 50% dim
+      focusOpacity = 0.5;
+  } else if (dayDiff >= 0 && dayDiff <= 2) {
+      // Immediate Future (Today, Tmrw, Next Day): 0% dim (Full Focus)
+      focusOpacity = 0;
+  } else {
+      // Future Gradient (Day 3+): Increases by 5% per day, capped at 50%
+      // Day 3 = 0.05, Day 4 = 0.10 ... Day 12+ = 0.50
+      const daysIntoFuture = dayDiff - 2;
+      focusOpacity = Math.min(daysIntoFuture * 0.05, 0.5);
+  }
+
   return (
     <div
       ref={setNodeRef}
@@ -101,8 +125,22 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
         <div className="absolute inset-0.5 border-2 border-dashed border-indigo-400 dark:border-indigo-500/60 rounded-[4px] pointer-events-none z-10" />
       )}
 
+      {/* 
+        Visual Focus Mask 
+        - Uses bg-zinc-950 (app background) to create a "fade out" effect in dark mode.
+        - Uses bg-zinc-50 for light mode for similar effect.
+        - z-index ensures it covers content but not the drop indicator or interactions if handled carefully.
+        - pointer-events-none ensures you can still click/drag items underneath.
+      */}
+      {viewMode === 'BLOCK' && focusOpacity > 0 && !isOver && (
+         <div 
+           className="absolute inset-0 bg-zinc-50 dark:bg-zinc-950 pointer-events-none z-10 transition-opacity duration-500 ease-in-out"
+           style={{ opacity: focusOpacity }}
+         />
+      )}
+
       {/* Date Header (Top Row) */}
-      <div className="flex justify-between items-start mb-1 min-h-[20px]">
+      <div className="flex justify-between items-start mb-1 min-h-[20px] relative z-20">
         {/* Left: Overload Indicator (Only if > 2 items) */}
         {items.length > 2 ? (
           <div 
@@ -129,7 +167,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
       </div>
       
       {/* Content Area */}
-      <div className="flex-1 flex flex-col gap-1 overflow-y-auto max-h-[85px] no-scrollbar">
+      <div className="flex-1 flex flex-col gap-1 overflow-y-auto max-h-[85px] no-scrollbar relative z-0">
         {sortedItems.map((item) => {
           const project = getProject(item.projectId);
           if (!project) return null;
