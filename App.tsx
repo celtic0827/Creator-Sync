@@ -25,7 +25,8 @@ import {
   Undo2,
   Layers,
   List,
-  LayoutGrid
+  LayoutGrid,
+  Copy, Edit2, Trash2, Archive, RotateCcw
 } from 'lucide-react';
 
 import { Project, ScheduleItem, DragData, SidebarTab, ProjectStatus } from './types';
@@ -38,6 +39,7 @@ import { SettingsModal } from './components/modals/SettingsModal';
 import { HelpModal } from './components/modals/HelpModal';
 import { Sidebar } from './components/Sidebar';
 import { TrashDropZone } from './components/TrashDropZone';
+import { ContextMenu, ContextMenuAction } from './components/ContextMenu';
 import { t } from './translations';
 import { useAppStore } from './hooks/useAppStore';
 
@@ -72,6 +74,9 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [checklistProjectId, setChecklistProjectId] = useState<string | null>(null);
+
+  // Context Menu State
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; projectId: string } | null>(null);
 
   // --- DnD Sensors ---
   const sensors = useSensors(
@@ -111,36 +116,23 @@ export default function App() {
   }, []);
 
   const handleScheduleItemClick = useCallback((projectId: string) => {
-    // FIX: Rely on the store's lists to determine location, avoiding logic mismatch
-    // between date comparisons (UTC vs Local) that caused incorrect tab switching.
     const isPublished = publishedProjects.some(p => p.id === projectId);
     const targetTab: SidebarTab = isPublished ? 'published' : 'pipeline';
     
-    // Switch tab if we are not on the correct one
     if (sidebarTab !== targetTab) {
         setSidebarTab(targetTab);
     }
     
     setHighlightedProjectId(projectId);
     
-    // Use setTimeout to allow the DOM to update (if tab switched) before scrolling
     setTimeout(() => {
-      // Use container-relative scrolling instead of generic scrollIntoView
-      // This prevents the entire browser window from scrolling/jumping
       const container = document.getElementById('sidebar-content-container');
       const target = document.getElementById(`project-card-${projectId}`);
 
       if (container && target) {
-          // 1. Get positions relative to viewport
           const containerRect = container.getBoundingClientRect();
           const targetRect = target.getBoundingClientRect();
-
-          // 2. Calculate current relative offset of the target within the container's viewport
           const relativeTop = targetRect.top - containerRect.top;
-
-          // 3. Calculate target scroll position
-          // Formula: CurrentScroll + RelativeDifference - (HalfContainerHeight) + (HalfTargetHeight)
-          // This centers the element in the container.
           const targetScrollTop = container.scrollTop + relativeTop - (container.clientHeight / 2) + (target.clientHeight / 2);
 
           container.scrollTo({
@@ -155,6 +147,7 @@ export default function App() {
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
     setActiveDragData(event.active.data.current as DragData);
+    setContextMenu(null); // Close context menu on drag
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -217,6 +210,74 @@ export default function App() {
     setIsModalOpen(false); setEditingProjectId(null);
   };
 
+  // --- Context Menu Handlers ---
+  const handleContextMenu = useCallback((e: React.MouseEvent, projectId: string) => {
+    setContextMenu({ x: e.clientX, y: e.clientY, projectId });
+  }, []);
+
+  const handleDuplicateProject = () => {
+    if (!contextMenu) return;
+    const original = projects.find(p => p.id === contextMenu.projectId);
+    if (!original) return;
+
+    saveHistory();
+    const newId = crypto.randomUUID();
+    const copy: Project = { 
+      ...original, 
+      id: newId, 
+      name: `${original.name} (Copy)`,
+      checklist: original.checklist?.map(c => ({...c, id: crypto.randomUUID(), isCompleted: false})) || []
+    };
+    
+    setProjects(prev => [...prev, copy]);
+    // Immediate edit
+    setEditingProjectId(newId);
+    setIsModalOpen(true);
+  };
+
+  const handleArchiveToggle = () => {
+    if (!contextMenu) return;
+    const project = projects.find(p => p.id === contextMenu.projectId);
+    if (!project) return;
+    
+    saveHistory();
+    const isArchived = project.status === ProjectStatus.ARCHIVED;
+    const newStatus = isArchived ? activeStatuses[0].id : ProjectStatus.ARCHIVED;
+    setProjects(prev => prev.map(p => p.id === project.id ? { ...p, status: newStatus } : p));
+  };
+
+  const handleDeleteFromContext = () => {
+    if (!contextMenu) return;
+    const project = projects.find(p => p.id === contextMenu.projectId);
+    if (project && confirm(`Delete project "${project.name}" permanently?`)) {
+       saveHistory();
+       setSchedule(prev => prev.filter(s => s.projectId !== project.id));
+       setProjects(prev => prev.filter(p => p.id !== project.id));
+    }
+  };
+
+  const handleEditFromContext = () => {
+    if (!contextMenu) return;
+    setEditingProjectId(contextMenu.projectId);
+    setIsModalOpen(true);
+  }
+
+  // Generate Menu Actions
+  const getMenuActions = (): ContextMenuAction[] => {
+    if (!contextMenu) return [];
+    const project = projects.find(p => p.id === contextMenu.projectId);
+    if (!project) return [];
+    
+    const isArchived = project.status === ProjectStatus.ARCHIVED;
+
+    return [
+      { id: 'duplicate', labelKey: 'menu_duplicate', icon: Copy, onClick: handleDuplicateProject },
+      { id: 'edit', labelKey: 'edit', icon: Edit2, onClick: handleEditFromContext },
+      { id: 'archive', labelKey: isArchived ? 'restore' : 'archive', icon: isArchived ? RotateCcw : Archive, onClick: handleArchiveToggle },
+      { id: 'delete', labelKey: 'menu_delete', icon: Trash2, onClick: handleDeleteFromContext, danger: true },
+    ];
+  };
+
   // Keyboard undo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -230,7 +291,14 @@ export default function App() {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className={`flex h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-indigo-500/30 ${lang === 'zh-TW' ? 'lang-zh' : ''}`}>
+      <div 
+        className={`flex h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-indigo-500/30 ${lang === 'zh-TW' ? 'lang-zh' : ''}`}
+        onContextMenu={(e) => {
+           // Prevent context menu on background, but allow if it bubbled up from a card
+           if(contextMenu) return; 
+           // Optional: You could allow native context menu on empty areas
+        }}
+      >
         
         <Sidebar 
           pipelineProjects={pipelineProjects}
@@ -253,6 +321,7 @@ export default function App() {
             setProjects(prev => prev.map(proj => proj.id === p.id ? { ...proj, status: isArchived ? activeStatuses[0].id : ProjectStatus.ARCHIVED } : proj));
           }}
           onOpenChecklist={(pid) => setChecklistProjectId(pid)}
+          onContextMenu={handleContextMenu}
         />
 
         <main className="flex-1 flex flex-col bg-zinc-50 dark:bg-zinc-950 relative transition-colors duration-200">
@@ -302,6 +371,7 @@ export default function App() {
                       onItemClick={handleScheduleItemClick}
                       onRemoveItem={(sid) => { saveHistory(); setSchedule(p => p.filter(s => s.id !== sid)); }}
                       onEditProject={(p) => { setEditingProjectId(p.id); setIsModalOpen(true); }}
+                      onContextMenu={handleContextMenu}
                       viewMode={appSettings.calendarViewMode}
                       appSettings={appSettings}
                     />
@@ -319,6 +389,16 @@ export default function App() {
               <div className="w-auto"><DraggableScheduleItem item={schedule.find(s => s.id === activeDragData.scheduleId)!} project={projects.find(p => p.id === activeDragData.projectId)!} categoryConfig={categoryConfig} isOverlay viewMode={appSettings.calendarViewMode} appSettings={appSettings} /></div>
           )}
         </DragOverlay>
+
+        {contextMenu && (
+          <ContextMenu 
+            x={contextMenu.x} 
+            y={contextMenu.y} 
+            onClose={() => setContextMenu(null)}
+            actions={getMenuActions()}
+            lang={lang}
+          />
+        )}
 
         <ProjectFormModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingProjectId(null); }} onSave={handleSaveProject} onDelete={editingProjectId ? handleDeleteProject : undefined} editingProject={editingProjectId ? projects.find(p => p.id === editingProjectId) : null} categoryConfig={categoryConfig} lang={lang} activeStatuses={activeStatuses} statusMode={appSettings.statusMode} />
         <ChecklistModal isOpen={!!checklistProjectId} onClose={() => setChecklistProjectId(null)} project={checklistProjectId ? projects.find(p => p.id === checklistProjectId) || null : null} onUpdateProject={(u) => setProjects(p => p.map(x => x.id === u.id ? u : x))} lang={lang} />

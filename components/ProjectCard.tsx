@@ -19,6 +19,7 @@ interface ProjectCardProps {
   onEdit?: () => void;
   onToggleArchive?: () => void;
   onOpenChecklist?: () => void;
+  onContextMenu?: (e: React.MouseEvent, projectId: string) => void;
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({ 
@@ -30,7 +31,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
   onJumpToDate, 
   onEdit,
   onToggleArchive,
-  onOpenChecklist
+  onOpenChecklist,
+  onContextMenu
 }) => {
   const dragData: DragData = {
     type: 'PROJECT_SOURCE',
@@ -119,6 +121,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
     }
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!isOverlay && onContextMenu) {
+      e.preventDefault();
+      onContextMenu(e, project.id);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -127,6 +136,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
       className={baseClasses}
       id={`project-card-${project.id}`}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
       title={isOverlay ? '' : t('edit', lang) + ' (Double Click)'}
     >
       {/* Left Color Bar & Icon */}

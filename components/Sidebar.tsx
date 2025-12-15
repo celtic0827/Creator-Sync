@@ -23,6 +23,7 @@ interface SidebarProps {
   onEditProject: (project: Project) => void;
   onToggleArchive: (project: Project) => void;
   onOpenChecklist: (projectId: string) => void;
+  onContextMenu?: (e: React.MouseEvent, projectId: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = React.memo(({
@@ -41,7 +42,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   onJumpToProject,
   onEditProject,
   onToggleArchive,
-  onOpenChecklist
+  onOpenChecklist,
+  onContextMenu
 }) => {
   const [sortMode, setSortMode] = useState<SortMode>(() => {
     try {
@@ -221,6 +223,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                           onEdit={() => onEditProject(project)}
                           onToggleArchive={() => onToggleArchive(project)}
                           onOpenChecklist={() => onOpenChecklist(project.id)}
+                          onContextMenu={onContextMenu}
                         />
                       );
                     })}
@@ -259,6 +262,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                         onEdit={() => onEditProject(project)}
                         onToggleArchive={() => onToggleArchive(project)}
                         onOpenChecklist={() => onOpenChecklist(project.id)}
+                        onContextMenu={onContextMenu}
                       />
                     </div>
                   );

@@ -1,5 +1,4 @@
 
-
 import { Language, ProjectStatus } from './types';
 
 type TranslationKey = 
@@ -20,7 +19,8 @@ type TranslationKey =
   | 'pipeline_mode_default' | 'pipeline_mode_custom' | 'pipeline_add' | 'pipeline_max_limit' | 'pipeline_placeholder'
   | 'pipeline_set_completed'
   | 'checklist_title' | 'checklist_placeholder' | 'checklist_add' | 'checklist_empty'
-  | 'view_compact' | 'view_block';
+  | 'view_compact' | 'view_block'
+  | 'menu_duplicate' | 'menu_delete';
 
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
@@ -98,6 +98,8 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     checklist_empty: 'No tasks yet. Add one above!',
     view_compact: 'Compact View',
     view_block: 'Block View',
+    menu_duplicate: 'Duplicate & Edit',
+    menu_delete: 'Delete',
   },
   'zh-TW': {
     pipeline: '專案管線',
@@ -174,6 +176,8 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     checklist_empty: '尚無任務，請從上方新增！',
     view_compact: '簡約模式',
     view_block: '色塊模式',
+    menu_duplicate: '複製並編輯',
+    menu_delete: '刪除',
   }
 };
 

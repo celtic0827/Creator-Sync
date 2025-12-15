@@ -12,7 +12,8 @@ interface DraggableScheduleItemProps {
   isHighlighted?: boolean;
   onClick?: () => void;
   onRemove?: () => void;
-  onEdit?: () => void; // New Prop
+  onEdit?: () => void;
+  onContextMenu?: (e: React.MouseEvent, projectId: string) => void;
   isOverlay?: boolean;
   viewMode?: CalendarViewMode;
   appSettings?: AppSettings;
@@ -26,6 +27,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   onClick,
   onRemove,
   onEdit,
+  onContextMenu,
   isOverlay,
   viewMode = 'COMPACT',
   appSettings
@@ -104,6 +106,13 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
     }
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!isOverlay && onContextMenu) {
+      e.preventDefault();
+      onContextMenu(e, project.id);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -111,6 +120,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
       {...attributes}
       onClick={onClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
       className={baseClasses}
     >
       {/* 
