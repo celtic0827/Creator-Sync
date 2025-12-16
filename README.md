@@ -11,6 +11,7 @@
 *   **Customizable Pipeline**: Adapt the workflow to your specific needs. Switch between standard production stages or define your own custom statuses (e.g., "Writing", "Recording", "Editing") in Settings.
 *   **Project Checklists**: Break down complex projects into sub-tasks. Track progress (e.g., "3/5") with visual mini-bars directly on the project cards.
 *   **Smart Deadline Alerts**: Visual urgency indicators. Unfinished projects glow **Yellow** (Warning) or **Red** (Critical) as release dates approach.
+*   **Visual Time Horizon**: In Block View, the interface creates a "spotlight" effect by dimming past days and fading out distant future tasks, helping you focus on the immediate workflow.
 *   **Catalogue Editor**: Fully customizable project taxonomy. Manage your **8 fixed category slots** (e.g., Video, Live, Social) with 24 color themes and 27 icon options.
 *   **Flexible Calendar Views**: Toggle between **Compact List** and **Block Grid** modes to visualize your schedule effectively.
 *   **Dual View Workflow**:
@@ -56,6 +57,7 @@
 *   **客製化管線**：適應您的工作流程。可切換標準模式，或在設定中定義您專屬的狀態（如：撰寫中、錄製中、剪輯中）。
 *   **專案待辦清單**：將大型專案拆解為子任務。透過卡片上的迷你進度條與數字（如 "3/5"）隨時掌握執行狀況。
 *   **智慧截止日警示**：自動監控進度。當專案已排程但未完成時，系統會依據剩餘天數顯示 **黃色警示** 或 **紅色緊急** 訊號。
+*   **視覺時間軸聚焦**：在色塊模式下，介面會自動調暗過去與遠期的日期，創造類似「聚光燈」的效果，協助您專注於當下的工作流。
 *   **高度客製化目錄**：內建「目錄編輯器」，管理 **8 個固定分類槽**（如：影片、直播、社群），並搭配 24 種主題色與 27 款圖示。
 *   **彈性日曆視圖**：一鍵切換「清單模式」與「色塊模式」，視覺化管理您的排程。
 *   **雙視圖工作流**：

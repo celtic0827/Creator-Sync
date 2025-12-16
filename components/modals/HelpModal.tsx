@@ -89,6 +89,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                           <li>
                             <span className="text-zinc-700 dark:text-zinc-300">{isZh ? '切換視圖:' : 'View Modes:'}</span> {isZh ? '使用頂部的工具列按鈕，在「清單模式」與「色塊模式」間自由切換。' : 'Use the toolbar buttons to switch between Compact (List) and Block (Colored) calendar views.'}
                           </li>
+                          <li>
+                            <span className="text-zinc-700 dark:text-zinc-300">{isZh ? '視覺專注 (色塊):' : 'Visual Focus (Block):'}</span> {isZh ? '在色塊模式下，過去與遠期(3天+)的日期會自動變暗，讓您聚焦於當下與未來的兩天。' : 'In Block Mode, past and distant future (3d+) dates are automatically dimmed to help you focus on the immediate schedule.'}
+                          </li>
                       </ul>
                     </div>
                 </section>
