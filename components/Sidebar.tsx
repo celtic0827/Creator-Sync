@@ -24,6 +24,7 @@ interface SidebarProps {
   onToggleArchive: (project: Project) => void;
   onOpenChecklist: (projectId: string) => void;
   onContextMenu?: (e: React.MouseEvent, projectId: string) => void;
+  highlightedProjectId?: string | null;
 }
 
 export const Sidebar: React.FC<SidebarProps> = React.memo(({
@@ -43,7 +44,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   onEditProject,
   onToggleArchive,
   onOpenChecklist,
-  onContextMenu
+  onContextMenu,
+  highlightedProjectId
 }) => {
   const [sortMode, setSortMode] = useState<SortMode>(() => {
     try {
@@ -218,6 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                           project={project} 
                           categoryConfig={categoryConfig}
                           scheduledDate={scheduledDate}
+                          isHighlighted={highlightedProjectId === project.id}
                           appSettings={appSettings}
                           onJumpToDate={scheduledDate ? (date) => onJumpToProject(project.id, date) : undefined}
                           onEdit={() => onEditProject(project)}
@@ -257,6 +260,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                         project={project} 
                         categoryConfig={categoryConfig}
                         scheduledDate={scheduledDate}
+                        isHighlighted={highlightedProjectId === project.id}
                         appSettings={appSettings}
                         onJumpToDate={scheduledDate ? (date) => onJumpToProject(project.id, date) : undefined}
                         onEdit={() => onEditProject(project)}

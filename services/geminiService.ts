@@ -18,7 +18,7 @@ export const generateScheduleSuggestions = async (
 
   // Initialize client with the latest key
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelId = "gemini-2.5-flash";
+  const modelId = "gemini-3-flash-preview";
 
   const systemInstruction = `
     You are an expert Project Manager and Content Strategist for a Patreon creator.
@@ -80,8 +80,6 @@ export const generateScheduleSuggestions = async (
     return [];
   } catch (error) {
     console.error("Error generating schedule:", error);
-    // If it's a "Requested entity was not found" error (often due to bad key state), prompt reset could be handled here,
-    // but for now we throw to let UI handle or just log.
     if (error instanceof Error && error.message.includes('Requested entity was not found')) {
        if (typeof window !== 'undefined' && (window as any).aistudio) {
           await (window as any).aistudio.openSelectKey();

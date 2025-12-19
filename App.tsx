@@ -322,6 +322,7 @@ export default function App() {
           }}
           onOpenChecklist={(pid) => setChecklistProjectId(pid)}
           onContextMenu={handleContextMenu}
+          highlightedProjectId={highlightedProjectId}
         />
 
         <main className="flex-1 flex flex-col bg-zinc-50 dark:bg-zinc-950 relative transition-colors duration-200">
