@@ -42,6 +42,11 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
 
   const getProject = (id: string) => projects.find((p) => p.id === id);
 
+  // Check if any item in this cell is the one being highlighted/searched for
+  const hasHighlightedItem = useMemo(() => {
+    return highlightedProjectId && items.some(item => item.projectId === highlightedProjectId);
+  }, [items, highlightedProjectId]);
+
   // Helper for priority weight
   const getPriorityWeight = (priority?: Priority): number => {
     if (priority === 'HIGH') return 3;
@@ -83,7 +88,6 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
 
   // --- Visual Focus Logic ---
   const today = new Date();
-  // Normalize time to ensure accurate day difference
   today.setHours(0, 0, 0, 0);
   const cellDate = new Date(date);
   cellDate.setHours(0, 0, 0, 0);
@@ -92,7 +96,10 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   
   let focusOpacity = 0;
   
-  if (dayDiff < 0) {
+  // If an item is highlighted, we remove the mask for this cell to ensure visibility
+  if (hasHighlightedItem) {
+      focusOpacity = 0;
+  } else if (dayDiff < 0) {
       // Past: Static 70% dim (Visible 30%)
       focusOpacity = 0.7;
   } else if (dayDiff >= 0 && dayDiff <= 2) {
@@ -117,6 +124,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
                     ? 'bg-zinc-100 dark:bg-[#0c0c0e]/50 hover:bg-zinc-50 dark:hover:bg-[#0c0c0e]/80' // Weekend
                     : 'bg-white dark:bg-[#09090b] hover:bg-zinc-50 dark:hover:bg-zinc-900/50' // Default
         }
+        ${hasHighlightedItem ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-zinc-950 z-30' : ''}
       `}
     >
       {/* Drop Target Indicator (Dashed Border) */}

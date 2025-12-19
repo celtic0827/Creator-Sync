@@ -2,7 +2,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
-import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertTriangle, AlertCircle, ListTodo, CheckSquare, Square, ArrowUp } from 'lucide-react';
+import { GripVertical, CalendarCheck2, Edit2, Archive, RotateCcw, AlertCircle, AlertTriangle, ListTodo, CheckSquare, Square, ArrowUp } from 'lucide-react';
 import { format, differenceInCalendarDays } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
 import zhTW from 'date-fns/locale/zh-TW';
@@ -69,7 +69,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
   let alertState: 'NONE' | 'WARNING' | 'CRITICAL' = 'NONE';
   if (isScheduled && !isCompleted && !isArchived && appSettings && !isOverlay) {
       const today = new Date();
-      // Use setHours to normalize today to start of day, avoiding time zone drifts in calculation
       today.setHours(0, 0, 0, 0); 
       
       const targetDate = new Date(scheduledDate + 'T00:00:00');
@@ -82,8 +81,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
       }
   }
 
-  // Visual Styles based on Alert State (Adaptive for Light/Dark)
-  let alertClasses = '';
+  // Visual Styles based on Alert State
   let borderClasses = 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700';
   let bgClasses = 'bg-white dark:bg-zinc-900/40 hover:bg-zinc-50 dark:hover:bg-zinc-800 shadow-sm';
 
@@ -95,22 +93,23 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
       bgClasses = 'bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100 dark:hover:bg-amber-950/30';
   }
 
-  // Professional Design Classes
   const baseClasses = `
     group relative flex items-stretch rounded-md border transition-all duration-200 overflow-visible
     ${isOverlay 
       ? 'cursor-grabbing scale-105 shadow-2xl rotate-1 z-50 bg-white dark:bg-zinc-800 border-indigo-500 ring-1 ring-indigo-500/50' 
-      : `cursor-grab ${bgClasses} ${borderClasses}`
+      : `cursor-pointer ${bgClasses} ${borderClasses}`
     }
     ${isDragging ? 'opacity-30' : 'opacity-100'}
     ${isScheduled && !isOverlay ? 'ml-4' : ''} 
     ${isArchived && !isOverlay ? 'opacity-75' : ''}
   `;
 
-  const handleDateClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (scheduledDate && onJumpToDate) {
-      onJumpToDate(scheduledDate);
+  const handleCardClick = (e: React.MouseEvent) => {
+    // If user is clicking a button, don't trigger jump
+    if ((e.target as HTMLElement).closest('button')) return;
+    
+    if (isScheduled && onJumpToDate && !isOverlay) {
+        onJumpToDate(scheduledDate!);
     }
   };
 
@@ -135,9 +134,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
       {...attributes}
       className={baseClasses}
       id={`project-card-${project.id}`}
+      onClick={handleCardClick}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
-      title={isOverlay ? '' : t('edit', lang) + ' (Double Click)'}
+      title={isOverlay ? '' : `${isScheduled ? t('jumpToDate', lang) : ''} (${t('edit', lang)}: Double Click)`}
     >
       {/* Left Color Bar & Icon */}
       <div className={`
@@ -148,14 +148,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
          <div className="flex-1 flex flex-col items-center justify-center gap-2">
             <DynamicIcon iconKey={config.iconKey} className="text-white/90 w-5 h-5 drop-shadow-md" />
             
-            {/* High Priority Indicator */}
             {isHighPriority && !isOverlay && (
                 <div title="High Priority" className="absolute -top-1 -left-1 bg-red-500 text-white rounded-full p-0.5 border border-white dark:border-zinc-900 shadow-sm z-10">
                     <ArrowUp size={8} strokeWidth={4} />
                 </div>
             )}
 
-            {/* Mini Progress Indicator & Tooltip */}
             {hasChecklist && !isOverlay && (
               <div className="relative group/progress flex flex-col items-center w-full px-1.5 gap-0.5 cursor-help">
                 <span className="text-[8px] font-bold text-white/90 leading-none">
@@ -168,11 +166,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
                    />
                 </div>
 
-                {/* Tooltip Popup */}
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 w-48 bg-zinc-900 text-zinc-100 text-[10px] rounded-md shadow-xl border border-zinc-700 p-2 invisible opacity-0 group-hover/progress:visible group-hover/progress:opacity-100 transition-all duration-200 delay-300 z-[60] pointer-events-none origin-left">
-                  {/* Tooltip Arrow */}
                   <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-zinc-900 border-l border-b border-zinc-700 rotate-45"></div>
-                  
                   <div className="relative font-bold mb-1.5 pb-1 border-b border-white/10 flex justify-between z-10">
                      <span>Tasks</span>
                      <span className="text-zinc-400">{completedChecks}/{totalChecks}</span>
@@ -200,18 +195,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
          </div>
       </div>
 
-      {/* Main Content Column */}
       <div className="flex-1 min-w-0 flex flex-col justify-center py-2 px-3 gap-1.5">
-        
-        {/* Row 1: Header (Title + Actions) */}
         <div className="flex items-start justify-between gap-2">
            <h4 className={`text-sm font-medium leading-tight break-words line-clamp-2 ${isScheduled || isArchived ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-700 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white'}`}>
              {project.name}
            </h4>
            
-           {/* Action Buttons Container (Top Right) */}
            <div className="flex items-center gap-1 shrink-0">
-              {/* Fade in on hover */}
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {!isOverlay && onOpenChecklist && (
                     <button
@@ -256,7 +246,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
                   )}
               </div>
 
-              {/* Grip - Only show if not scheduled (visual indicator for dragging) */}
               {!isScheduled && !isOverlay && (
                 <div className="text-zinc-300 dark:text-zinc-700 group-hover:text-zinc-400 dark:group-hover:text-zinc-500 transition-colors cursor-grab ml-1">
                    <GripVertical size={14} />
@@ -265,16 +254,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
            </div>
         </div>
         
-        {/* Row 2: Description */}
         {project.description && (
           <p className="text-[11px] text-zinc-500 truncate w-full">{project.description}</p>
         )}
 
-        {/* Row 3: Tags + Inline Info (Right aligned) */}
-        {( (project.tags && project.tags.length > 0) || isScheduled || alertState !== 'NONE' ) && (
+        {((project.tags && project.tags.length > 0) || isScheduled || alertState !== 'NONE') && (
           <div className="flex items-center justify-between gap-2 mt-0.5">
-            
-            {/* Tags Container */}
             <div className="flex flex-wrap gap-1">
               {project.tags && project.tags.map((tag, i) => (
                 <span 
@@ -292,11 +277,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
               ))}
             </div>
 
-            {/* Right Side: Date & Alerts (Inline) */}
             {(isScheduled || alertState !== 'NONE') && !isOverlay && (
                <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                  
-                  {/* Alerts (Icon Only) */}
                   {alertState === 'CRITICAL' && (
                     <div title={t('settings_critical', lang)} className="text-red-500 animate-pulse">
                         <AlertCircle size={14} />
@@ -308,25 +290,21 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
                     </div>
                   )}
 
-                  {/* Date Button - Clean Text Only Design */}
                   {isScheduled && (
-                     <button 
-                      onPointerDown={(e) => e.stopPropagation()} 
-                      onClick={handleDateClick}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-all cursor-pointer text-zinc-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-700/50"
+                     <div 
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-all text-zinc-400 dark:text-zinc-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/30"
                       title={t('jumpToDate', lang)}
                      >
                        <CalendarCheck2 size={11} />
                        <span className="text-[10px] font-medium leading-none">
                          {format(new Date(scheduledDate + 'T00:00:00'), 'MMM d', { locale: dateLocale })}
                        </span>
-                     </button>
+                     </div>
                   )}
                </div>
             )}
           </div>
         )}
-
       </div>
     </div>
   );
