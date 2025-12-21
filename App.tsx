@@ -40,6 +40,7 @@ import { HelpModal } from './components/modals/HelpModal';
 import { Sidebar } from './components/Sidebar';
 import { TrashDropZone } from './components/TrashDropZone';
 import { ContextMenu, ContextMenuAction } from './components/ContextMenu';
+import { GlobalSearch } from './components/GlobalSearch';
 import { t } from './translations';
 import { useAppStore } from './hooks/useAppStore';
 
@@ -115,7 +116,8 @@ export default function App() {
     setTimeout(() => setHighlightedProjectId(null), 2000);
   }, []);
 
-  const handleScheduleItemClick = useCallback((projectId: string) => {
+  // Common logic for finding a project in the sidebar and scrolling to it
+  const scrollToSidebarProject = useCallback((projectId: string) => {
     const isPublished = publishedProjects.some(p => p.id === projectId);
     const targetTab: SidebarTab = isPublished ? 'published' : 'pipeline';
     
@@ -125,6 +127,8 @@ export default function App() {
     
     setHighlightedProjectId(projectId);
     
+    // We need a slight delay to allow the tab switch (React render) to happen
+    // before we try to find the DOM element
     setTimeout(() => {
       const container = document.getElementById('sidebar-content-container');
       const target = document.getElementById(`project-card-${projectId}`);
@@ -143,6 +147,20 @@ export default function App() {
       setTimeout(() => setHighlightedProjectId(null), 2000);
     }, 100); 
   }, [publishedProjects, sidebarTab]);
+
+  const handleScheduleItemClick = useCallback((projectId: string) => {
+    scrollToSidebarProject(projectId);
+  }, [scrollToSidebarProject]);
+
+  const handleSearchNavigation = useCallback((projectId: string, scheduledDate?: string) => {
+      if (scheduledDate) {
+          // If scheduled, jump to the date on the calendar
+          handleJumpToProject(projectId, scheduledDate);
+      } else {
+          // If not scheduled, find it in the sidebar
+          scrollToSidebarProject(projectId);
+      }
+  }, [handleJumpToProject, scrollToSidebarProject]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
@@ -338,7 +356,19 @@ export default function App() {
                  <button onClick={() => setCurrentMonth(new Date())} className="w-16 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white whitespace-nowrap">{t('today', lang)}</button>
                  <button onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"><ChevronRight size={16} /></button>
                </div>
-               <div className="h-6 w-px bg-zinc-300 dark:bg-zinc-800/50 mx-2"></div>
+               
+               {/* Global Search Component inserted here */}
+               <div className="mx-2">
+                 <GlobalSearch 
+                    projects={projects}
+                    schedule={schedule}
+                    categoryConfig={categoryConfig}
+                    appSettings={appSettings}
+                    lang={lang}
+                    onNavigate={handleSearchNavigation}
+                 />
+               </div>
+
                <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/50 p-0.5">
                   <button onClick={() => toggleViewMode('COMPACT')} className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'COMPACT' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}><List size={14} /></button>
                   <button onClick={() => toggleViewMode('BLOCK')} className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'BLOCK' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}><LayoutGrid size={14} /></button>

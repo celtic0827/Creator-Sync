@@ -20,7 +20,8 @@ type TranslationKey =
   | 'pipeline_set_completed'
   | 'checklist_title' | 'checklist_placeholder' | 'checklist_add' | 'checklist_empty'
   | 'view_compact' | 'view_block'
-  | 'menu_duplicate' | 'menu_delete';
+  | 'menu_duplicate' | 'menu_delete'
+  | 'search_placeholder' | 'search_no_results' | 'search_scheduled' | 'search_unscheduled';
 
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
@@ -100,6 +101,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     view_block: 'Block View',
     menu_duplicate: 'Duplicate & Edit',
     menu_delete: 'Delete',
+    search_placeholder: 'Search projects...',
+    search_no_results: 'No projects found',
+    search_scheduled: 'Scheduled',
+    search_unscheduled: 'Unscheduled',
   },
   'zh-TW': {
     pipeline: '專案管線',
@@ -178,6 +183,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     view_block: '色塊模式',
     menu_duplicate: '複製並編輯',
     menu_delete: '刪除',
+    search_placeholder: '搜尋專案...',
+    search_no_results: '找不到符合的專案',
+    search_scheduled: '已排程',
+    search_unscheduled: '未排程',
   }
 };
 
