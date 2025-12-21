@@ -74,8 +74,9 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
   const handleSelect = (project: Project, date?: string) => {
     onNavigate(project.id, date);
-    setIsOpen(false);
-    setQuery('');
+    // We intentionally keep the dropdown open and query intact 
+    // to allow the user to view multiple results.
+    // The user can close it by clicking 'X' or clicking outside.
   };
 
   const getScheduledDate = (projectId: string) => {
@@ -117,8 +118,9 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         <div className="absolute top-full right-0 left-0 mt-2 bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in fade-in zoom-in-95 duration-100 min-w-[320px]">
           {filteredProjects.length > 0 ? (
             <div className="py-1">
-              <div className="px-3 py-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800 mb-1">
-                Results
+              <div className="px-3 py-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800 mb-1 flex justify-between items-center">
+                <span>Results</span>
+                <span className="text-[9px] font-normal lowercase opacity-70">Click to navigate</span>
               </div>
               <ul className="max-h-[60vh] overflow-y-auto custom-scrollbar">
                 {filteredProjects.map(project => {
