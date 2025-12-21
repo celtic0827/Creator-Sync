@@ -8,6 +8,7 @@
 ## 🚀 Key Features
 
 *   **Pipeline-to-Calendar Sync**: Instantly turn your backlog into a release schedule. Drag projects from your "Pipeline" directly onto calendar dates.
+*   **Global Search**: Instantly find any project by name or tag. Results act as navigation shortcuts—click to jump to a specific calendar month or scroll to a sidebar card.
 *   **Customizable Pipeline**: Adapt the workflow to your specific needs. Switch between standard production stages or define your own custom statuses (e.g., "Writing", "Recording", "Editing") in Settings.
 *   **Project Checklists**: Break down complex projects into sub-tasks. Track progress (e.g., "3/5") with visual mini-bars directly on the project cards.
 *   **Smart Deadline Alerts**: Visual urgency indicators. Unfinished projects glow **Yellow** (Warning) or **Red** (Critical) as release dates approach.
@@ -54,6 +55,7 @@
 ## 🚀 核心特色
 
 *   **管線與日曆同步**：將側邊欄的待辦事項直接拖曳至月曆，瞬間完成排程規劃。
+*   **全域搜尋**：透過關鍵字或標籤快速尋找專案。搜尋結果即是導航捷徑，點擊即可瞬間跳轉至日曆日期或定位側邊欄卡片。
 *   **客製化管線**：適應您的工作流程。可切換標準模式，或在設定中定義您專屬的狀態（如：撰寫中、錄製中、剪輯中）。
 *   **專案待辦清單**：將大型專案拆解為子任務。透過卡片上的迷你進度條與數字（如 "3/5"）隨時掌握執行狀況。
 *   **智慧截止日警示**：自動監控進度。當專案已排程但未完成時，系統會依據剩餘天數顯示 **黃色警示** 或 **紅色緊急** 訊號。

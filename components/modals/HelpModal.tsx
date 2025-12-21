@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, BookOpen, Layers, Calendar, ListTodo, Archive, Trash2, ShieldCheck, AlertTriangle, Undo2, Edit2, Settings, Clock, Globe, Shapes, CheckSquare } from 'lucide-react';
+import { X, BookOpen, Layers, Calendar, ListTodo, Archive, Trash2, ShieldCheck, AlertTriangle, Undo2, Edit2, Settings, Clock, Globe, Shapes, CheckSquare, Search } from 'lucide-react';
 import { Language } from '../../types';
 import { t } from '../../translations';
 
@@ -96,7 +96,34 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 3: Statuses */}
+                {/* Section 3: Global Search (NEW) */}
+                <section className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <Search size={14} className="text-fuchsia-600 dark:text-fuchsia-500" /> {isZh ? '全域搜尋' : 'Global Search'}
+                      </h3>
+                      <span className="text-[10px] px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 font-mono text-zinc-500">
+                         Ctrl + K
+                      </span>
+                    </div>
+                    <div className="prose prose-sm prose-zinc dark:prose-invert text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed space-y-2">
+                      <p>
+                          {isZh 
+                            ? '位於頂部工具列。可同時搜尋管線與已發布的專案。' 
+                            : 'Located in the top bar. Searches both Pipeline and Published projects.'}
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1">
+                          <li>
+                            <strong className="text-zinc-700 dark:text-zinc-300">{isZh ? '智慧導航:' : 'Smart Navigation:'}</strong> {isZh ? '點擊搜尋結果會自動執行動作：若已排程則跳轉至日曆；若未排程則捲動側邊欄至該卡片。' : 'Clicking a result automatically navigates you: jumps to the calendar date if scheduled, or scrolls to the sidebar card if unscheduled.'}
+                          </li>
+                          <li>
+                            <strong className="text-zinc-700 dark:text-zinc-300">{isZh ? '多重檢視:' : 'Multi-View:'}</strong> {isZh ? '點擊後搜尋列表會保持開啟，讓您可以連續查看多個不同專案的位置。' : 'The result list stays open after clicking, allowing you to check the location of multiple projects in sequence.'}
+                          </li>
+                      </ul>
+                    </div>
+                </section>
+
+                {/* Section 4: Statuses */}
                 <section className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
@@ -134,7 +161,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 4: Project Categories */}
+                {/* Section 5: Project Categories */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Shapes size={14} className="text-pink-600 dark:text-pink-500" /> {isZh ? '專案分類' : 'Project Categories'}
@@ -156,7 +183,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 5: Checklists & Tasks (NEW) */}
+                {/* Section 6: Checklists & Tasks (NEW) */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <CheckSquare size={14} className="text-sky-500 dark:text-sky-400" /> {isZh ? '待辦清單與任務' : 'Checklists & Tasks'}
@@ -181,7 +208,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 6: Alerts & Settings */}
+                {/* Section 7: Alerts & Settings */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Clock size={14} className="text-red-500 dark:text-red-400" /> {isZh ? '截止日與警示' : 'Deadlines & Alerts'}
@@ -207,7 +234,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 7: Archiving */}
+                {/* Section 8: Archiving */}
                 <section className="space-y-3">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Archive size={14} className="text-violet-600 dark:text-violet-500" /> {isZh ? '已發布與封存' : 'Published vs. Archive'}
@@ -230,7 +257,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 8: Deletion */}
+                {/* Section 9: Deletion */}
                 <section className="space-y-3 border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-2">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <Trash2 size={14} className="text-red-500 dark:text-red-500" /> {isZh ? '垃圾桶與刪除' : 'Trash & Deletion'}
@@ -244,7 +271,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, lang }) =
                     </div>
                 </section>
 
-                {/* Section 9: Data & Safety */}
+                {/* Section 10: Data & Safety */}
                 <section className="space-y-3 border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-2">
                     <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <ShieldCheck size={14} className="text-blue-500" /> {isZh ? '資料安全' : 'Data & Safety'}
