@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { X, AlertCircle, AlertTriangle } from 'lucide-react';
@@ -48,6 +49,18 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   // Logic for Block Mode
   const isBlock = viewMode === 'BLOCK';
 
+  // Get status color if available
+  let statusColor = 'zinc'; // Default fallback
+  if (appSettings) {
+      const statusDef = appSettings.statusMode === 'CUSTOM'
+         ? appSettings.customStatuses.find(s => s.id === project.status)
+         : appSettings.customStatuses.find(s => s.id === project.status) || { color: 'zinc' } as any; // Fallback to customStatuses list even in default mode because useAppStore populates it with defaults
+      
+      if (statusDef && statusDef.color) {
+          statusColor = statusDef.color;
+      }
+  }
+
   // Alert Logic
   const isCompleted = appSettings?.statusMode === 'CUSTOM'
      ? appSettings.customStatuses.find(s => s.id === project.status)?.isCompleted
@@ -73,15 +86,18 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   }
 
   // Visual Styles based on Alert State
-  let alertClasses = '';
+  let borderClasses = '';
   
   // In COMPACT mode, we use ring/borders. 
   // In BLOCK mode, we use the Dot Badge (rendered below) instead of rings.
   if (!isBlock) {
     if (alertState === 'CRITICAL') {
-        alertClasses = 'ring-1 ring-inset ring-red-500 dark:ring-red-500 bg-red-50 dark:bg-red-900/10';
+        borderClasses = 'ring-1 ring-inset ring-red-500 dark:ring-red-500 bg-red-50 dark:bg-red-900/10 border-red-500';
     } else if (alertState === 'WARNING') {
-        alertClasses = 'ring-1 ring-inset ring-amber-500 dark:ring-amber-500 bg-amber-50 dark:bg-amber-900/10';
+        borderClasses = 'ring-1 ring-inset ring-amber-500 dark:ring-amber-500 bg-amber-50 dark:bg-amber-900/10 border-amber-500';
+    } else {
+        // Apply Status Color to Border
+        borderClasses = `border-${statusColor}-300 dark:border-${statusColor}-500/50 bg-white dark:bg-zinc-900/40`;
     }
   }
 
@@ -94,7 +110,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
             ? 'opacity-30 text-left' 
             : isBlock 
                 ? `${config.color} border-transparent hover:brightness-110 cursor-grab justify-center shadow-sm` 
-                : `cursor-grab text-left border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 ${alertClasses ? alertClasses : 'bg-zinc-50 dark:bg-zinc-900/40'}`
+                : `cursor-grab text-left hover:brightness-105 dark:hover:brightness-110 ${borderClasses}`
     }
     ${isHighlighted ? 'ring-2 ring-inset ring-indigo-500 z-20' : ''}
   `;
@@ -137,7 +153,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
         </div>
       )}
 
-      {/* Color Indicator (Only for Compact Mode) */}
+      {/* Color Indicator (Only for Compact Mode) - Uses Category Color */}
       {!isBlock && (
         <div className={`w-1.5 self-stretch rounded-full ${config.color} shrink-0`} />
       )}

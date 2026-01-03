@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { format, isBefore, addMonths } from 'date-fns';
 import zhTW from 'date-fns/locale/zh-TW';
@@ -28,10 +29,10 @@ const DEFAULT_CATEGORY_CONFIG: CategoryConfig = {
 };
 
 const DEFAULT_STATUS_DEFS: StatusDefinition[] = [
-  { id: ProjectStatus.PLANNING, label: 'Planning' },
-  { id: ProjectStatus.IN_PROGRESS, label: 'In Progress' },
-  { id: ProjectStatus.COMPLETED, label: 'Completed', isCompleted: true },
-  { id: ProjectStatus.PAUSED, label: 'Paused' }
+  { id: ProjectStatus.PLANNING, label: 'Planning', color: 'sky' },
+  { id: ProjectStatus.IN_PROGRESS, label: 'In Progress', color: 'indigo' },
+  { id: ProjectStatus.COMPLETED, label: 'Completed', isCompleted: true, color: 'emerald' },
+  { id: ProjectStatus.PAUSED, label: 'Paused', color: 'zinc' }
 ];
 
 const getDefaultLanguage = (): Language => {
@@ -114,6 +115,14 @@ export const useAppStore = () => {
           settings.categoryOrder = [...DEFAULT_APP_SETTINGS.categoryOrder];
       }
       
+      // Migration: Ensure colors exist in customStatuses if loading from old data
+      if (settings.customStatuses && settings.customStatuses.length > 0) {
+         settings.customStatuses = settings.customStatuses.map((s: any) => ({
+             ...s,
+             color: s.color || 'zinc' // Default fallback
+         }));
+      }
+      
       // Sanitize: Validate keys against defaults to prevent crash from old/corrupt data
       const validKeys = Object.keys(DEFAULT_CATEGORY_CONFIG);
       // Filter out invalid keys
@@ -192,7 +201,12 @@ export const useAppStore = () => {
   const dateLocale = lang === 'zh-TW' ? zhTW : enUS;
 
   const activeStatuses = useMemo(() => {
-    return appSettings.statusMode === 'CUSTOM' ? appSettings.customStatuses : DEFAULT_STATUS_DEFS;
+    // If Custom mode, use custom list. 
+    // If Default mode, we still need to provide colors, so we map defaults to our StatusDefinition format.
+    if (appSettings.statusMode === 'CUSTOM') {
+       return appSettings.customStatuses;
+    }
+    return DEFAULT_STATUS_DEFS;
   }, [appSettings.statusMode, appSettings.customStatuses]);
 
   const scheduleLookup = useMemo(() => {

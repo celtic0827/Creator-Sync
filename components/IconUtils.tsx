@@ -76,6 +76,27 @@ export const COLOR_PALETTE = [
   'bg-pink-900'
 ];
 
+export const STATUS_COLOR_OPTIONS = [
+  'zinc', 
+  'slate',
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose'
+];
+
 export const DynamicIcon = React.memo(({ iconKey, className }: { iconKey: string, className?: string }) => {
   const IconComponent = ICON_MAP[iconKey] || Layers;
   return <IconComponent className={className} />;

@@ -1,8 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
-import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, GripVertical, CheckCircle, Circle, Sun, Moon, ChevronUp, ChevronDown, RefreshCw, ArrowDownUp } from 'lucide-react';
-import { ProjectType, CategoryConfig, CategoryDefinition, AppSettings, Language, StatusDefinition, ProjectStatus } from '../../types';
-import { DynamicIcon, COLOR_PALETTE, ICON_MAP } from '../IconUtils';
+import { Settings, Database, Upload, Download, Check, Edit2, Sliders, Globe, Kanban, Plus, Trash2, CheckCircle, Circle, Sun, Moon, ArrowDownUp } from 'lucide-react';
+import { ProjectType, CategoryConfig, CategoryDefinition, AppSettings, StatusDefinition } from '../../types';
+import { DynamicIcon, COLOR_PALETTE, ICON_MAP, STATUS_COLOR_OPTIONS } from '../IconUtils';
 import { t } from '../../translations';
 
 interface SettingsModalProps {
@@ -29,35 +30,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [activeSettingsTab, setActiveSettingsTab] = useState<string>('VIDEO');
   const [editCategoryForm, setEditCategoryForm] = useState<CategoryDefinition>({ label: '', color: '', iconKey: '' });
   const [prefForm, setPrefForm] = useState<AppSettings>(appSettings);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [openStatusColorPicker, setOpenStatusColorPicker] = useState<number | null>(null);
 
-  // Initial Sync when modal opens
+  // Reset/Sync form when tab or config changes
   useEffect(() => {
-    if (isOpen) {
-      setActiveSettingsTab('VIDEO');
-      if (categoryConfig['VIDEO']) {
-        setEditCategoryForm(categoryConfig['VIDEO']);
-      }
-      setPrefForm(appSettings);
+    if (activeSettingsTab && !['DATA', 'PREFERENCES', 'PIPELINE'].includes(activeSettingsTab) && isOpen) {
+       setEditCategoryForm(categoryConfig[activeSettingsTab as ProjectType]);
     }
-  }, [isOpen]);
+  }, [activeSettingsTab, categoryConfig, isOpen]);
 
-  // Sync prefForm when appSettings changes externally (e.g. reordering)
   useEffect(() => {
     if (appSettings) {
       setPrefForm(appSettings);
     }
   }, [appSettings]);
 
-  const handleSwitchTab = (key: string) => {
-    setActiveSettingsTab(key);
-    if (!['DATA', 'PREFERENCES', 'PIPELINE'].includes(key)) {
-        const config = categoryConfig[key as ProjectType];
-        if (config) {
-            setEditCategoryForm(config);
-        }
+  // Handle setting default tab when opening
+  useEffect(() => {
+    if (isOpen) {
+      setActiveSettingsTab('VIDEO');
     }
-  };
+  }, [isOpen]);
 
   const handleSaveCategory = () => {
     if (activeSettingsTab && !['DATA', 'PREFERENCES', 'PIPELINE'].includes(activeSettingsTab)) {
@@ -79,7 +72,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const newStatus: StatusDefinition = {
       id: `custom-${Date.now()}`,
       label: 'New Status',
-      isCompleted: false
+      isCompleted: false,
+      color: 'zinc'
     };
     setPrefForm(prev => ({
       ...prev,
@@ -91,6 +85,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (prefForm.customStatuses.length <= 2) return;
     setPrefForm(prev => {
       const newList = [...prev.customStatuses];
+      // If removing the completed one, make the last one completed
       if (newList[index].isCompleted) {
          if (index > 0) newList[index-1].isCompleted = true;
          else if (index < newList.length - 1) newList[index+1].isCompleted = true;
@@ -108,6 +103,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     });
   };
 
+  const handlePipelineColorChange = (index: number, newColor: string) => {
+    setPrefForm(prev => {
+      const newList = [...prev.customStatuses];
+      newList[index] = { ...newList[index], color: newColor };
+      return { ...prev, customStatuses: newList };
+    });
+    setOpenStatusColorPicker(null);
+  };
+
   const handleSetCompleted = (index: number) => {
     setPrefForm(prev => ({
         ...prev,
@@ -117,38 +121,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }))
     }));
   };
-
-  const handleMoveCategory = (e: React.MouseEvent, index: number, direction: -1 | 1) => {
-    e.stopPropagation();
-    const currentOrder = appSettings.categoryOrder && appSettings.categoryOrder.length > 0 
-        ? [...appSettings.categoryOrder] 
-        : (Object.keys(categoryConfig) as ProjectType[]);
-    
-    if (index + direction < 0 || index + direction >= currentOrder.length) return;
-    
-    const item = currentOrder[index];
-    currentOrder.splice(index, 1);
-    currentOrder.splice(index + direction, 0, item);
-    
-    onUpdateAppSettings({
-        ...appSettings,
-        categoryOrder: currentOrder
-    });
-  };
-
-  const handleManualSync = () => {
-    setIsSyncing(true);
-    // Force update app settings to ensure calendar receives the latest order
-    onUpdateAppSettings({ ...appSettings });
-    setTimeout(() => setIsSyncing(false), 600);
-  };
   
-  const safeEditCategoryForm = editCategoryForm || { label: '', color: '', iconKey: '' };
-  const lang = prefForm.language || 'en';
-
-  const currentCategoryOrder = appSettings.categoryOrder && appSettings.categoryOrder.length > 0 
-    ? appSettings.categoryOrder 
-    : (Object.keys(categoryConfig) as ProjectType[]);
+  // Safe accessor to avoid 'unknown' type errors if inference fails
+  const safeEditCategoryForm = editCategoryForm as CategoryDefinition;
+  const lang = prefForm.language;
 
   if (!isOpen) return null;
 
@@ -169,7 +145,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="px-2 py-2">
                   <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-2 mb-1 uppercase tracking-wider">{t('settings_system', lang)}</div>
                   <button 
-                    onClick={() => handleSwitchTab('PREFERENCES')}
+                    onClick={() => setActiveSettingsTab('PREFERENCES')}
                     className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
                       activeSettingsTab === 'PREFERENCES' 
                         ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-900 dark:text-white' 
@@ -180,7 +156,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="text-xs font-medium">{t('settings_pref', lang)}</div>
                   </button>
                   <button 
-                    onClick={() => handleSwitchTab('PIPELINE')}
+                    onClick={() => setActiveSettingsTab('PIPELINE')}
                     className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
                       activeSettingsTab === 'PIPELINE' 
                         ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-900 dark:text-white' 
@@ -191,7 +167,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="text-xs font-medium">{t('settings_pipeline', lang)}</div>
                   </button>
                   <button 
-                    onClick={() => handleSwitchTab('DATA')}
+                    onClick={() => setActiveSettingsTab('DATA')}
                     className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
                       activeSettingsTab === 'DATA' 
                         ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-900 dark:text-white' 
@@ -205,21 +181,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 {/* Catalogue Section */}
                 <div className="px-2 pb-2">
-                  <div className="flex items-center justify-between px-2 mb-1 mt-2">
-                     <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{t('settings_catalogue', lang)}</div>
-                     <button onClick={handleManualSync} title="Sync sort order to calendar" className={`p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 hover:text-indigo-500 transition-all ${isSyncing ? 'animate-spin text-indigo-500' : ''}`}>
-                        <RefreshCw size={10} />
-                     </button>
-                  </div>
-                  {currentCategoryOrder.map((key, index) => {
-                      const config = categoryConfig[key];
-                      if(!config) return null;
-                      
-                      return (
+                  <div className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-2 mb-1 mt-2 uppercase tracking-wider">{t('settings_catalogue', lang)}</div>
+                  {(Object.entries(categoryConfig) as [string, CategoryDefinition][]).map(([key, config]) => (
                       <button
                         key={key}
-                        onClick={() => handleSwitchTab(key)}
-                        className={`w-full flex items-center gap-3 p-2 rounded-md transition-all group relative ${
+                        onClick={() => setActiveSettingsTab(key)}
+                        className={`w-full flex items-center gap-3 p-2 rounded-md transition-all ${
                           activeSettingsTab === key 
                             ? 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm' 
                             : 'hover:bg-zinc-200 dark:hover:bg-zinc-900 border border-transparent'
@@ -231,26 +198,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="text-left flex-1 min-w-0">
                             <div className="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate">{config.label}</div>
                         </div>
-
-                        {/* Reordering Buttons (Visible on Hover/Active) */}
-                        <div className={`flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${activeSettingsTab === key ? 'opacity-100' : ''}`}>
-                            <div 
-                                role="button"
-                                onClick={(e) => handleMoveCategory(e, index, -1)}
-                                className={`p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 ${index === 0 ? 'invisible' : ''}`}
-                            >
-                                <ChevronUp size={10} className="text-zinc-400 dark:text-zinc-500" />
-                            </div>
-                            <div 
-                                role="button"
-                                onClick={(e) => handleMoveCategory(e, index, 1)}
-                                className={`p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 ${index === currentCategoryOrder.length - 1 ? 'invisible' : ''}`}
-                            >
-                                <ChevronDown size={10} className="text-zinc-400 dark:text-zinc-500" />
-                            </div>
-                        </div>
                       </button>
-                  )})}
+                  ))}
                 </div>
               </div>
               <div className="p-3 border-t border-zinc-200 dark:border-zinc-800">
@@ -265,7 +214,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {activeSettingsTab === 'DATA' ? (
                 // Data Management View
                 <div className="flex flex-col h-full">
-                    {/* ... (DATA content unchanged) ... */}
                     <div className="pb-4 border-b border-zinc-200 dark:border-zinc-800 mb-6">
                       <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wide">{t('settings_data', lang)}</h2>
                       <p className="text-xs text-zinc-500 mt-1">Export your data for backup or transfer to another device.</p>
@@ -309,7 +257,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) onImportData(file);
-                                e.target.value = '';
                               }} 
                               className="hidden" 
                             />
@@ -319,7 +266,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                 </div>
               ) : activeSettingsTab === 'PIPELINE' ? (
-                 // Pipeline Settings View (unchanged)
+                 // Pipeline Settings View
                  <div className="flex flex-col h-full gap-4">
                     <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
                       <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wide">{t('settings_pipeline', lang)}</h2>
@@ -331,9 +278,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </button>
                     </div>
 
-                    <div className="space-y-4 pt-2 overflow-y-auto custom-scrollbar">
+                    <div className="space-y-4 pt-2 overflow-y-auto custom-scrollbar h-full">
                        {/* Mode Toggles */}
-                       <div className="flex gap-4">
+                       <div className="flex gap-4 shrink-0">
                           <button
                             onClick={() => setPrefForm(prev => ({...prev, statusMode: 'DEFAULT'}))}
                             className={`flex-1 p-4 rounded-lg border flex flex-col gap-2 items-start transition-all ${
@@ -379,7 +326,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                        {/* List Editor (Only for Custom) */}
                        {prefForm.statusMode === 'CUSTOM' && (
-                         <div className="space-y-2 mt-2">
+                         <div className="space-y-2 mt-2 pb-10">
                             <label className="text-[10px] font-bold text-zinc-500 uppercase flex justify-between">
                               <span>Custom Statuses ({prefForm.customStatuses.length}/8)</span>
                               {prefForm.customStatuses.length >= 8 && <span className="text-amber-500">{t('pipeline_max_limit', lang)}</span>}
@@ -388,10 +335,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <div className="bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800/50 rounded-lg p-3 space-y-2">
                                <p className="text-[10px] text-zinc-400 mb-2">{t('pipeline_set_completed', lang)}</p>
                                {prefForm.customStatuses.map((status, idx) => (
-                                 <div key={status.id} className="flex items-center gap-2 group animate-in slide-in-from-left-2 duration-200">
+                                 <div key={status.id} className="flex items-center gap-2 group animate-in slide-in-from-left-2 duration-200 relative">
                                     <div className="w-6 flex justify-center text-zinc-400 dark:text-zinc-600 cursor-default">
                                        <span className="text-[10px] font-mono">{idx + 1}</span>
                                     </div>
+
+                                    {/* Color Picker */}
+                                    <div className="relative">
+                                        <button 
+                                          onClick={() => setOpenStatusColorPicker(openStatusColorPicker === idx ? null : idx)}
+                                          className={`w-6 h-6 rounded-full border-2 border-white dark:border-zinc-800 shadow-sm transition-transform hover:scale-110 bg-${status.color || 'zinc'}-500`}
+                                        />
+                                        
+                                        {openStatusColorPicker === idx && (
+                                            <div className="absolute top-8 left-0 z-50 p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-xl grid grid-cols-6 gap-1.5 w-48">
+                                                {STATUS_COLOR_OPTIONS.map(c => (
+                                                    <button
+                                                        key={c}
+                                                        onClick={() => handlePipelineColorChange(idx, c)}
+                                                        className={`w-5 h-5 rounded-full bg-${c}-500 hover:scale-110 transition-transform ${status.color === c ? 'ring-2 ring-zinc-900 dark:ring-white ring-offset-1' : ''}`}
+                                                        title={c}
+                                                    />
+                                                ))}
+                                                {/* Close overlay */}
+                                                <div 
+                                                    className="fixed inset-0 z-[-1]" 
+                                                    onClick={() => setOpenStatusColorPicker(null)} 
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <input 
                                       type="text" 
                                       value={status.label}
@@ -434,7 +408,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                  </div>
               ) : activeSettingsTab === 'PREFERENCES' ? (
-                // Preferences View (unchanged)
+                // Preferences View
                  <div className="flex flex-col h-full gap-4">
                     <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
                       <div>
@@ -622,20 +596,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             </button>
                           ))}
                       </div>
-                    </div>
-                    
-                    {/* Explicit Sync Button for Order */}
-                    <div className="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-                        <div className="text-[10px] text-zinc-400">
-                           Category order determines vertical sorting on the calendar.
-                        </div>
-                        <button 
-                           onClick={handleManualSync}
-                           className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-xs font-medium rounded transition-colors"
-                        >
-                           <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
-                           {isSyncing ? 'Syncing...' : 'Sync Order to Calendar'}
-                        </button>
                     </div>
 
                 </div>
