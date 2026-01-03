@@ -15,10 +15,10 @@ import {
   endOfMonth, 
   eachDayOfInterval, 
   endOfWeek, 
-  addMonths
+  addMonths,
+  startOfWeek,
+  startOfMonth
 } from 'date-fns';
-import startOfWeek from 'date-fns/startOfWeek';
-import startOfMonth from 'date-fns/startOfMonth';
 import { 
   ChevronLeft, 
   ChevronRight, 

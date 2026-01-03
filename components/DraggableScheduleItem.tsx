@@ -54,7 +54,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   if (appSettings) {
       const statusDef = appSettings.statusMode === 'CUSTOM'
          ? appSettings.customStatuses.find(s => s.id === project.status)
-         : appSettings.customStatuses.find(s => s.id === project.status) || { color: 'zinc' } as any; // Fallback to customStatuses list even in default mode because useAppStore populates it with defaults
+         : appSettings.customStatuses.find(s => s.id === project.status) || { color: 'zinc' } as any; 
       
       if (statusDef && statusDef.color) {
           statusColor = statusDef.color;
@@ -85,20 +85,15 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
       }
   }
 
-  // Visual Styles based on Alert State
+  // Visual Styles based on Status (Alerts are now only indicators/lights)
   let borderClasses = '';
-  
-  // In COMPACT mode, we use ring/borders. 
-  // In BLOCK mode, we use the Dot Badge (rendered below) instead of rings.
-  if (!isBlock) {
-    if (alertState === 'CRITICAL') {
-        borderClasses = 'ring-1 ring-inset ring-red-500 dark:ring-red-500 bg-red-50 dark:bg-red-900/10 border-red-500';
-    } else if (alertState === 'WARNING') {
-        borderClasses = 'ring-1 ring-inset ring-amber-500 dark:ring-amber-500 bg-amber-50 dark:bg-amber-900/10 border-amber-500';
-    } else {
-        // Apply Status Color to Border
-        borderClasses = `border-${statusColor}-300 dark:border-${statusColor}-500/50 bg-white dark:bg-zinc-900/40`;
-    }
+
+  if (isBlock) {
+      // Solid status border in block mode (2px to be visible against category color)
+      borderClasses = `border-${statusColor}-300 dark:border-${statusColor}-400 border-2`;
+  } else {
+      // Compact mode status border
+      borderClasses = `border-${statusColor}-300 dark:border-${statusColor}-500/50 bg-white dark:bg-zinc-900/40`;
   }
 
   // Base classes used for both modes
@@ -109,7 +104,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
         : isDragging 
             ? 'opacity-30 text-left' 
             : isBlock 
-                ? `${config.color} border-transparent hover:brightness-110 cursor-grab justify-center shadow-sm` 
+                ? `${config.color} ${borderClasses} hover:brightness-110 cursor-grab justify-center shadow-sm` 
                 : `cursor-grab text-left hover:brightness-105 dark:hover:brightness-110 ${borderClasses}`
     }
     ${isHighlighted ? 'ring-2 ring-inset ring-indigo-500 z-20' : ''}
