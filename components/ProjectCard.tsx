@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Project, ProjectStatus, DragData, CategoryConfig, AppSettings } from '../types';
@@ -95,7 +96,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
   const baseClasses = [
     'group relative flex items-stretch rounded-md border transition-all duration-300 overflow-visible',
     isOverlay 
-      ? 'cursor-grabbing scale-105 shadow-2xl rotate-1 z-50 bg-white dark:bg-zinc-800 border-indigo-500 ring-1 ring-indigo-500/50' 
+      ? 'cursor-grabbing scale-105 shadow-2xl rotate-1 z-50 bg-white dark:bg-zinc-800 border-indigo-500 ring-1 ring-indigo-500/50 pointer-events-none' 
       : `cursor-pointer ${bgClasses} ${borderClasses}`,
     isDragging ? 'opacity-30' : 'opacity-100',
     isScheduled && !isOverlay ? 'ml-4' : '',

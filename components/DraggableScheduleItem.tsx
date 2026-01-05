@@ -100,7 +100,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   const baseClasses = `
     group relative flex items-center gap-2 p-1.5 rounded-md border transition-all select-none
     ${isOverlay 
-        ? 'bg-white dark:bg-zinc-800 shadow-xl scale-105 rotate-1 z-50 border-indigo-500 cursor-grabbing w-[200px] text-left' 
+        ? 'bg-white dark:bg-zinc-800 shadow-xl scale-105 rotate-1 z-50 border-indigo-500 cursor-grabbing w-[200px] text-left pointer-events-none' 
         : isDragging 
             ? 'opacity-30 text-left' 
             : isBlock 

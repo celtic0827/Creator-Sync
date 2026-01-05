@@ -5,10 +5,13 @@ import {
   DragOverlay, 
   DragStartEvent, 
   DragEndEvent, 
+  DragMoveEvent,
   useSensor, 
   useSensors, 
   PointerSensor, 
   TouchSensor,
+  pointerWithin,
+  MeasuringStrategy
 } from '@dnd-kit/core';
 import { 
   format, 
@@ -17,7 +20,8 @@ import {
   endOfWeek, 
   addMonths,
   startOfWeek,
-  startOfMonth
+  startOfMonth,
+  isWithinInterval
 } from 'date-fns';
 import { 
   ChevronLeft, 
@@ -68,6 +72,7 @@ export default function App() {
   const [activeDragData, setActiveDragData] = useState<DragData | null>(null);
   const [highlightedProjectId, setHighlightedProjectId] = useState<string | null>(null);
   const scrollCooldown = useRef(false);
+  const pagingCooldown = useRef(false);
 
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -109,6 +114,37 @@ export default function App() {
       return format(d, 'EEE', { locale: dateLocale });
     });
   }, [dateLocale]);
+
+  // --- Preservation Logic for Draggable Items ---
+  // When switching months, the original draggable item might be unmounted.
+  // We check if the active item is off-screen, and if so, render a hidden proxy to keep the DnD session alive.
+  const activeDraggableHiddenProxy = useMemo(() => {
+    if (!activeDragData || activeDragData.type !== 'SCHEDULE_ITEM' || !activeDragData.scheduleId || !activeDragData.originDate) {
+        return null;
+    }
+    
+    // Check if the origin date is currently visible in the calendarDays grid
+    const start = calendarDays[0];
+    const end = calendarDays[calendarDays.length - 1];
+    
+    // Set times to ensure inclusive comparison
+    const s = new Date(start); s.setHours(0,0,0,0);
+    const e = new Date(end); e.setHours(23,59,59,999);
+    const origin = new Date(activeDragData.originDate); origin.setHours(12,0,0,0);
+
+    const isVisible = isWithinInterval(origin, { start: s, end: e });
+
+    if (isVisible) return null;
+
+    // Not visible, return the item and project to render a proxy
+    const item = schedule.find(s => s.id === activeDragData.scheduleId);
+    const project = projects.find(p => p.id === activeDragData.projectId);
+    
+    if (item && project) {
+        return { item, project };
+    }
+    return null;
+  }, [activeDragData, calendarDays, schedule, projects]);
 
   const handleJumpToProject = useCallback((projectId: string, dateStr: string) => {
     setCurrentMonth(new Date(dateStr + 'T00:00:00'));
@@ -166,6 +202,36 @@ export default function App() {
     setActiveDragId(event.active.id as string);
     setActiveDragData(event.active.data.current as DragData);
     setContextMenu(null); // Close context menu on drag
+  };
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    // Check cooldown
+    if (pagingCooldown.current) return;
+
+    // We need the translated rect (where the item is currently on screen)
+    const activeRect = event.active.rect.current.translated;
+    if (!activeRect) return;
+
+    // Detect if we are dragging inside the Calendar area (approximate sidebar width is 340px)
+    // We don't want to switch months if user is just organizing the sidebar
+    if (activeRect.left < 360) return;
+
+    const viewportHeight = window.innerHeight;
+    const threshold = 100; // pixels from edge to trigger paging
+
+    // Check Bottom Edge -> Next Month
+    if (activeRect.top + activeRect.height > viewportHeight - threshold) {
+        setCurrentMonth(prev => addMonths(prev, 1));
+        pagingCooldown.current = true;
+        setTimeout(() => { pagingCooldown.current = false; }, 800); // 800ms cooldown
+    }
+    // Check Top Edge -> Prev Month
+    // We check top edge > 0 to ensure we don't trigger if cursor left the window upwards
+    else if (activeRect.top < threshold && activeRect.top > -50) {
+        setCurrentMonth(prev => addMonths(prev, -1));
+        pagingCooldown.current = true;
+        setTimeout(() => { pagingCooldown.current = false; }, 800);
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -308,7 +374,14 @@ export default function App() {
   const toggleViewMode = (mode: 'COMPACT' | 'BLOCK') => setAppSettings(p => ({ ...p, calendarViewMode: mode }));
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext 
+      sensors={sensors} 
+      collisionDetection={pointerWithin} 
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+      onDragStart={handleDragStart} 
+      onDragMove={handleDragMove} 
+      onDragEnd={handleDragEnd}
+    >
       <div 
         className={`flex h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-indigo-500/30 ${lang === 'zh-TW' ? 'lang-zh' : ''}`}
         onContextMenu={(e) => {
@@ -420,6 +493,19 @@ export default function App() {
               <div className="w-auto"><DraggableScheduleItem item={schedule.find(s => s.id === activeDragData.scheduleId)!} project={projects.find(p => p.id === activeDragData.projectId)!} categoryConfig={categoryConfig} isOverlay viewMode={appSettings.calendarViewMode} appSettings={appSettings} /></div>
           )}
         </DragOverlay>
+
+        {/* HIDDEN PROXY: Keeps draggable mounted if its original cell is unmounted during month switch */}
+        <div style={{ display: 'none' }}>
+           {activeDraggableHiddenProxy && (
+               <DraggableScheduleItem 
+                 item={activeDraggableHiddenProxy.item}
+                 project={activeDraggableHiddenProxy.project}
+                 categoryConfig={categoryConfig}
+                 appSettings={appSettings}
+                 viewMode={appSettings.calendarViewMode}
+               />
+           )}
+        </div>
 
         {contextMenu && (
           <ContextMenu 
