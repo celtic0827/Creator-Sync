@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { format, isToday, isWeekend, differenceInCalendarDays } from 'date-fns';
+import { format, isToday, isWeekend, differenceInCalendarDays, getMonth } from 'date-fns';
 import { ScheduleItem, Project, CategoryConfig, CalendarViewMode, AppSettings, Priority } from '../types';
 import { DraggableScheduleItem } from './DraggableScheduleItem';
 import { Layers } from 'lucide-react';
@@ -86,6 +86,13 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   const isCurrentDay = isToday(date);
   const isWknd = isWeekend(date);
 
+  // --- Background Color Logic for Paging Effect ---
+  // We use the month of the cell to determine if it's an "Even" or "Odd" month.
+  // Note: getMonth returns 0-11 (Jan=0, Feb=1).
+  // Visual logic: Jan (Month 1, Odd), Feb (Month 2, Even).
+  const monthNum = getMonth(date) + 1;
+  const isEvenMonth = monthNum % 2 === 0;
+
   // --- Visual Focus Logic ---
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -122,7 +129,9 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
                 ? 'bg-indigo-50/60 dark:bg-indigo-500/10 pattern-today ring-1 ring-indigo-500/10 dark:ring-indigo-400/20 inset-ring inset-ring-indigo-500/5' // Today
                 : isWknd 
                     ? 'bg-zinc-100 dark:bg-[#0c0c0e]/50 hover:bg-zinc-50 dark:hover:bg-[#0c0c0e]/80' // Weekend
-                    : 'bg-white dark:bg-[#09090b] hover:bg-zinc-50 dark:hover:bg-zinc-900/50' // Default
+                    : isEvenMonth
+                        ? 'bg-zinc-50/80 dark:bg-[#111113] hover:bg-white dark:hover:bg-[#161618]' // Even Month (~5% Gray feel)
+                        : 'bg-white dark:bg-[#09090b] hover:bg-zinc-50 dark:hover:bg-[#0e0e10]' // Odd Month (~3% Gray feel / Standard)
         }
         ${hasHighlightedItem ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-zinc-950 z-30' : ''}
       `}
