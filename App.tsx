@@ -116,8 +116,6 @@ export default function App() {
   }, [dateLocale]);
 
   // --- Preservation Logic for Draggable Items ---
-  // When switching months, the original draggable item might be unmounted.
-  // We check if the active item is off-screen, and if so, render a hidden proxy to keep the DnD session alive.
   const activeDraggableHiddenProxy = useMemo(() => {
     if (!activeDragData || activeDragData.type !== 'SCHEDULE_ITEM' || !activeDragData.scheduleId || !activeDragData.originDate) {
         return null;
@@ -217,7 +215,7 @@ export default function App() {
     if (activeRect.left < 360) return;
 
     const viewportHeight = window.innerHeight;
-    const threshold = 100; // pixels from edge to trigger paging
+    const threshold = 15; // Decreased from 100 to 15 to require dragging to the very edge
 
     // Check Bottom Edge -> Next Month
     if (activeRect.top + activeRect.height > viewportHeight - threshold) {
