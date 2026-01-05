@@ -215,17 +215,20 @@ export default function App() {
     if (activeRect.left < 360) return;
 
     const viewportHeight = window.innerHeight;
-    const threshold = 15; // Decreased from 100 to 15 to require dragging to the very edge
+    
+    // Configurable thresholds
+    const topThreshold = 100; // Loose threshold for going back (previous month)
+    const bottomThreshold = 15; // Strict threshold for going forward (prevent accidental drops)
 
     // Check Bottom Edge -> Next Month
-    if (activeRect.top + activeRect.height > viewportHeight - threshold) {
+    if (activeRect.top + activeRect.height > viewportHeight - bottomThreshold) {
         setCurrentMonth(prev => addMonths(prev, 1));
         pagingCooldown.current = true;
         setTimeout(() => { pagingCooldown.current = false; }, 800); // 800ms cooldown
     }
     // Check Top Edge -> Prev Month
-    // We check top edge > 0 to ensure we don't trigger if cursor left the window upwards
-    else if (activeRect.top < threshold && activeRect.top > -50) {
+    // We check top edge > -50 to ensure we don't trigger if cursor left the window completely upwards in a weird way
+    else if (activeRect.top < topThreshold && activeRect.top > -50) {
         setCurrentMonth(prev => addMonths(prev, -1));
         pagingCooldown.current = true;
         setTimeout(() => { pagingCooldown.current = false; }, 800);
