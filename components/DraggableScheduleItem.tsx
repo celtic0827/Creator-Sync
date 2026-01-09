@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { X, AlertCircle, AlertTriangle } from 'lucide-react';
@@ -133,6 +132,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
       className={baseClasses}
+      title={project.name}
     >
       {/* 
           BLOCK MODE ALERT BADGE 
