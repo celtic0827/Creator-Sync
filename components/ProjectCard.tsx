@@ -80,6 +80,25 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
       }
   }
 
+  let borderStyleVal = 'solid';
+  if (appSettings) {
+      const statusDef = appSettings.statusMode === 'CUSTOM'
+         ? appSettings.customStatuses.find(s => s.id === project.status)
+         : appSettings.customStatuses.find(s => s.id === project.status) || { borderStyle: 'solid' } as any;
+      if (statusDef && statusDef.borderStyle) {
+          borderStyleVal = statusDef.borderStyle;
+      }
+  }
+
+  let borderStyleClass = 'border-solid';
+  let showDottedSvg = false;
+  if (borderStyleVal === 'dashed') borderStyleClass = 'border-dashed';
+  else if (borderStyleVal === 'dotted') {
+      showDottedSvg = true;
+      borderStyleClass = 'border-transparent';
+  }
+  else if (borderStyleVal === 'double') borderStyleClass = 'border-double border-2';
+
   let borderClasses = 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700';
   let bgClasses = 'bg-white dark:bg-zinc-900/40 hover:bg-zinc-50 dark:hover:bg-zinc-800 shadow-sm';
 
@@ -97,7 +116,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
     'group relative flex items-stretch rounded-md border transition-all duration-300 overflow-visible',
     isOverlay 
       ? 'cursor-grabbing scale-105 shadow-2xl rotate-1 z-50 bg-white dark:bg-zinc-800 border-indigo-500 ring-1 ring-indigo-500/50 pointer-events-none' 
-      : `cursor-pointer ${bgClasses} ${borderClasses}`,
+      : `cursor-pointer ${bgClasses} ${borderClasses} ${borderStyleClass}`,
     isDragging ? 'opacity-30' : 'opacity-100',
     isScheduled && !isOverlay ? 'ml-4' : '',
     isArchived && !isOverlay ? 'opacity-75' : '',
@@ -137,6 +156,29 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
       onContextMenu={handleContextMenu}
       title={isOverlay ? '' : (isScheduled ? `${t('jumpToDate', lang)} (${t('edit', lang)}: Double Click)` : `${t('edit', lang)}: Double Click`)}
     >
+      {showDottedSvg && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-md overflow-hidden z-10">
+          <rect
+            x="0.5"
+            y="0.5"
+            width="calc(100% - 1px)"
+            height="calc(100% - 1px)"
+            fill="none"
+            rx="6"
+            ry="6"
+            className={
+              alertState === 'CRITICAL'
+                ? 'stroke-red-400 dark:stroke-red-500/80'
+                : alertState === 'WARNING'
+                ? 'stroke-amber-400 dark:stroke-amber-500/80'
+                : `stroke-${statusColor}-300 dark:stroke-${statusColor}-500/60`
+            }
+            strokeWidth="1.5"
+            strokeDasharray="1 8"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
       <div className={`w-10 flex flex-col items-center justify-center shrink-0 relative rounded-l-md overflow-visible ${config.color} ${(isScheduled || isArchived) && !isOverlay ? 'opacity-80' : 'opacity-100'}`}>
          <div className="flex-1 flex flex-col items-center justify-center gap-2">
             <DynamicIcon iconKey={config.iconKey} className="text-white/90 w-5 h-5 drop-shadow-md" />

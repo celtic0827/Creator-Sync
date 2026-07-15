@@ -29,10 +29,10 @@ const DEFAULT_CATEGORY_CONFIG: CategoryConfig = {
 };
 
 const DEFAULT_STATUS_DEFS: StatusDefinition[] = [
-  { id: ProjectStatus.PLANNING, label: 'Planning', color: 'sky' },
-  { id: ProjectStatus.IN_PROGRESS, label: 'In Progress', color: 'indigo' },
-  { id: ProjectStatus.COMPLETED, label: 'Completed', isCompleted: true, color: 'emerald' },
-  { id: ProjectStatus.PAUSED, label: 'Paused', color: 'zinc' }
+  { id: ProjectStatus.PLANNING, label: 'Planning', color: 'sky', borderStyle: 'dashed' },
+  { id: ProjectStatus.IN_PROGRESS, label: 'In Progress', color: 'indigo', borderStyle: 'solid' },
+  { id: ProjectStatus.COMPLETED, label: 'Completed', isCompleted: true, color: 'emerald', borderStyle: 'double' },
+  { id: ProjectStatus.PAUSED, label: 'Paused', color: 'zinc', borderStyle: 'dotted' }
 ];
 
 const getDefaultLanguage = (): Language => {
@@ -115,11 +115,12 @@ export const useAppStore = () => {
           settings.categoryOrder = [...DEFAULT_APP_SETTINGS.categoryOrder];
       }
       
-      // Migration: Ensure colors exist in customStatuses if loading from old data
+      // Migration: Ensure colors and border styles exist in customStatuses if loading from old data
       if (settings.customStatuses && settings.customStatuses.length > 0) {
          settings.customStatuses = settings.customStatuses.map((s: any) => ({
              ...s,
-             color: s.color || 'zinc' // Default fallback
+             color: s.color || 'zinc', // Default fallback
+             borderStyle: s.borderStyle || 'solid' // Default fallback
          }));
       }
       

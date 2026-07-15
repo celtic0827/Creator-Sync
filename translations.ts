@@ -105,6 +105,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     search_no_results: 'No projects found',
     search_scheduled: 'Scheduled',
     search_unscheduled: 'Unscheduled',
+    border_solid: 'Solid',
+    border_dashed: 'Dashed',
+    border_dotted: 'Dotted',
+    border_double: 'Double',
   },
   'zh-TW': {
     pipeline: '專案管線',
@@ -187,6 +191,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     search_no_results: '找不到符合的專案',
     search_scheduled: '已排程',
     search_unscheduled: '未排程',
+    border_solid: '實線',
+    border_dashed: '虛線',
+    border_dotted: '點線',
+    border_double: '雙實線',
   }
 };
 

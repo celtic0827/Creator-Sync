@@ -29,6 +29,7 @@ export interface StatusDefinition {
   label: string;
   isCompleted?: boolean; // Marks this status as the "Done" state for logic purposes
   color: string; // Base color name for the status (e.g. 'indigo', 'zinc')
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double'; // Border style for the status
 }
 
 export interface AppSettings {

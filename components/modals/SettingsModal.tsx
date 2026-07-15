@@ -121,6 +121,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }))
     }));
   };
+
+  const handlePipelineBorderStyleChange = (index: number, newStyle: 'solid' | 'dashed' | 'dotted' | 'double') => {
+    setPrefForm(prev => {
+      const newList = [...prev.customStatuses];
+      newList[index] = { ...newList[index], borderStyle: newStyle };
+      return { ...prev, customStatuses: newList };
+    });
+  };
   
   // Safe accessor to avoid 'unknown' type errors if inference fails
   const safeEditCategoryForm = editCategoryForm as CategoryDefinition;
@@ -373,6 +381,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                       placeholder={t('pipeline_placeholder', lang)}
                                       className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded px-3 py-2 text-xs text-zinc-900 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none"
                                     />
+                                    
+                                    <select
+                                      value={status.borderStyle || 'solid'}
+                                      onChange={(e) => handlePipelineBorderStyleChange(idx, e.target.value as any)}
+                                      className="w-24 shrink-0 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-700 dark:text-zinc-300 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
+                                    >
+                                      <option value="solid">{t('border_solid', lang)}</option>
+                                      <option value="dashed">{t('border_dashed', lang)}</option>
+                                      <option value="dotted">{t('border_dotted', lang)}</option>
+                                      <option value="double">{t('border_double', lang)}</option>
+                                    </select>
                                     
                                     <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
                                     

@@ -50,15 +50,26 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
 
   // Get status color if available
   let statusColor = 'zinc'; // Default fallback
+  let borderStyleVal = 'solid'; // Default fallback
   if (appSettings) {
       const statusDef = appSettings.statusMode === 'CUSTOM'
          ? appSettings.customStatuses.find(s => s.id === project.status)
-         : appSettings.customStatuses.find(s => s.id === project.status) || { color: 'zinc' } as any; 
+         : appSettings.customStatuses.find(s => s.id === project.status) || { color: 'zinc', borderStyle: 'solid' } as any; 
       
-      if (statusDef && statusDef.color) {
-          statusColor = statusDef.color;
+      if (statusDef) {
+          if (statusDef.color) {
+              statusColor = statusDef.color;
+          }
+          if (statusDef.borderStyle) {
+              borderStyleVal = statusDef.borderStyle;
+          }
       }
   }
+
+  let borderStyleClass = 'border-solid';
+  if (borderStyleVal === 'dashed') borderStyleClass = 'border-dashed';
+  else if (borderStyleVal === 'dotted') borderStyleClass = 'border-dotted';
+  else if (borderStyleVal === 'double') borderStyleClass = 'border-double border-2';
 
   // Alert Logic
   const isCompleted = appSettings?.statusMode === 'CUSTOM'
@@ -86,13 +97,25 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
 
   // Visual Styles based on Status (Alerts are now only indicators/lights)
   let borderClasses = '';
+  let showDottedSvg = false;
 
-  if (isBlock) {
-      // Solid status border in block mode (2px to be visible against category color)
-      borderClasses = `border-${statusColor}-300 dark:border-${statusColor}-400 border-2`;
+  if (borderStyleVal === 'dotted') {
+      showDottedSvg = true;
+      if (isBlock) {
+          // Status border in block mode (2px transparent border to reserve space for SVG)
+          borderClasses = `border-transparent border-2`;
+      } else {
+          // Compact mode status border (transparent border to reserve space for SVG)
+          borderClasses = `border-transparent bg-white dark:bg-zinc-900/40 border`;
+      }
   } else {
-      // Compact mode status border
-      borderClasses = `border-${statusColor}-300 dark:border-${statusColor}-500/50 bg-white dark:bg-zinc-900/40`;
+      if (isBlock) {
+          // Status border in block mode (2px to be visible against category color)
+          borderClasses = `border-${statusColor}-300 dark:border-${statusColor}-400 border-2 ${borderStyleClass}`;
+      } else {
+          // Compact mode status border
+          borderClasses = `border-${statusColor}-300 dark:border-${statusColor}-500/50 bg-white dark:bg-zinc-900/40 ${borderStyleClass}`;
+      }
   }
 
   // Base classes used for both modes
@@ -134,6 +157,23 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
       className={baseClasses}
       title={project.name}
     >
+      {showDottedSvg && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-md overflow-hidden z-10">
+          <rect
+            x="0.5"
+            y="0.5"
+            width="calc(100% - 1px)"
+            height="calc(100% - 1px)"
+            fill="none"
+            rx="6"
+            ry="6"
+            className={isBlock ? 'stroke-white/80' : `stroke-${statusColor}-300 dark:stroke-${statusColor}-500/60`}
+            strokeWidth={isBlock ? '2' : '1.5'}
+            strokeDasharray="1 8"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
       {/* 
           BLOCK MODE ALERT BADGE 
           Design: Black background circle with a colored dot inside.
