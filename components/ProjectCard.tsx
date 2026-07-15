@@ -98,12 +98,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
 
   let borderStyleClass = 'border-solid';
   let showDottedSvg = false;
+  let showDoubleSvg = false;
   if (borderStyleVal === 'dashed') borderStyleClass = 'border-dashed';
   else if (borderStyleVal === 'dotted') {
       showDottedSvg = true;
       borderStyleClass = 'border-transparent';
   }
-  else if (borderStyleVal === 'double') borderStyleClass = 'border-double border-2';
+  else if (borderStyleVal === 'double') {
+      showDoubleSvg = true;
+      borderStyleClass = 'border-transparent';
+  }
 
   let borderClasses = 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700';
   let bgClasses = 'bg-white dark:bg-zinc-900/40 hover:bg-zinc-50 dark:hover:bg-zinc-800 shadow-sm';
@@ -182,6 +186,44 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
             strokeWidth="1.5"
             strokeDasharray="1 8"
             strokeLinecap="round"
+          />
+        </svg>
+      )}
+      {showDoubleSvg && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-md overflow-hidden z-10">
+          <rect
+            x="0.75"
+            y="0.75"
+            width="calc(100% - 1.5px)"
+            height="calc(100% - 1.5px)"
+            fill="none"
+            rx="6"
+            ry="6"
+            className={
+              alertState === 'CRITICAL'
+                ? 'stroke-red-400 dark:stroke-red-500/80'
+                : alertState === 'WARNING'
+                ? 'stroke-amber-400 dark:stroke-amber-500/80'
+                : `stroke-${statusColor}-300 dark:stroke-${statusColor}-500/60`
+            }
+            strokeWidth="1"
+          />
+          <rect
+            x="3.25"
+            y="3.25"
+            width="calc(100% - 6.5px)"
+            height="calc(100% - 6.5px)"
+            fill="none"
+            rx="3.5"
+            ry="3.5"
+            className={
+              alertState === 'CRITICAL'
+                ? 'stroke-red-400 dark:stroke-red-500/80'
+                : alertState === 'WARNING'
+                ? 'stroke-amber-400 dark:stroke-amber-500/80'
+                : `stroke-${statusColor}-300 dark:stroke-${statusColor}-500/60`
+            }
+            strokeWidth="1"
           />
         </svg>
       )}

@@ -98,6 +98,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   // Visual Styles based on Status (Alerts are now only indicators/lights)
   let borderClasses = '';
   let showDottedSvg = false;
+  let showDoubleSvg = false;
 
   if (borderStyleVal === 'dotted') {
       showDottedSvg = true;
@@ -106,6 +107,13 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
           borderClasses = `border-transparent border-2`;
       } else {
           // Compact mode status border (transparent border to reserve space for SVG)
+          borderClasses = `border-transparent bg-white dark:bg-zinc-900/40 border`;
+      }
+  } else if (borderStyleVal === 'double') {
+      showDoubleSvg = true;
+      if (isBlock) {
+          borderClasses = `border-transparent border-2`;
+      } else {
           borderClasses = `border-transparent bg-white dark:bg-zinc-900/40 border`;
       }
   } else {
@@ -171,6 +179,32 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
             strokeWidth={isBlock ? '2' : '1.5'}
             strokeDasharray="1 8"
             strokeLinecap="round"
+          />
+        </svg>
+      )}
+      {showDoubleSvg && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-md overflow-hidden z-10">
+          <rect
+            x="0.75"
+            y="0.75"
+            width="calc(100% - 1.5px)"
+            height="calc(100% - 1.5px)"
+            fill="none"
+            rx="6"
+            ry="6"
+            className={isBlock ? 'stroke-white/80' : `stroke-${statusColor}-300 dark:stroke-${statusColor}-500/60`}
+            strokeWidth="1"
+          />
+          <rect
+            x="3.25"
+            y="3.25"
+            width="calc(100% - 6.5px)"
+            height="calc(100% - 6.5px)"
+            fill="none"
+            rx="3.5"
+            ry="3.5"
+            className={isBlock ? 'stroke-white/80' : `stroke-${statusColor}-300 dark:stroke-${statusColor}-500/60`}
+            strokeWidth="1"
           />
         </svg>
       )}
