@@ -80,13 +80,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({
       }
   }
 
+  let statusColor = 'zinc';
   let borderStyleVal = 'solid';
   if (appSettings) {
       const statusDef = appSettings.statusMode === 'CUSTOM'
          ? appSettings.customStatuses.find(s => s.id === project.status)
-         : appSettings.customStatuses.find(s => s.id === project.status) || { borderStyle: 'solid' } as any;
-      if (statusDef && statusDef.borderStyle) {
-          borderStyleVal = statusDef.borderStyle;
+         : appSettings.customStatuses.find(s => s.id === project.status) || { color: 'zinc', borderStyle: 'solid' } as any;
+      if (statusDef) {
+          if (statusDef.color) {
+              statusColor = statusDef.color;
+          }
+          if (statusDef.borderStyle) {
+              borderStyleVal = statusDef.borderStyle;
+          }
       }
   }
 
