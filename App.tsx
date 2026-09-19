@@ -417,22 +417,22 @@ export default function App() {
           highlightedProjectId={highlightedProjectId}
         />
 
-        <main className="flex-1 flex flex-col bg-zinc-50 dark:bg-zinc-950 relative transition-colors duration-200">
-          <div className="flex items-center justify-between px-8 py-6 h-20">
-             <div className="flex items-center gap-6">
-               <div className="w-60">
-                 <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight capitalize">
+        <main className="flex-1 min-w-0 flex flex-col bg-zinc-50 dark:bg-zinc-950 relative transition-colors duration-200">
+          <div className="flex items-center justify-between px-4 lg:px-8 py-4 lg:py-6 h-20 min-w-0">
+             <div className="flex items-center gap-2 md:gap-3 xl:gap-5 min-w-0 flex-1 overflow-x-auto no-scrollbar py-1">
+               <div className="shrink-0">
+                 <h2 className="text-xl lg:text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight capitalize whitespace-nowrap">
                    {format(currentMonth, 'MMMM yyyy', { locale: dateLocale })}
                  </h2>
                </div>
-               <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-1">
+               <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-1 shrink-0">
                  <button onClick={() => setCurrentMonth(prev => addMonths(prev, -1))} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"><ChevronLeft size={16} /></button>
-                 <button onClick={() => setCurrentMonth(new Date())} className="w-16 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white whitespace-nowrap">{t('today', lang)}</button>
+                 <button onClick={() => setCurrentMonth(new Date())} className="w-14 sm:w-16 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white whitespace-nowrap">{t('today', lang)}</button>
                  <button onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"><ChevronRight size={16} /></button>
                </div>
                
                {/* Global Search Component inserted here */}
-               <div className="mx-2">
+               <div className="shrink-0">
                  <GlobalSearch 
                     projects={projects}
                     schedule={schedule}
@@ -443,26 +443,26 @@ export default function App() {
                  />
                </div>
 
-               <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/50 p-0.5">
+               <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/50 p-0.5 shrink-0">
                   <button onClick={() => toggleViewMode('COMPACT')} className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'COMPACT' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}><List size={14} /></button>
                   <button onClick={() => toggleViewMode('BLOCK')} className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'BLOCK' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}><LayoutGrid size={14} /></button>
                </div>
-               <div className="h-6 w-px bg-zinc-300 dark:bg-zinc-800/50 mx-2"></div>
-               <button onClick={handleUndo} disabled={history.length === 0} className={`flex items-center gap-2 px-3 py-1.5 rounded-md border transition-all ${history.length > 0 ? 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 hover:bg-zinc-50 shadow-sm' : 'bg-transparent border-transparent text-zinc-400 cursor-default opacity-50'}`}><Undo2 size={16} /></button>
+               <div className="hidden sm:block h-6 w-px bg-zinc-300 dark:bg-zinc-800/50 mx-1 shrink-0"></div>
+               <button onClick={handleUndo} disabled={history.length === 0} className={`shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-md border transition-all ${history.length > 0 ? 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 hover:bg-zinc-50 shadow-sm' : 'bg-transparent border-transparent text-zinc-400 cursor-default opacity-50'}`}><Undo2 size={16} /></button>
                <TrashDropZone activeDragId={activeDragId} lang={lang} />
              </div>
-             <div className="flex items-center gap-3">
-               <div className="text-right"><h1 className="text-xs font-bold tracking-tight text-zinc-500 dark:text-zinc-300 uppercase">Creator Sync</h1><p className="text-[10px] text-zinc-400 dark:text-zinc-600 font-medium">Pro Scheduler</p></div>
+             <div className="flex items-center gap-2 lg:gap-3 shrink-0 ml-3">
+               <div className="text-right hidden sm:block"><h1 className="text-xs font-bold tracking-tight text-zinc-500 dark:text-zinc-300 uppercase">Creator Sync</h1><p className="text-[10px] text-zinc-400 dark:text-zinc-600 font-medium">Pro Scheduler</p></div>
                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 shadow-inner"><Layers size={16} /></div>
              </div>
           </div>
 
-          <div className="flex-1 px-8 pb-8 overflow-hidden flex flex-col" onWheel={handleCalendarWheel}>
-            <div className="grid grid-cols-7 mb-2">
-              {weekDays.map(day => (<div key={day} className="text-center text-[10px] font-medium text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">{day}</div>))}
+          <div className="flex-1 min-w-0 px-4 lg:px-8 pb-4 lg:pb-8 overflow-hidden flex flex-col" onWheel={handleCalendarWheel}>
+            <div className="grid grid-cols-7 mb-2 min-w-0">
+              {weekDays.map(day => (<div key={day} className="text-center text-[10px] font-medium text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">{day}</div>))}
             </div>
-            <div className="flex-1 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-200 dark:bg-zinc-800 shadow-xl dark:shadow-2xl">
-               <div className="grid grid-cols-7 gap-px bg-zinc-200 dark:bg-zinc-800 h-full min-h-[500px]">
+            <div className="flex-1 min-w-0 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-200 dark:bg-zinc-800 shadow-xl dark:shadow-2xl custom-scrollbar">
+               <div className="grid grid-cols-7 gap-px bg-zinc-200 dark:bg-zinc-800 h-full min-h-[500px] min-w-0">
                 {calendarDays.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd');
                   return (

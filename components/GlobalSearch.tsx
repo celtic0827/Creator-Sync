@@ -86,7 +86,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   const dateLocale = lang === 'zh-TW' ? zhTW : enUS;
 
   return (
-    <div ref={wrapperRef} className="relative w-64 max-w-[300px] z-50">
+    <div ref={wrapperRef} className="relative w-44 sm:w-56 xl:w-64 max-w-[280px] z-50">
       <div className="relative group">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-indigo-500 transition-colors">
           <Search size={14} />
@@ -115,7 +115,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
       {/* Dropdown Results */}
       {isOpen && query && (
-        <div className="absolute top-full right-0 left-0 mt-2 bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in fade-in zoom-in-95 duration-100 min-w-[320px]">
+        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in fade-in zoom-in-95 duration-100 w-[280px] sm:w-[320px]">
           {filteredProjects.length > 0 ? (
             <div className="py-1">
               <div className="px-3 py-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800 mb-1 flex justify-between items-center">

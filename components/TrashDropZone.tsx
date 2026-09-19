@@ -22,7 +22,7 @@ export const TrashDropZone: React.FC<TrashDropZoneProps> = React.memo(({ activeD
       ref={setNodeRef}
       id="trash-zone" 
       className={`
-        flex items-center gap-2 px-6 py-1.5 rounded-md transition-all duration-200 border z-50 select-none whitespace-nowrap
+        flex items-center gap-1.5 px-3 xl:px-4 py-1.5 rounded-md transition-all duration-200 border z-50 select-none whitespace-nowrap shrink-0
         ${isActive 
           ? 'opacity-100 border-zinc-300 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/80 text-zinc-600 dark:text-zinc-300 shadow-sm' 
           : 'opacity-40 border-transparent text-zinc-500 dark:text-zinc-600'
@@ -33,7 +33,7 @@ export const TrashDropZone: React.FC<TrashDropZoneProps> = React.memo(({ activeD
         }
      `}
     >
-       <Trash2 size={16} />
+       <Trash2 size={15} />
        <span className="text-xs font-semibold">{t('dropToDelete', lang)}</span>
     </div>
   );
