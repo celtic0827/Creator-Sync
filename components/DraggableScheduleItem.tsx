@@ -150,6 +150,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
   const handleContextMenu = (e: React.MouseEvent) => {
     if (!isOverlay && onContextMenu) {
       e.preventDefault();
+      e.stopPropagation();
       onContextMenu(e, project.id);
     }
   };

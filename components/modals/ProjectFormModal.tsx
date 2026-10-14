@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Tag, Check, AlertTriangle, Trash2, Gauge } from 'lucide-react';
+import { X, Tag, Check, AlertTriangle, Trash2, Gauge, Calendar } from 'lucide-react';
 import { Project, ProjectStatus, ProjectType, CategoryConfig, CategoryDefinition, Language, StatusDefinition, Priority } from '../../types';
 import { DynamicIcon } from '../IconUtils';
 import { t, getStatusText } from '../../translations';
@@ -11,6 +11,7 @@ interface ProjectFormModalProps {
   onSave: (projectData: Partial<Project>) => void;
   onDelete?: () => void;
   editingProject?: Project | null;
+  targetScheduleDate?: string | null;
   categoryConfig: CategoryConfig;
   lang: Language;
   activeStatuses: StatusDefinition[];
@@ -23,6 +24,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
   onSave, 
   onDelete,
   editingProject, 
+  targetScheduleDate,
   categoryConfig,
   lang,
   activeStatuses,
@@ -91,14 +93,33 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 p-4">
-          <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
-            {editingProject ? t('modal_editTitle', lang) : t('modal_createTitle', lang)}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
+              {editingProject ? t('modal_editTitle', lang) : t('modal_createTitle', lang)}
+            </h3>
+            {targetScheduleDate && !editingProject && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/80">
+                <Calendar size={11} />
+                {targetScheduleDate}
+              </span>
+            )}
+          </div>
           <button onClick={onClose} className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white">
             <X size={16} />
           </button>
         </div>
         <div className="p-4 space-y-4">
+          {targetScheduleDate && !editingProject && (
+            <div className="flex items-center justify-between px-3 py-2 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-lg text-xs text-indigo-700 dark:text-indigo-300">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Calendar size={13} className="text-indigo-500 shrink-0" />
+                {t('modal_target_date', lang)}: <span className="font-semibold underline decoration-indigo-300 dark:decoration-indigo-600">{targetScheduleDate}</span>
+              </span>
+              <span className="text-[10px] text-indigo-500 dark:text-indigo-400">
+                {lang === 'zh-TW' ? '儲存後自動排入此日期' : 'Auto-schedules on save'}
+              </span>
+            </div>
+          )}
           <div className="space-y-1.5">
             <label className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{t('modal_name', lang)}</label>
             <input 

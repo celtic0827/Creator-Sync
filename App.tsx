@@ -30,7 +30,7 @@ import {
   Layers,
   List,
   LayoutGrid,
-  Copy, Edit2, Trash2, Archive, RotateCcw
+  Copy, Edit2, Trash2, Archive, RotateCcw, CalendarPlus
 } from 'lucide-react';
 
 import { Project, ScheduleItem, DragData, SidebarTab, ProjectStatus } from './types';
@@ -82,7 +82,14 @@ export default function App() {
   const [checklistProjectId, setChecklistProjectId] = useState<string | null>(null);
 
   // Context Menu State
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; projectId: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ 
+    x: number; 
+    y: number; 
+    type: 'project' | 'cell'; 
+    projectId?: string; 
+    targetDate?: string; 
+  } | null>(null);
+  const [targetScheduleDate, setTargetScheduleDate] = useState<string | null>(null);
 
   // --- DnD Sensors ---
   const sensors = useSensors(
@@ -278,13 +285,26 @@ export default function App() {
     if (editingProjectId) {
       setProjects(prev => prev.map(p => p.id === editingProjectId ? { ...p, ...formData, color: config.color } as Project : p));
     } else {
+      const newProjectId = crypto.randomUUID();
       setProjects(prev => [...prev, {
-        id: crypto.randomUUID(), name: formData.name || 'Untitled', description: formData.description || '',
+        id: newProjectId, name: formData.name || 'Untitled', description: formData.description || '',
         tags: formData.tags || [], status: formData.status || activeStatuses[0].id,
         type: formData.type || 'VIDEO', color: config.color, checklist: []
       }]);
+
+      // If created from a calendar cell right-click, schedule it automatically!
+      if (targetScheduleDate) {
+        setSchedule(prev => [...prev, {
+          id: crypto.randomUUID(),
+          date: targetScheduleDate,
+          projectId: newProjectId,
+          note: 'Release'
+        }]);
+      }
     }
-    setIsModalOpen(false); setEditingProjectId(null);
+    setIsModalOpen(false); 
+    setEditingProjectId(null);
+    setTargetScheduleDate(null);
   };
 
   const handleDeleteProject = () => {
@@ -292,16 +312,22 @@ export default function App() {
     saveHistory();
     setSchedule(prev => prev.filter(s => s.projectId !== editingProjectId));
     setProjects(prev => prev.filter(p => p.id !== editingProjectId));
-    setIsModalOpen(false); setEditingProjectId(null);
+    setIsModalOpen(false); 
+    setEditingProjectId(null);
+    setTargetScheduleDate(null);
   };
 
   // --- Context Menu Handlers ---
   const handleContextMenu = useCallback((e: React.MouseEvent, projectId: string) => {
-    setContextMenu({ x: e.clientX, y: e.clientY, projectId });
+    setContextMenu({ x: e.clientX, y: e.clientY, type: 'project', projectId });
+  }, []);
+
+  const handleCellContextMenu = useCallback((e: React.MouseEvent, dateStr: string) => {
+    setContextMenu({ x: e.clientX, y: e.clientY, type: 'cell', targetDate: dateStr });
   }, []);
 
   const handleDuplicateProject = () => {
-    if (!contextMenu) return;
+    if (!contextMenu || contextMenu.type !== 'project' || !contextMenu.projectId) return;
     const original = projects.find(p => p.id === contextMenu.projectId);
     if (!original) return;
 
@@ -317,11 +343,12 @@ export default function App() {
     setProjects(prev => [...prev, copy]);
     // Immediate edit
     setEditingProjectId(newId);
+    setTargetScheduleDate(null);
     setIsModalOpen(true);
   };
 
   const handleArchiveToggle = () => {
-    if (!contextMenu) return;
+    if (!contextMenu || contextMenu.type !== 'project' || !contextMenu.projectId) return;
     const project = projects.find(p => p.id === contextMenu.projectId);
     if (!project) return;
     
@@ -332,7 +359,7 @@ export default function App() {
   };
 
   const handleDeleteFromContext = () => {
-    if (!contextMenu) return;
+    if (!contextMenu || contextMenu.type !== 'project' || !contextMenu.projectId) return;
     const project = projects.find(p => p.id === contextMenu.projectId);
     if (project && confirm(`Delete project "${project.name}" permanently?`)) {
        saveHistory();
@@ -342,14 +369,36 @@ export default function App() {
   };
 
   const handleEditFromContext = () => {
-    if (!contextMenu) return;
+    if (!contextMenu || contextMenu.type !== 'project' || !contextMenu.projectId) return;
     setEditingProjectId(contextMenu.projectId);
+    setTargetScheduleDate(null);
     setIsModalOpen(true);
-  }
+  };
 
   // Generate Menu Actions
   const getMenuActions = (): ContextMenuAction[] => {
     if (!contextMenu) return [];
+
+    if (contextMenu.type === 'cell') {
+      if (!contextMenu.targetDate) return [];
+      const dateStr = contextMenu.targetDate;
+      return [
+        { 
+          id: 'create_project_here', 
+          label: lang === 'zh-TW' 
+            ? `在此日期新增專案 (${dateStr})` 
+            : `New Project on ${dateStr}`, 
+          icon: CalendarPlus, 
+          onClick: () => {
+            setTargetScheduleDate(dateStr);
+            setEditingProjectId(null);
+            setIsModalOpen(true);
+          } 
+        }
+      ];
+    }
+
+    if (!contextMenu.projectId) return [];
     const project = projects.find(p => p.id === contextMenu.projectId);
     if (!project) return [];
     
@@ -399,7 +448,7 @@ export default function App() {
           categoryConfig={categoryConfig}
           appSettings={appSettings}
           lang={lang}
-          onOpenCreateModal={() => { setEditingProjectId(null); setIsModalOpen(true); }}
+          onOpenCreateModal={() => { setTargetScheduleDate(null); setEditingProjectId(null); setIsModalOpen(true); }}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           onOpenHelp={() => setIsHelpModalOpen(true)}
           sidebarTab={sidebarTab}
@@ -477,6 +526,7 @@ export default function App() {
                       onRemoveItem={(sid) => { saveHistory(); setSchedule(p => p.filter(s => s.id !== sid)); }}
                       onEditProject={(p) => { setEditingProjectId(p.id); setIsModalOpen(true); }}
                       onContextMenu={handleContextMenu}
+                      onCellContextMenu={handleCellContextMenu}
                       viewMode={appSettings.calendarViewMode}
                       appSettings={appSettings}
                     />
@@ -518,7 +568,22 @@ export default function App() {
           />
         )}
 
-        <ProjectFormModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingProjectId(null); }} onSave={handleSaveProject} onDelete={editingProjectId ? handleDeleteProject : undefined} editingProject={editingProjectId ? projects.find(p => p.id === editingProjectId) : null} categoryConfig={categoryConfig} lang={lang} activeStatuses={activeStatuses} statusMode={appSettings.statusMode} />
+        <ProjectFormModal 
+          isOpen={isModalOpen} 
+          onClose={() => { 
+            setIsModalOpen(false); 
+            setEditingProjectId(null); 
+            setTargetScheduleDate(null); 
+          }} 
+          onSave={handleSaveProject} 
+          onDelete={editingProjectId ? handleDeleteProject : undefined} 
+          editingProject={editingProjectId ? projects.find(p => p.id === editingProjectId) : null} 
+          targetScheduleDate={targetScheduleDate}
+          categoryConfig={categoryConfig} 
+          lang={lang} 
+          activeStatuses={activeStatuses} 
+          statusMode={appSettings.statusMode} 
+        />
         <ChecklistModal isOpen={!!checklistProjectId} onClose={() => setChecklistProjectId(null)} project={checklistProjectId ? projects.find(p => p.id === checklistProjectId) || null : null} onUpdateProject={(u) => setProjects(p => p.map(x => x.id === u.id ? u : x))} lang={lang} />
         <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} categoryConfig={categoryConfig} onUpdateCategory={setCategoryConfig} onExportData={exportData} onImportData={importData} appSettings={appSettings} onUpdateAppSettings={setAppSettings} />
         <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} lang={lang} />

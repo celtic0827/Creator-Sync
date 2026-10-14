@@ -6,7 +6,8 @@ import { t } from '../translations';
 
 export interface ContextMenuAction {
   id: string;
-  labelKey: string;
+  labelKey?: string;
+  label?: string;
   icon: React.ElementType;
   onClick: () => void;
   danger?: boolean;
@@ -77,7 +78,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, actions
           `}
         >
           <action.icon size={14} className={action.danger ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400'} />
-          {t(action.labelKey, lang)}
+          {action.label || (action.labelKey ? t(action.labelKey, lang) : '')}
         </button>
       ))}
     </div>

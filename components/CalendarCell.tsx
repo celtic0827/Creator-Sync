@@ -16,6 +16,7 @@ interface CalendarCellProps {
   onRemoveItem?: (scheduleId: string) => void;
   onEditProject?: (project: Project) => void;
   onContextMenu?: (e: React.MouseEvent, projectId: string) => void;
+  onCellContextMenu?: (e: React.MouseEvent, dateStr: string) => void;
   viewMode?: CalendarViewMode;
   appSettings?: AppSettings;
 }
@@ -30,6 +31,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   onRemoveItem,
   onEditProject,
   onContextMenu,
+  onCellContextMenu,
   viewMode = 'COMPACT',
   appSettings
 }) => {
@@ -121,6 +123,12 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
   return (
     <div
       ref={setNodeRef}
+      onContextMenu={(e) => {
+        if (onCellContextMenu) {
+          e.preventDefault();
+          onCellContextMenu(e, dateStr);
+        }
+      }}
       className={`
         group relative min-h-[85px] flex flex-col p-1.5 transition-all duration-200
         ${isOver 
