@@ -21,7 +21,10 @@ import {
   addMonths,
   startOfWeek,
   startOfMonth,
-  isWithinInterval
+  isWithinInterval,
+  addDays,
+  subDays,
+  parseISO
 } from 'date-fns';
 import { 
   ChevronLeft, 
@@ -30,7 +33,7 @@ import {
   Layers,
   List,
   LayoutGrid,
-  Copy, Edit2, Trash2, Archive, RotateCcw, CalendarPlus
+  Copy, Edit2, Trash2, Archive, RotateCcw, CalendarPlus, FastForward, Rewind
 } from 'lucide-react';
 
 import { Project, ScheduleItem, DragData, SidebarTab, ProjectStatus } from './types';
@@ -90,6 +93,18 @@ export default function App() {
     targetDate?: string; 
   } | null>(null);
   const [targetScheduleDate, setTargetScheduleDate] = useState<string | null>(null);
+
+  // Toast Notification State
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastMessage(msg);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  }, []);
 
   // --- DnD Sensors ---
   const sensors = useSensors(
@@ -375,6 +390,61 @@ export default function App() {
     setIsModalOpen(true);
   };
 
+  const handleShiftBackward = useCallback((dateStr: string) => {
+    const affected = schedule.filter(s => s.date >= dateStr);
+    if (affected.length === 0) return;
+    saveHistory();
+    setSchedule(prev => {
+      return prev.map(item => {
+        if (item.date >= dateStr) {
+          const d = parseISO(item.date);
+          return { ...item, date: format(addDays(d, 1), 'yyyy-MM-dd') };
+        }
+        return item;
+      });
+    });
+    showToast(
+      lang === 'zh-TW'
+        ? `已將 ${dateStr} 起共 ${affected.length} 個排程專案順延 1 天 (+1 天)`
+        : `Postponed ${affected.length} projects from ${dateStr} by 1 day (+1 Day)`
+    );
+  }, [schedule, saveHistory, setSchedule, showToast, lang]);
+
+  const handleRemoveAndShiftForward = useCallback((dateStr: string) => {
+    const targetItems = schedule.filter(s => s.date === dateStr);
+    const subsequent = schedule.filter(s => s.date > dateStr);
+    
+    // If no items on current date AND no subsequent items, nothing to do
+    if (targetItems.length === 0 && subsequent.length === 0) return;
+
+    saveHistory();
+    setSchedule(prev => {
+      return prev
+        .filter(item => item.date !== dateStr)
+        .map(item => {
+          if (item.date > dateStr) {
+            const d = parseISO(item.date);
+            return { ...item, date: format(subDays(d, 1), 'yyyy-MM-dd') };
+          }
+          return item;
+        });
+    });
+
+    if (targetItems.length > 0) {
+      showToast(
+        lang === 'zh-TW'
+          ? `已刪除 ${dateStr} 的 ${targetItems.length} 個專案排程，後續 ${subsequent.length} 個專案已前移 1 天 (-1 天)`
+          : `Removed ${targetItems.length} project(s) on ${dateStr} & shifted ${subsequent.length} next forward (-1 Day)`
+      );
+    } else {
+      showToast(
+        lang === 'zh-TW'
+          ? `${dateStr} 當日無排程，已將後續 ${subsequent.length} 個專案前移 1 天 (-1 天)`
+          : `Shifted subsequent ${subsequent.length} project(s) forward by 1 day (-1 Day)`
+      );
+    }
+  }, [schedule, saveHistory, setSchedule, showToast, lang]);
+
   // Generate Menu Actions
   const getMenuActions = (): ContextMenuAction[] => {
     if (!contextMenu) return [];
@@ -382,6 +452,29 @@ export default function App() {
     if (contextMenu.type === 'cell') {
       if (!contextMenu.targetDate) return [];
       const dateStr = contextMenu.targetDate;
+      const targetItems = schedule.filter(s => s.date === dateStr);
+      const subsequentItems = schedule.filter(s => s.date > dateStr);
+      const affectedBackwardItems = schedule.filter(s => s.date >= dateStr);
+
+      const hasTarget = targetItems.length > 0;
+      const hasSubsequent = subsequentItems.length > 0;
+      const canShiftForward = hasTarget || hasSubsequent;
+
+      let forwardLabel = '';
+      if (hasTarget) {
+        forwardLabel = lang === 'zh-TW'
+          ? `刪除當日專案 (${targetItems.length}) 並將後續前移 (-1 天)`
+          : `Delete date project (${targetItems.length}) & shift next (-1 Day)`;
+      } else if (hasSubsequent) {
+        forwardLabel = lang === 'zh-TW'
+          ? `將後續專案往前推一天 (-1 天)`
+          : `Shift subsequent projects forward (-1 Day)`;
+      } else {
+        forwardLabel = lang === 'zh-TW'
+          ? `將後續專案前移 (無後續專案)`
+          : `Shift subsequent projects (No projects)`;
+      }
+
       return [
         { 
           id: 'create_project_here', 
@@ -394,6 +487,24 @@ export default function App() {
             setEditingProjectId(null);
             setIsModalOpen(true);
           } 
+        },
+        {
+          id: 'shift_backward',
+          dividerAbove: true,
+          disabled: affectedBackwardItems.length === 0,
+          label: affectedBackwardItems.length === 0
+            ? (lang === 'zh-TW' ? `將此日及後續專案順延 (無專案)` : `Postpone from this date (No projects)`)
+            : (lang === 'zh-TW' ? `將此日及後續專案順延一天 (+1 天)` : `Postpone from this date (+1 Day)`),
+          icon: FastForward,
+          onClick: () => handleShiftBackward(dateStr)
+        },
+        {
+          id: 'remove_and_shift_forward',
+          disabled: !canShiftForward,
+          label: forwardLabel,
+          icon: Rewind,
+          danger: hasTarget,
+          onClick: () => handleRemoveAndShiftForward(dateStr)
         }
       ];
     }
@@ -587,6 +698,22 @@ export default function App() {
         <ChecklistModal isOpen={!!checklistProjectId} onClose={() => setChecklistProjectId(null)} project={checklistProjectId ? projects.find(p => p.id === checklistProjectId) || null : null} onUpdateProject={(u) => setProjects(p => p.map(x => x.id === u.id ? u : x))} lang={lang} />
         <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} categoryConfig={categoryConfig} onUpdateCategory={setCategoryConfig} onExportData={exportData} onImportData={importData} appSettings={appSettings} onUpdateAppSettings={setAppSettings} />
         <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} lang={lang} />
+
+        {toastMessage && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-3 px-4 py-2 bg-zinc-900/95 dark:bg-zinc-100/95 text-white dark:text-zinc-900 text-xs font-medium rounded-full shadow-2xl backdrop-blur-md border border-zinc-700/50 dark:border-zinc-300 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <span>{toastMessage}</span>
+            <button 
+              onClick={() => {
+                handleUndo();
+                setToastMessage(null);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/20 dark:bg-zinc-900/10 hover:bg-white/30 dark:hover:bg-zinc-900/20 text-[11px] font-semibold transition-colors cursor-pointer"
+            >
+              <Undo2 size={12} />
+              {lang === 'zh-TW' ? '復原' : 'Undo'}
+            </button>
+          </div>
+        )}
       </div>
     </DndContext>
   );

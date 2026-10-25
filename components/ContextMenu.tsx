@@ -11,6 +11,8 @@ export interface ContextMenuAction {
   icon: React.ElementType;
   onClick: () => void;
   danger?: boolean;
+  disabled?: boolean;
+  dividerAbove?: boolean;
 }
 
 interface ContextMenuProps {
@@ -44,42 +46,62 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, actions
   }, [onClose]);
 
   // Adjust position if close to edge of screen
+  const menuWidth = 270;
+  const menuHeight = 240;
   const style: React.CSSProperties = {
     top: y,
     left: x,
   };
   
-  // Simple check to prevent overflow (simplistic)
   if (typeof window !== 'undefined') {
-     if (x + 200 > window.innerWidth) style.left = x - 200;
-     if (y + 200 > window.innerHeight) style.top = y - 200;
+     if (x + menuWidth > window.innerWidth) style.left = Math.max(10, window.innerWidth - menuWidth - 12);
+     if (y + menuHeight > window.innerHeight) style.top = Math.max(10, window.innerHeight - menuHeight - 12);
   }
 
   return (
     <div 
       ref={menuRef}
       style={style}
-      className="fixed z-[100] w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 py-1.5 animate-in fade-in zoom-in-95 duration-75 flex flex-col"
+      className="fixed z-[100] min-w-[250px] max-w-[320px] bg-white dark:bg-zinc-800 rounded-lg shadow-2xl border border-zinc-200 dark:border-zinc-700 py-1.5 animate-in fade-in zoom-in-95 duration-75 flex flex-col"
     >
       {actions.map((action) => (
-        <button
-          key={action.id}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick();
-            onClose();
-          }}
-          className={`
-            w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-left transition-colors
-            ${action.danger 
-              ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20' 
-              : 'text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700'
-            }
-          `}
-        >
-          <action.icon size={14} className={action.danger ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400'} />
-          {action.label || (action.labelKey ? t(action.labelKey, lang) : '')}
-        </button>
+        <React.Fragment key={action.id}>
+          {action.dividerAbove && (
+            <div className="my-1 border-t border-zinc-200 dark:border-zinc-700/60" />
+          )}
+          <button
+            disabled={action.disabled}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (action.disabled) return;
+              action.onClick();
+              onClose();
+            }}
+            className={`
+              w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-left transition-colors
+              ${action.disabled
+                ? 'text-zinc-400 dark:text-zinc-500 cursor-not-allowed opacity-50 select-none'
+                : action.danger 
+                  ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer' 
+                  : 'text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer'
+              }
+            `}
+          >
+            <action.icon 
+              size={14} 
+              className={`shrink-0 ${
+                action.disabled 
+                  ? 'text-zinc-300 dark:text-zinc-600' 
+                  : action.danger 
+                    ? 'text-red-500' 
+                    : 'text-zinc-500 dark:text-zinc-400'
+              }`} 
+            />
+            <span className="truncate flex-1">
+              {action.label || (action.labelKey ? t(action.labelKey, lang) : '')}
+            </span>
+          </button>
+        </React.Fragment>
       ))}
     </div>
   );

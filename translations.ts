@@ -21,6 +21,8 @@ type TranslationKey =
   | 'checklist_title' | 'checklist_placeholder' | 'checklist_add' | 'checklist_empty'
   | 'view_compact' | 'view_block'
   | 'menu_duplicate' | 'menu_delete' | 'menu_create_project_here' | 'modal_target_date'
+  | 'menu_shift_backward_day' | 'menu_remove_and_shift_forward_day' | 'menu_no_projects_to_remove'
+  | 'toast_shifted_forward' | 'toast_shifted_backward'
   | 'search_placeholder' | 'search_no_results' | 'search_scheduled' | 'search_unscheduled';
 
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
@@ -102,6 +104,11 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     menu_duplicate: 'Duplicate & Edit',
     menu_delete: 'Delete',
     menu_create_project_here: 'New Project on This Date',
+    menu_shift_backward_day: 'Postpone from this date (+1 Day)',
+    menu_remove_and_shift_forward_day: 'Remove date project & shift next (-1 Day)',
+    menu_no_projects_to_remove: 'No projects scheduled on this date',
+    toast_shifted_forward: 'Subsequent schedule shifted forward by 1 day',
+    toast_shifted_backward: 'Schedule shifted back by 1 day',
     modal_target_date: 'Scheduled Date',
     search_placeholder: 'Search projects...',
     search_no_results: 'No projects found',
@@ -190,6 +197,11 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     menu_duplicate: '複製並編輯',
     menu_delete: '刪除',
     menu_create_project_here: '在此日期新增專案',
+    menu_shift_backward_day: '將此日及後續專案順延一天 (+1 天)',
+    menu_remove_and_shift_forward_day: '移除當日專案並將後續專案前移 (-1 天)',
+    menu_no_projects_to_remove: '當日無排程專案',
+    toast_shifted_forward: '已將後續排程專案往前推移 1 天',
+    toast_shifted_backward: '已將此日及後續排程專案順延 1 天',
     modal_target_date: '排程日期',
     search_placeholder: '搜尋專案...',
     search_no_results: '找不到符合的專案',
