@@ -130,7 +130,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
         }
       }}
       className={`
-        group relative min-h-[85px] flex flex-col p-1.5 transition-all duration-200
+        group relative min-h-[85px] flex flex-col p-1 sm:p-1.5 transition-all duration-200
         ${isOver 
             ? 'bg-indigo-50 dark:bg-indigo-500/20 z-10' // Drag over state
             : isCurrentDay
@@ -164,25 +164,25 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
       )}
 
       {/* Date Header (Top Row) */}
-      <div className="flex justify-between items-start mb-1 min-h-[20px] relative z-20">
+      <div className="flex justify-between items-center mb-1 min-h-[18px] relative z-20">
         {/* Left: Overload Indicator (Only if > 2 items) */}
         {items.length > 2 ? (
           <div 
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded-[3px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/50 text-zinc-500 dark:text-zinc-400"
+            className="flex items-center gap-0.5 px-1 py-0.5 rounded-[3px] bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/50 text-zinc-500 dark:text-zinc-400"
             title={`${items.length} items`}
           >
-            <Layers size={10} />
+            <Layers size={9} />
             <span className="text-[9px] font-bold leading-none">{items.length}</span>
           </div>
         ) : (
-          <div></div> // Spacer
+          <div />
         )}
 
         {/* Right: Date Number */}
         <span className={`
           flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold transition-opacity duration-200
           ${isCurrentDay 
-            ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-md shadow-indigo-500/30' 
+            ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-md shadow-indigo-500/30 font-bold' 
             : 'text-zinc-400 dark:text-zinc-500 opacity-60 group-hover:opacity-100'
           }
         `}>
@@ -191,7 +191,7 @@ export const CalendarCell: React.FC<CalendarCellProps> = React.memo(({
       </div>
       
       {/* Content Area */}
-      <div className="flex-1 flex flex-col gap-1 overflow-y-auto max-h-[85px] no-scrollbar relative z-0">
+      <div className="flex-1 flex flex-col gap-1 overflow-y-auto max-h-[110px] sm:max-h-[140px] custom-scrollbar relative z-0">
         {sortedItems.map((item) => {
           const project = getProject(item.projectId);
           if (!project) return null;

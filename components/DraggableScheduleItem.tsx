@@ -128,7 +128,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
 
   // Base classes used for both modes
   const baseClasses = `
-    group relative flex items-center gap-2 p-1.5 rounded-md border transition-all select-none
+    group relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-md border transition-all select-none min-w-0
     ${isOverlay 
         ? 'bg-white dark:bg-zinc-800 shadow-xl scale-105 rotate-1 z-50 border-indigo-500 cursor-grabbing w-[200px] text-left pointer-events-none' 
         : isDragging 
@@ -225,12 +225,12 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
 
       {/* Color Indicator (Only for Compact Mode) - Uses Category Color */}
       {!isBlock && (
-        <div className={`w-1.5 self-stretch rounded-full ${config.color} shrink-0`} />
+        <div className={`w-1 sm:w-1.5 self-stretch rounded-full ${config.color} shrink-0`} />
       )}
 
       {/* Content */}
       <div className={`flex-1 min-w-0 ${isBlock ? 'text-center w-full' : ''}`}>
-        <h4 className={`text-[11px] font-medium truncate leading-tight ${isBlock ? 'text-white drop-shadow-md mx-auto px-1' : 'text-zinc-700 dark:text-zinc-200'}`}>
+        <h4 className={`text-[10px] sm:text-[11px] font-medium truncate leading-tight ${isBlock ? 'text-white drop-shadow-md mx-auto px-0.5' : 'text-zinc-700 dark:text-zinc-200'}`}>
            {project.name}
         </h4>
         
@@ -241,7 +241,7 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
                   <span 
                     key={i} 
                     className={`
-                      text-[9px] font-normal truncate
+                      text-[8.5px] sm:text-[9px] font-normal truncate max-w-[60px] sm:max-w-[85px]
                       ${isBlock 
                          ? 'text-white/90' 
                          : 'text-zinc-400 dark:text-zinc-500'
@@ -256,14 +256,14 @@ export const DraggableScheduleItem: React.FC<DraggableScheduleItemProps> = React
 
         {/* Compact Mode Alert Icon (Inline) */}
         {!isBlock && alertState !== 'NONE' && (
-            <div className="flex items-center gap-1 mt-1">
+            <div className="flex items-center gap-0.5 mt-0.5" title={alertState === 'CRITICAL' ? 'Due soon' : 'Upcoming'}>
                  {alertState === 'CRITICAL' ? (
-                    <span className="flex items-center gap-1 text-[9px] font-bold text-red-600 dark:text-red-400">
-                        <AlertCircle size={10} /> Due soon
+                    <span className="flex items-center gap-0.5 text-[8.5px] sm:text-[9px] font-bold text-red-600 dark:text-red-400">
+                        <AlertCircle size={9} /> <span className="hidden sm:inline">Due soon</span>
                     </span>
                  ) : (
-                    <span className="flex items-center gap-1 text-[9px] font-bold text-amber-600 dark:text-amber-500">
-                        <AlertTriangle size={10} /> Upcoming
+                    <span className="flex items-center gap-0.5 text-[8.5px] sm:text-[9px] font-bold text-amber-600 dark:text-amber-500">
+                        <AlertTriangle size={9} /> <span className="hidden sm:inline">Upcoming</span>
                     </span>
                  )}
             </div>

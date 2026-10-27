@@ -23,7 +23,8 @@ type TranslationKey =
   | 'menu_duplicate' | 'menu_delete' | 'menu_create_project_here' | 'modal_target_date'
   | 'menu_shift_backward_day' | 'menu_remove_and_shift_forward_day' | 'menu_no_projects_to_remove'
   | 'toast_shifted_forward' | 'toast_shifted_backward'
-  | 'search_placeholder' | 'search_no_results' | 'search_scheduled' | 'search_unscheduled';
+  | 'search_placeholder' | 'search_no_results' | 'search_scheduled' | 'search_unscheduled'
+  | 'collapse_sidebar' | 'expand_sidebar' | 'toggle_sidebar' | 'drop_to_pipeline';
 
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
@@ -118,6 +119,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     border_dashed: 'Dashed',
     border_dotted: 'Dotted',
     border_double: 'Double',
+    collapse_sidebar: 'Collapse Sidebar',
+    expand_sidebar: 'Expand Sidebar',
+    toggle_sidebar: 'Toggle Sidebar',
+    drop_to_pipeline: 'Drop to return to Pipeline',
   },
   'zh-TW': {
     pipeline: '專案管線',
@@ -211,6 +216,10 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     border_dashed: '虛線',
     border_dotted: '點線',
     border_double: '雙實線',
+    collapse_sidebar: '收合側邊欄',
+    expand_sidebar: '展開側邊欄',
+    toggle_sidebar: '切換側邊欄',
+    drop_to_pipeline: '拖曳至此移回專案管線',
   }
 };
 

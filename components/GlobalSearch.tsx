@@ -86,7 +86,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   const dateLocale = lang === 'zh-TW' ? zhTW : enUS;
 
   return (
-    <div ref={wrapperRef} className="relative w-44 sm:w-56 xl:w-64 max-w-[280px] z-50">
+    <div ref={wrapperRef} className="relative w-28 sm:w-44 md:w-52 lg:w-60 focus-within:w-44 sm:focus-within:w-52 md:focus-within:w-60 lg:focus-within:w-64 max-w-[280px] transition-all duration-200 z-50">
       <div className="relative group">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-indigo-500 transition-colors">
           <Search size={14} />

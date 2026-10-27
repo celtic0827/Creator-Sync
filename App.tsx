@@ -77,6 +77,27 @@ export default function App() {
   const scrollCooldown = useRef(false);
   const pagingCooldown = useRef(false);
 
+  // Sidebar responsive collapse state
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('patreon_scheduler_sidebar_collapsed');
+      if (saved !== null) return saved === 'true';
+      return window.innerWidth < 1024;
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('patreon_scheduler_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
@@ -232,9 +253,10 @@ export default function App() {
     const activeRect = event.active.rect.current.translated;
     if (!activeRect) return;
 
-    // Detect if we are dragging inside the Calendar area (approximate sidebar width is 340px)
-    // We don't want to switch months if user is just organizing the sidebar
-    if (activeRect.left < 360) return;
+    // Detect if we are dragging inside the Calendar area
+    // Dynamic threshold based on collapsed sidebar (56px) or expanded sidebar (320px)
+    const sidebarThreshold = isSidebarCollapsed ? 80 : 340;
+    if (activeRect.left < sidebarThreshold) return;
 
     const viewportHeight = window.innerHeight;
     
@@ -575,20 +597,23 @@ export default function App() {
           onOpenChecklist={(pid) => setChecklistProjectId(pid)}
           onContextMenu={handleContextMenu}
           highlightedProjectId={highlightedProjectId}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
         />
 
         <main className="flex-1 min-w-0 flex flex-col bg-zinc-50 dark:bg-zinc-950 relative transition-colors duration-200">
-          <div className="flex items-center justify-between px-4 lg:px-8 py-4 lg:py-6 h-20 min-w-0">
-             <div className="flex items-center gap-2 md:gap-3 xl:gap-5 min-w-0 flex-1 overflow-x-auto no-scrollbar py-1">
+          <div className="flex items-center justify-between px-3 sm:px-6 lg:px-8 py-3 lg:py-5 min-h-[64px] min-w-0 border-b border-zinc-200/60 dark:border-white/5">
+             <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-4 min-w-0 flex-1 overflow-x-auto no-scrollbar py-1">
                <div className="shrink-0">
-                 <h2 className="text-xl lg:text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight capitalize whitespace-nowrap">
+                 <h2 className="text-base sm:text-lg lg:text-xl font-bold text-zinc-900 dark:text-white tracking-tight capitalize whitespace-nowrap">
                    {format(currentMonth, 'MMMM yyyy', { locale: dateLocale })}
                  </h2>
                </div>
-               <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-1 shrink-0">
-                 <button onClick={() => setCurrentMonth(prev => addMonths(prev, -1))} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"><ChevronLeft size={16} /></button>
-                 <button onClick={() => setCurrentMonth(new Date())} className="w-14 sm:w-16 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white whitespace-nowrap">{t('today', lang)}</button>
-                 <button onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors"><ChevronRight size={16} /></button>
+
+               <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-0.5 sm:p-1 shrink-0">
+                 <button onClick={() => setCurrentMonth(prev => addMonths(prev, -1))} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors" title="Previous Month"><ChevronLeft size={15} /></button>
+                 <button onClick={() => setCurrentMonth(new Date())} className="px-2 sm:w-14 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white whitespace-nowrap">{t('today', lang)}</button>
+                 <button onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors" title="Next Month"><ChevronRight size={15} /></button>
                </div>
                
                {/* Global Search Component inserted here */}
@@ -604,21 +629,21 @@ export default function App() {
                </div>
 
                <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900/50 p-0.5 shrink-0">
-                  <button onClick={() => toggleViewMode('COMPACT')} className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'COMPACT' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}><List size={14} /></button>
-                  <button onClick={() => toggleViewMode('BLOCK')} className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'BLOCK' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}><LayoutGrid size={14} /></button>
+                  <button onClick={() => toggleViewMode('COMPACT')} title={t('view_compact', lang)} className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'COMPACT' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}><List size={14} /></button>
+                  <button onClick={() => toggleViewMode('BLOCK')} title={t('view_block', lang)} className={`p-1.5 rounded transition-all ${appSettings.calendarViewMode === 'BLOCK' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}><LayoutGrid size={14} /></button>
                </div>
-               <div className="hidden sm:block h-6 w-px bg-zinc-300 dark:bg-zinc-800/50 mx-1 shrink-0"></div>
-               <button onClick={handleUndo} disabled={history.length === 0} className={`shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-md border transition-all ${history.length > 0 ? 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 hover:bg-zinc-50 shadow-sm' : 'bg-transparent border-transparent text-zinc-400 cursor-default opacity-50'}`}><Undo2 size={16} /></button>
+               <div className="hidden sm:block h-5 w-px bg-zinc-300 dark:bg-zinc-800/50 mx-0.5 shrink-0"></div>
+               <button onClick={handleUndo} disabled={history.length === 0} title={t('undo', lang)} className={`shrink-0 flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-md border transition-all ${history.length > 0 ? 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 hover:bg-zinc-50 shadow-xs' : 'bg-transparent border-transparent text-zinc-400 cursor-default opacity-50'}`}><Undo2 size={15} /></button>
                <TrashDropZone activeDragId={activeDragId} lang={lang} />
              </div>
-             <div className="flex items-center gap-2 lg:gap-3 shrink-0 ml-3">
-               <div className="text-right hidden sm:block"><h1 className="text-xs font-bold tracking-tight text-zinc-500 dark:text-zinc-300 uppercase">Creator Sync</h1><p className="text-[10px] text-zinc-400 dark:text-zinc-600 font-medium">Pro Scheduler</p></div>
-               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 shadow-inner"><Layers size={16} /></div>
+             <div className="flex items-center gap-2 lg:gap-3 shrink-0 ml-2">
+               <div className="text-right hidden xl:block"><h1 className="text-xs font-bold tracking-tight text-zinc-500 dark:text-zinc-300 uppercase">Creator Sync</h1><p className="text-[10px] text-zinc-400 dark:text-zinc-600 font-medium">Pro Scheduler</p></div>
+               <div className="hidden sm:flex h-8 w-8 items-center justify-center rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 shadow-xs"><Layers size={16} /></div>
              </div>
           </div>
 
-          <div className="flex-1 min-w-0 px-4 lg:px-8 pb-4 lg:pb-8 overflow-hidden flex flex-col" onWheel={handleCalendarWheel}>
-            <div className="grid grid-cols-7 mb-2 min-w-0">
+          <div className="flex-1 min-w-0 px-2 sm:px-4 lg:px-8 pb-3 sm:pb-4 lg:pb-8 overflow-hidden flex flex-col" onWheel={handleCalendarWheel}>
+            <div className="grid grid-cols-7 mb-1.5 sm:mb-2 min-w-0">
               {weekDays.map(day => (<div key={day} className="text-center text-[10px] font-medium text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">{day}</div>))}
             </div>
             <div className="flex-1 min-w-0 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-200 dark:bg-zinc-800 shadow-xl dark:shadow-2xl custom-scrollbar">

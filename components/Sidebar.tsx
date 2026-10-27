@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ListTodo, Archive, List, ArrowDownAZ, Shapes, CalendarClock, Inbox, Plus, Settings, CircleHelp, ArrowUpWideNarrow } from 'lucide-react';
+import { ListTodo, Archive, List, ArrowDownAZ, Shapes, CalendarClock, Inbox, Plus, Settings, CircleHelp, ArrowUpWideNarrow, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Project, CategoryConfig, AppSettings, Language, SidebarTab, SortMode, StatusDefinition, ProjectStatus, Priority } from '../types';
 import { ProjectCard } from './ProjectCard';
 import { StatusZone } from './StatusZone';
@@ -25,6 +25,8 @@ interface SidebarProps {
   onOpenChecklist: (projectId: string) => void;
   onContextMenu?: (e: React.MouseEvent, projectId: string) => void;
   highlightedProjectId?: string | null;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = React.memo(({
@@ -45,7 +47,9 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   onToggleArchive,
   onOpenChecklist,
   onContextMenu,
-  highlightedProjectId
+  highlightedProjectId,
+  isCollapsed = false,
+  onToggleCollapse
 }) => {
   const [sortMode, setSortMode] = useState<SortMode>(() => {
     try {
@@ -78,12 +82,10 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
              return a.name.localeCompare(b.name);
         
         case 'PRIORITY':
-             // 1. Sort by Priority (High to Low)
              const pA = getPriorityWeight(a.priority);
              const pB = getPriorityWeight(b.priority);
              if (pA !== pB) return pB - pA;
              
-             // 2. Secondary: Category Order
              const catA1 = getCatIndex(a.type);
              const catB1 = getCatIndex(b.type);
              if (catA1 !== catB1) return catA1 - catB1;
@@ -91,17 +93,14 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
              return a.name.localeCompare(b.name);
 
         case 'CATEGORY': 
-             // 1. Sort by Category Order
              const catA2 = getCatIndex(a.type);
              const catB2 = getCatIndex(b.type);
              if (catA2 !== catB2) return catA2 - catB2;
              
-             // 2. Same Category -> Sort by Priority (High to Low)
              const wA = getPriorityWeight(a.priority);
              const wB = getPriorityWeight(b.priority);
              if (wA !== wB) return wB - wA;
 
-             // 3. Fallback to name
              return a.name.localeCompare(b.name);
         
         case 'DATE':
@@ -114,8 +113,6 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
         case 'DEFAULT':
         default:
-             // Smart Default: Priority > Category > Name
-             // This ensures that when a user changes priority, the item moves immediately
              const dpA = getPriorityWeight(a.priority);
              const dpB = getPriorityWeight(b.priority);
              if (dpA !== dpB) return dpB - dpA;
@@ -129,37 +126,142 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
     });
   };
 
-  return (
-    <aside className="w-[340px] shrink-0 border-r border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-900/50 flex flex-col z-10 transition-colors duration-200">
-      {/* Header & Tabs */}
-      <div className="p-4 border-b border-zinc-200 dark:border-white/5 pt-6 flex flex-col gap-3">
-        <div className="flex p-1 bg-zinc-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-white/5">
+  if (isCollapsed) {
+    return (
+      <aside className="w-14 shrink-0 border-r border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-900/50 flex flex-col z-10 transition-all duration-200 items-center py-4 justify-between select-none">
+        {/* Top: Toggle and Tab Switchers */}
+        <div className="flex flex-col items-center gap-3 w-full px-1.5">
           <button
-            onClick={() => setSidebarTab('pipeline')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-md transition-all ${
+            onClick={onToggleCollapse}
+            title={t('expand_sidebar', lang)}
+            className="p-2 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            <PanelLeftOpen size={18} />
+          </button>
+
+          <div className="w-8 h-px bg-zinc-200 dark:bg-zinc-800/80 my-0.5" />
+
+          {/* Pipeline Tab Icon */}
+          <button
+            onClick={() => { setSidebarTab('pipeline'); }}
+            title={`${t('pipeline', lang)} (${pipelineProjects.length})`}
+            className={`relative p-2 rounded-lg transition-all ${
               sidebarTab === 'pipeline' 
-                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-transparent' 
-                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold shadow-xs' 
+                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
-            <ListTodo size={14} /> {t('pipeline', lang)}
-            <span className={`text-[10px] px-1.5 rounded-full ${sidebarTab === 'pipeline' ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-600'}`}>
-              {pipelineProjects.length}
-            </span>
+            <ListTodo size={18} />
+            {pipelineProjects.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[9px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center shadow-xs">
+                {pipelineProjects.length > 99 ? '99+' : pipelineProjects.length}
+              </span>
+            )}
+          </button>
+
+          {/* Published Tab Icon */}
+          <button
+            onClick={() => { setSidebarTab('published'); }}
+            title={`${t('published', lang)} (${publishedProjects.length})`}
+            className={`relative p-2 rounded-lg transition-all ${
+              sidebarTab === 'published' 
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold shadow-xs' 
+                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+            }`}
+          >
+            <Archive size={18} />
+            {publishedProjects.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-zinc-500 dark:bg-zinc-600 text-white text-[9px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center shadow-xs">
+                {publishedProjects.length > 99 ? '99+' : publishedProjects.length}
+              </span>
+            )}
+          </button>
+
+          {/* Dedicated Mini Return-to-Pipeline Drop Target */}
+          {activeStatuses.length > 0 && (
+            <div className="w-full mt-2" title={t('drop_to_pipeline', lang)}>
+              <StatusZone status={activeStatuses[0].id}>
+                <div className="w-10 h-10 mx-auto rounded-lg border-2 border-dashed border-zinc-200 dark:border-zinc-800 hover:border-indigo-500 dark:hover:border-indigo-400 flex flex-col items-center justify-center text-zinc-400 hover:text-indigo-600 transition-all cursor-pointer">
+                  <Inbox size={16} />
+                </div>
+              </StatusZone>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom: Action Buttons */}
+        <div className="flex flex-col items-center gap-2 w-full px-1.5">
+          <button
+            onClick={onOpenCreateModal}
+            className="w-9 h-9 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-colors shadow-sm"
+            title={t('newProject', lang)}
+          >
+            <Plus size={16} />
           </button>
           <button
-            onClick={() => setSidebarTab('published')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-md transition-all ${
-              sidebarTab === 'published' 
-                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-transparent' 
-                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
-            }`}
+            onClick={onOpenSettings}
+            className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors"
+            title={t('settings', lang)}
           >
-            <Archive size={14} /> {t('published', lang)}
-            <span className={`text-[10px] px-1.5 rounded-full ${sidebarTab === 'published' ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-600'}`}>
-              {publishedProjects.length}
-            </span>
+            <Settings size={16} />
           </button>
+          <button
+            onClick={onOpenHelp}
+            className="p-2 text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors"
+            title="Help Guide"
+          >
+            <CircleHelp size={16} />
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="w-[300px] sm:w-[320px] lg:w-[340px] shrink-0 border-r border-zinc-200 dark:border-white/5 bg-white dark:bg-zinc-900/50 flex flex-col z-10 transition-colors duration-200">
+      {/* Header & Tabs */}
+      <div className="p-3 sm:p-4 border-b border-zinc-200 dark:border-white/5 pt-4 sm:pt-6 flex flex-col gap-3">
+        <div className="flex items-center gap-1.5">
+          <div className="flex p-1 bg-zinc-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-white/5 flex-1 min-w-0">
+            <button
+              onClick={() => setSidebarTab('pipeline')}
+              className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 text-xs font-semibold rounded-md transition-all truncate ${
+                sidebarTab === 'pipeline' 
+                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-transparent' 
+                  : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+              }`}
+            >
+              <ListTodo size={14} className="shrink-0" />
+              <span className="truncate">{t('pipeline', lang)}</span>
+              <span className={`text-[10px] px-1.5 rounded-full shrink-0 ${sidebarTab === 'pipeline' ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-600'}`}>
+                {pipelineProjects.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setSidebarTab('published')}
+              className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 text-xs font-semibold rounded-md transition-all truncate ${
+                sidebarTab === 'published' 
+                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-transparent' 
+                  : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+              }`}
+            >
+              <Archive size={14} className="shrink-0" />
+              <span className="truncate">{t('published', lang)}</span>
+              <span className={`text-[10px] px-1.5 rounded-full shrink-0 ${sidebarTab === 'published' ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-600'}`}>
+                {publishedProjects.length}
+              </span>
+            </button>
+          </div>
+
+          {onToggleCollapse && (
+            <button
+              onClick={onToggleCollapse}
+              title={t('collapse_sidebar', lang)}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+            >
+              <PanelLeftClose size={16} />
+            </button>
+          )}
         </div>
 
         {/* Sorting Toolbar */}
